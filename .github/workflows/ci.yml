@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: bella_test
+          POSTGRES_USER: bella
+          POSTGRES_PASSWORD: bella
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U bella"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Configurar JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Compilar projeto
+        run: mvn -B clean compile
+
+      - name: Rodar testes
+        run: mvn -B test
+        env:
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_NAME: bella_test
+          DB_USER: bella
+          DB_PASSWORD: bella
+
+      - name: Empacotar aplicação
+        run: mvn -B package -DskipTests
