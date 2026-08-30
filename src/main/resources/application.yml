@@ -26,3 +26,7 @@ server:
 logging:
   level:
     com.bella: DEBUG
+
+bella:
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173}
