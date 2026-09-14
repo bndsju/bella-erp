@@ -2,6 +2,10 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { ClientesListPage } from "@/pages/ClientesListPage";
 import { ClienteFormPage } from "@/pages/ClienteFormPage";
+import { ProdutosListPage } from "@/pages/ProdutosListPage";
+import { ProdutoFormPage } from "@/pages/ProdutoFormPage";
+import { CategoriasPage } from "@/pages/CategoriasPage";
+import { UnidadesMedidaPage } from "@/pages/UnidadesMedidaPage";
 
 function App() {
   return (
@@ -11,6 +15,11 @@ function App() {
         <Route path="/clientes" element={<ClientesListPage />} />
         <Route path="/clientes/novo" element={<ClienteFormPage />} />
         <Route path="/clientes/:id/editar" element={<ClienteFormPage />} />
+        <Route path="/produtos" element={<ProdutosListPage />} />
+        <Route path="/produtos/novo" element={<ProdutoFormPage />} />
+        <Route path="/produtos/:id/editar" element={<ProdutoFormPage />} />
+        <Route path="/categorias" element={<CategoriasPage />} />
+        <Route path="/unidades-medida" element={<UnidadesMedidaPage />} />
       </Route>
     </Routes>
   );

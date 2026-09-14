@@ -1,7 +1,12 @@
 import { Outlet, NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
-const navItems = [{ to: "/clientes", label: "Clientes" }];
+const navItems = [
+  { to: "/clientes", label: "Clientes" },
+  { to: "/produtos", label: "Produtos" },
+  { to: "/categorias", label: "Categorias" },
+  { to: "/unidades-medida", label: "Unidades de medida" },
+];
 
 export function AppLayout() {
   return (
