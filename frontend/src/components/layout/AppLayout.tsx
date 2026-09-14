@@ -6,6 +6,7 @@ const navItems = [
   { to: "/produtos", label: "Produtos" },
   { to: "/categorias", label: "Categorias" },
   { to: "/unidades-medida", label: "Unidades de medida" },
+  { to: "/orcamentos", label: "Orçamentos" },
 ];
 
 export function AppLayout() {
