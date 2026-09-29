@@ -3,6 +3,9 @@ package com.bella.backend.application.pedido.usecase;
 import com.bella.backend.domain.cliente.model.ClientePessoaFisica;
 import com.bella.backend.domain.cliente.model.Endereco;
 import com.bella.backend.domain.cliente.port.in.BuscarClientePorIdUseCase;
+import com.bella.backend.domain.estoque.port.in.ConsumirReservaEstoqueParaPedidoUseCase;
+import com.bella.backend.domain.estoque.port.in.LiberarReservaEstoqueParaPedidoUseCase;
+import com.bella.backend.domain.estoque.port.in.ReservarEstoqueParaPedidoUseCase;
 import com.bella.backend.domain.orcamento.model.Orcamento;
 import com.bella.backend.domain.orcamento.model.OrcamentoItem;
 import com.bella.backend.domain.orcamento.model.StatusOrcamento;
@@ -35,6 +38,7 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -57,6 +61,15 @@ class PedidoServiceTest {
     @Mock
     private BuscarOrcamentoPorIdUseCase buscarOrcamentoPorIdUseCase;
 
+    @Mock
+    private ReservarEstoqueParaPedidoUseCase reservarEstoqueParaPedidoUseCase;
+
+    @Mock
+    private LiberarReservaEstoqueParaPedidoUseCase liberarReservaEstoqueParaPedidoUseCase;
+
+    @Mock
+    private ConsumirReservaEstoqueParaPedidoUseCase consumirReservaEstoqueParaPedidoUseCase;
+
     private PedidoService pedidoService;
 
     private static final UUID CLIENTE_ID = UUID.randomUUID();
@@ -66,7 +79,8 @@ class PedidoServiceTest {
     @BeforeEach
     void setUp() {
         pedidoService = new PedidoService(pedidoRepositoryPort, buscarClientePorIdUseCase, buscarProdutoPorIdUseCase,
-                buscarTransportadoraPorIdUseCase, buscarOrcamentoPorIdUseCase);
+                buscarTransportadoraPorIdUseCase, buscarOrcamentoPorIdUseCase, reservarEstoqueParaPedidoUseCase,
+                liberarReservaEstoqueParaPedidoUseCase, consumirReservaEstoqueParaPedidoUseCase);
     }
 
     private ComandoPedido comandoValido() {
@@ -180,9 +194,27 @@ class PedidoServiceTest {
         when(pedidoRepositoryPort.salvar(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
         assertThat(pedidoService.confirmar(id).getStatus()).isEqualTo(StatusPedido.CONFIRMADO);
+        verify(reservarEstoqueParaPedidoUseCase).reservarParaPedido(eq(criado.getId()), any());
+
         assertThat(pedidoService.iniciarSeparacao(id).getStatus()).isEqualTo(StatusPedido.EM_SEPARACAO);
         assertThat(pedidoService.marcarProntoParaEntrega(id).getStatus()).isEqualTo(StatusPedido.PRONTO_PARA_ENTREGA);
+
         assertThat(pedidoService.entregar(id).getStatus()).isEqualTo(StatusPedido.ENTREGUE);
+        verify(consumirReservaEstoqueParaPedidoUseCase).consumirReservaParaPedido(criado.getId());
+    }
+
+    @Test
+    void cancelarLiberaReservaDeEstoque() {
+        UUID id = UUID.randomUUID();
+        Pedido criado = Pedido.novo(CLIENTE_ID, null, null,
+                List.of(PedidoItem.novo(PRODUTO_ID, BigDecimal.ONE, BigDecimal.TEN)),
+                BigDecimal.ZERO, BigDecimal.ZERO, "À vista");
+
+        when(pedidoRepositoryPort.buscarPorId(id)).thenReturn(Optional.of(criado));
+        when(pedidoRepositoryPort.salvar(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+        assertThat(pedidoService.cancelar(id).getStatus()).isEqualTo(StatusPedido.CANCELADO);
+        verify(liberarReservaEstoqueParaPedidoUseCase).liberarReservaParaPedido(criado.getId());
     }
 
     @Test
@@ -196,6 +228,7 @@ class PedidoServiceTest {
         when(pedidoRepositoryPort.buscarPorId(id)).thenReturn(Optional.of(entregue));
 
         assertThrows(RegraDeNegocioException.class, () -> pedidoService.cancelar(id));
+        verify(liberarReservaEstoqueParaPedidoUseCase, never()).liberarReservaParaPedido(any());
     }
 
     @Test

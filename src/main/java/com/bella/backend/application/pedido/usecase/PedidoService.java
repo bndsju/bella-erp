@@ -1,6 +1,10 @@
 package com.bella.backend.application.pedido.usecase;
 
 import com.bella.backend.domain.cliente.port.in.BuscarClientePorIdUseCase;
+import com.bella.backend.domain.estoque.port.in.ConsumirReservaEstoqueParaPedidoUseCase;
+import com.bella.backend.domain.estoque.port.in.ItemMovimentacaoEstoque;
+import com.bella.backend.domain.estoque.port.in.LiberarReservaEstoqueParaPedidoUseCase;
+import com.bella.backend.domain.estoque.port.in.ReservarEstoqueParaPedidoUseCase;
 import com.bella.backend.domain.orcamento.model.Orcamento;
 import com.bella.backend.domain.orcamento.model.StatusOrcamento;
 import com.bella.backend.domain.orcamento.port.in.BuscarOrcamentoPorIdUseCase;
@@ -48,17 +52,26 @@ public class PedidoService implements
     private final BuscarProdutoPorIdUseCase buscarProdutoPorIdUseCase;
     private final BuscarTransportadoraPorIdUseCase buscarTransportadoraPorIdUseCase;
     private final BuscarOrcamentoPorIdUseCase buscarOrcamentoPorIdUseCase;
+    private final ReservarEstoqueParaPedidoUseCase reservarEstoqueParaPedidoUseCase;
+    private final LiberarReservaEstoqueParaPedidoUseCase liberarReservaEstoqueParaPedidoUseCase;
+    private final ConsumirReservaEstoqueParaPedidoUseCase consumirReservaEstoqueParaPedidoUseCase;
 
     public PedidoService(PedidoRepositoryPort pedidoRepositoryPort,
                           BuscarClientePorIdUseCase buscarClientePorIdUseCase,
                           BuscarProdutoPorIdUseCase buscarProdutoPorIdUseCase,
                           BuscarTransportadoraPorIdUseCase buscarTransportadoraPorIdUseCase,
-                          BuscarOrcamentoPorIdUseCase buscarOrcamentoPorIdUseCase) {
+                          BuscarOrcamentoPorIdUseCase buscarOrcamentoPorIdUseCase,
+                          ReservarEstoqueParaPedidoUseCase reservarEstoqueParaPedidoUseCase,
+                          LiberarReservaEstoqueParaPedidoUseCase liberarReservaEstoqueParaPedidoUseCase,
+                          ConsumirReservaEstoqueParaPedidoUseCase consumirReservaEstoqueParaPedidoUseCase) {
         this.pedidoRepositoryPort = pedidoRepositoryPort;
         this.buscarClientePorIdUseCase = buscarClientePorIdUseCase;
         this.buscarProdutoPorIdUseCase = buscarProdutoPorIdUseCase;
         this.buscarTransportadoraPorIdUseCase = buscarTransportadoraPorIdUseCase;
         this.buscarOrcamentoPorIdUseCase = buscarOrcamentoPorIdUseCase;
+        this.reservarEstoqueParaPedidoUseCase = reservarEstoqueParaPedidoUseCase;
+        this.liberarReservaEstoqueParaPedidoUseCase = liberarReservaEstoqueParaPedidoUseCase;
+        this.consumirReservaEstoqueParaPedidoUseCase = consumirReservaEstoqueParaPedidoUseCase;
     }
 
     @Override
@@ -136,7 +149,9 @@ public class PedidoService implements
     public Pedido confirmar(UUID id) {
         Pedido pedido = buscarPorId(id);
         pedido.confirmar();
-        return pedidoRepositoryPort.salvar(pedido);
+        Pedido salvo = pedidoRepositoryPort.salvar(pedido);
+        reservarEstoqueParaPedidoUseCase.reservarParaPedido(salvo.getId(), paraItensMovimentacao(salvo));
+        return salvo;
     }
 
     @Override
@@ -157,14 +172,18 @@ public class PedidoService implements
     public Pedido entregar(UUID id) {
         Pedido pedido = buscarPorId(id);
         pedido.entregar();
-        return pedidoRepositoryPort.salvar(pedido);
+        Pedido salvo = pedidoRepositoryPort.salvar(pedido);
+        consumirReservaEstoqueParaPedidoUseCase.consumirReservaParaPedido(salvo.getId());
+        return salvo;
     }
 
     @Override
     public Pedido cancelar(UUID id) {
         Pedido pedido = buscarPorId(id);
         pedido.cancelar();
-        return pedidoRepositoryPort.salvar(pedido);
+        Pedido salvo = pedidoRepositoryPort.salvar(pedido);
+        liberarReservaEstoqueParaPedidoUseCase.liberarReservaParaPedido(salvo.getId());
+        return salvo;
     }
 
     private void validarReferencias(UUID clienteId, UUID transportadoraId, List<ComandoItemPedido> itens) {
@@ -180,6 +199,12 @@ public class PedidoService implements
     private List<PedidoItem> paraItens(List<ComandoItemPedido> itensComando) {
         return itensComando.stream()
                 .map(item -> PedidoItem.novo(item.produtoId(), item.quantidade(), item.valorUnitario()))
+                .toList();
+    }
+
+    private List<ItemMovimentacaoEstoque> paraItensMovimentacao(Pedido pedido) {
+        return pedido.getItens().stream()
+                .map(item -> new ItemMovimentacaoEstoque(item.getProdutoId(), item.getQuantidade()))
                 .toList();
     }
 }
