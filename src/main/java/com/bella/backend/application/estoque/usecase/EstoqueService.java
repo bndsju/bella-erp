@@ -8,6 +8,7 @@ import com.bella.backend.domain.estoque.model.TipoMovimentacaoEstoque;
 import com.bella.backend.domain.estoque.port.in.ComandoMovimentacaoManual;
 import com.bella.backend.domain.estoque.port.in.ConsultarSaldoEstoqueUseCase;
 import com.bella.backend.domain.estoque.port.in.ConsumirReservaEstoqueParaPedidoUseCase;
+import com.bella.backend.domain.estoque.port.in.ItemEntradaCompra;
 import com.bella.backend.domain.estoque.port.in.ItemMovimentacaoEstoque;
 import com.bella.backend.domain.estoque.port.in.LiberarReservaEstoqueParaPedidoUseCase;
 import com.bella.backend.domain.estoque.port.in.ListarMovimentacoesEstoqueUseCase;
@@ -16,6 +17,7 @@ import com.bella.backend.domain.estoque.port.in.ListarSaldoEstoqueUseCase;
 import com.bella.backend.domain.estoque.port.in.RegistrarAjusteEntradaEstoqueUseCase;
 import com.bella.backend.domain.estoque.port.in.RegistrarAjusteSaidaEstoqueUseCase;
 import com.bella.backend.domain.estoque.port.in.RegistrarEntradaEstoqueUseCase;
+import com.bella.backend.domain.estoque.port.in.RegistrarEntradasDeCompraUseCase;
 import com.bella.backend.domain.estoque.port.in.RegistrarSaidaEstoqueUseCase;
 import com.bella.backend.domain.estoque.port.in.ReservarEstoqueParaPedidoUseCase;
 import com.bella.backend.domain.estoque.port.out.MovimentacaoEstoqueRepositoryPort;
@@ -41,6 +43,7 @@ public class EstoqueService implements
         RegistrarSaidaEstoqueUseCase,
         RegistrarAjusteEntradaEstoqueUseCase,
         RegistrarAjusteSaidaEstoqueUseCase,
+        RegistrarEntradasDeCompraUseCase,
         ReservarEstoqueParaPedidoUseCase,
         LiberarReservaEstoqueParaPedidoUseCase,
         ConsumirReservaEstoqueParaPedidoUseCase,
@@ -52,6 +55,7 @@ public class EstoqueService implements
     private static final String MOTIVO_RESERVA = "Reserva de estoque referente ao pedido";
     private static final String MOTIVO_LIBERACAO_RESERVA = "Liberação de reserva referente ao cancelamento do pedido";
     private static final String MOTIVO_SAIDA_ENTREGA = "Saída de estoque referente à entrega do pedido";
+    private static final String MOTIVO_ENTRADA_COMPRA = "Entrada de estoque referente ao recebimento da compra";
 
     private final SaldoEstoqueRepositoryPort saldoEstoqueRepositoryPort;
     private final MovimentacaoEstoqueRepositoryPort movimentacaoEstoqueRepositoryPort;
@@ -98,6 +102,24 @@ public class EstoqueService implements
         saldo.registrarSaida(comando.quantidade());
         saldoEstoqueRepositoryPort.salvar(saldo);
         return registrarMovimentacaoManual(comando, TipoMovimentacaoEstoque.AJUSTE_SAIDA);
+    }
+
+    @Override
+    public void registrarEntradasDeCompra(UUID compraId, List<ItemEntradaCompra> itens) {
+        if (movimentacaoEstoqueRepositoryPort.existePorOrigemOperacaoIdETipo(compraId, TipoMovimentacaoEstoque.ENTRADA)) {
+            return;
+        }
+
+        for (ItemEntradaCompra item : itens) {
+            SaldoEstoque saldo = buscarOuCriarSaldo(item.produtoId());
+            saldo.registrarEntrada(item.quantidade());
+            saldoEstoqueRepositoryPort.salvar(saldo);
+
+            movimentacaoEstoqueRepositoryPort.salvar(MovimentacaoEstoque.registrar(
+                    item.produtoId(), TipoMovimentacaoEstoque.ENTRADA, item.quantidade(), MOTIVO_ENTRADA_COMPRA,
+                    "Custo unitário: " + item.custoUnitario().toPlainString(), OrigemMovimentacaoEstoque.COMPRA,
+                    compraId, null));
+        }
     }
 
     @Override

@@ -205,6 +205,45 @@ class EstoqueServiceTest {
         assertThat(estoqueService.listar(filtro)).isEmpty();
     }
 
+    @Test
+    void entradasDeCompraRegistramUmaEntradaPorItemComOrigemCompra() {
+        UUID compraId = UUID.randomUUID();
+        UUID outroProduto = UUID.randomUUID();
+        when(movimentacaoEstoqueRepositoryPort.existePorOrigemOperacaoIdETipo(compraId, TipoMovimentacaoEstoque.ENTRADA))
+                .thenReturn(false);
+        when(saldoEstoqueRepositoryPort.buscarPorProdutoId(any())).thenReturn(Optional.empty());
+
+        estoqueService.registrarEntradasDeCompra(compraId, List.of(
+                new com.bella.backend.domain.estoque.port.in.ItemEntradaCompra(PRODUTO_ID, new BigDecimal("10"),
+                        new BigDecimal("5.00")),
+                new com.bella.backend.domain.estoque.port.in.ItemEntradaCompra(outroProduto, new BigDecimal("4"),
+                        new BigDecimal("2.50"))));
+
+        org.mockito.ArgumentCaptor<MovimentacaoEstoque> captor =
+                org.mockito.ArgumentCaptor.forClass(MovimentacaoEstoque.class);
+        verify(movimentacaoEstoqueRepositoryPort, org.mockito.Mockito.times(2)).salvar(captor.capture());
+        assertThat(captor.getAllValues()).allSatisfy(movimentacao -> {
+            assertThat(movimentacao.getTipo()).isEqualTo(TipoMovimentacaoEstoque.ENTRADA);
+            assertThat(movimentacao.getOrigem()).isEqualTo(OrigemMovimentacaoEstoque.COMPRA);
+            assertThat(movimentacao.getOrigemOperacaoId()).isEqualTo(compraId);
+        });
+        verify(saldoEstoqueRepositoryPort, org.mockito.Mockito.times(2)).salvar(any());
+    }
+
+    @Test
+    void entradasDeCompraNaoDuplicamQuandoJaRegistradas() {
+        UUID compraId = UUID.randomUUID();
+        when(movimentacaoEstoqueRepositoryPort.existePorOrigemOperacaoIdETipo(compraId, TipoMovimentacaoEstoque.ENTRADA))
+                .thenReturn(true);
+
+        estoqueService.registrarEntradasDeCompra(compraId, List.of(
+                new com.bella.backend.domain.estoque.port.in.ItemEntradaCompra(PRODUTO_ID, new BigDecimal("10"),
+                        new BigDecimal("5.00"))));
+
+        verify(saldoEstoqueRepositoryPort, never()).salvar(any());
+        verify(movimentacaoEstoqueRepositoryPort, never()).salvar(any());
+    }
+
     private SaldoEstoque saldoComEntrada(String quantidade) {
         SaldoEstoque saldo = SaldoEstoque.novo(PRODUTO_ID);
         saldo.registrarEntrada(new BigDecimal(quantidade));
