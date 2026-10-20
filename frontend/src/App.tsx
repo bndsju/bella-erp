@@ -13,6 +13,8 @@ import { PedidosListPage } from "@/pages/PedidosListPage";
 import { PedidoFormPage } from "@/pages/PedidoFormPage";
 import { VendasListPage } from "@/pages/VendasListPage";
 import { VendaDetalhePage } from "@/pages/VendaDetalhePage";
+import { EstoquePage } from "@/pages/EstoquePage";
+import { MovimentacoesEstoquePage } from "@/pages/MovimentacoesEstoquePage";
 
 function App() {
   return (
@@ -36,6 +38,8 @@ function App() {
         <Route path="/pedidos/:id/editar" element={<PedidoFormPage />} />
         <Route path="/vendas" element={<VendasListPage />} />
         <Route path="/vendas/:id" element={<VendaDetalhePage />} />
+        <Route path="/estoque" element={<EstoquePage />} />
+        <Route path="/estoque/movimentacoes" element={<MovimentacoesEstoquePage />} />
       </Route>
     </Routes>
   );
