@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/categoriasDespesa-despesa-despesa")
+@RequestMapping("/api/categorias-despesa")
 public class CategoriaDespesaController {
 
     private final CadastrarCategoriaDespesaUseCase cadastrarCategoriaDespesaUseCase;
@@ -50,7 +50,7 @@ public class CategoriaDespesaController {
     @PostMapping
     public ResponseEntity<CategoriaDespesaResponse> cadastrar(@Valid @RequestBody CategoriaDespesaRequest request) {
         CategoriaDespesa categoriaDespesa = cadastrarCategoriaDespesaUseCase.cadastrar(new CadastrarCategoriaDespesaUseCase.Comando(request.nome()));
-        return ResponseEntity.created(URI.create("/api/categoriasDespesa-despesa-despesa/" + categoriaDespesa.getId()))
+        return ResponseEntity.created(URI.create("/api/categorias-despesa/" + categoriaDespesa.getId()))
                 .body(CategoriaDespesaResponse.de(categoriaDespesa));
     }
 
