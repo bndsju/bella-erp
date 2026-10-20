@@ -12,6 +12,7 @@ const navItems = [
   { to: "/compras", label: "Compras" },
   { to: "/pedidos", label: "Pedidos" },
   { to: "/vendas", label: "Vendas" },
+  { to: "/contas-receber", label: "Contas a receber" },
   { to: "/estoque", label: "Estoque" },
 ];
 
