@@ -52,7 +52,7 @@ public class ContaReceberJpaEntity {
     private UUID origemReferenciaId;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
+    @Column(nullable = false, length = 30)
     private StatusContaReceber status;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)

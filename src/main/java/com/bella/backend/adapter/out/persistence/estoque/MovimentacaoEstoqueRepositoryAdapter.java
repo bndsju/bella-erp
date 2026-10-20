@@ -6,11 +6,16 @@ import com.bella.backend.domain.estoque.port.in.ListarMovimentacoesEstoqueUseCas
 import com.bella.backend.domain.estoque.port.out.MovimentacaoEstoqueRepositoryPort;
 import org.springframework.stereotype.Component;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
 @Component
 public class MovimentacaoEstoqueRepositoryAdapter implements MovimentacaoEstoqueRepositoryPort {
+
+    // Limites no lugar de parâmetros nulos: o Postgres não infere o tipo de "? IS NULL" para datas.
+    private static final Instant DATA_MINIMA = Instant.parse("1900-01-01T00:00:00Z");
+    private static final Instant DATA_MAXIMA = Instant.parse("9999-12-31T23:59:59Z");
 
     private final MovimentacaoEstoqueJpaRepository movimentacaoEstoqueJpaRepository;
 
@@ -27,7 +32,9 @@ public class MovimentacaoEstoqueRepositoryAdapter implements MovimentacaoEstoque
     @Override
     public List<MovimentacaoEstoque> listar(FiltroListagem filtro) {
         return movimentacaoEstoqueJpaRepository
-                .buscarPorFiltro(filtro.produtoId(), filtro.tipo(), filtro.dataInicio(), filtro.dataFim()).stream()
+                .buscarPorFiltro(filtro.produtoId(), filtro.tipo(),
+                        filtro.dataInicio() == null ? DATA_MINIMA : filtro.dataInicio(),
+                        filtro.dataFim() == null ? DATA_MAXIMA : filtro.dataFim()).stream()
                 .map(this::paraDominio)
                 .toList();
     }

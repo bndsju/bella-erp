@@ -31,7 +31,7 @@ public class ProdutoRepositoryAdapter implements ProdutoRepositoryPort {
 
     @Override
     public List<Produto> listar(FiltroListagem filtro) {
-        String termo = (filtro.termoBusca() == null || filtro.termoBusca().isBlank()) ? null : filtro.termoBusca();
+        String termo = (filtro.termoBusca() == null || filtro.termoBusca().isBlank()) ? "" : filtro.termoBusca();
         return produtoJpaRepository.buscarPorFiltro(termo, filtro.status(), filtro.categoriaId()).stream()
                 .map(this::paraDominio)
                 .toList();

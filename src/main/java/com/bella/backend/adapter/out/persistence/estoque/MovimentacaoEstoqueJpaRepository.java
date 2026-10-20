@@ -19,8 +19,8 @@ public interface MovimentacaoEstoqueJpaRepository extends JpaRepository<Moviment
             SELECT m FROM MovimentacaoEstoqueJpaEntity m
             WHERE (:produtoId IS NULL OR m.produtoId = :produtoId)
             AND (:tipo IS NULL OR m.tipo = :tipo)
-            AND (:dataInicio IS NULL OR m.dataHora >= :dataInicio)
-            AND (:dataFim IS NULL OR m.dataHora <= :dataFim)
+            AND m.dataHora >= :dataInicio
+            AND m.dataHora <= :dataFim
             ORDER BY m.dataHora DESC
             """)
     List<MovimentacaoEstoqueJpaEntity> buscarPorFiltro(@Param("produtoId") UUID produtoId,
