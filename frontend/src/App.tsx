@@ -9,6 +9,9 @@ import { UnidadesMedidaPage } from "@/pages/UnidadesMedidaPage";
 import { OrcamentosListPage } from "@/pages/OrcamentosListPage";
 import { OrcamentoFormPage } from "@/pages/OrcamentoFormPage";
 import { TransportadorasPage } from "@/pages/TransportadorasPage";
+import { FornecedoresPage } from "@/pages/FornecedoresPage";
+import { ComprasListPage } from "@/pages/ComprasListPage";
+import { CompraFormPage } from "@/pages/CompraFormPage";
 import { PedidosListPage } from "@/pages/PedidosListPage";
 import { PedidoFormPage } from "@/pages/PedidoFormPage";
 import { VendasListPage } from "@/pages/VendasListPage";
@@ -31,6 +34,10 @@ function App() {
         <Route path="/orcamentos/novo" element={<OrcamentoFormPage />} />
         <Route path="/orcamentos/:id/editar" element={<OrcamentoFormPage />} />
         <Route path="/transportadoras" element={<TransportadorasPage />} />
+        <Route path="/fornecedores" element={<FornecedoresPage />} />
+        <Route path="/compras" element={<ComprasListPage />} />
+        <Route path="/compras/novo" element={<CompraFormPage />} />
+        <Route path="/compras/:id" element={<CompraFormPage />} />
         <Route path="/pedidos" element={<PedidosListPage />} />
         <Route path="/pedidos/novo" element={<PedidoFormPage />} />
         <Route path="/pedidos/:id/editar" element={<PedidoFormPage />} />
