@@ -10,6 +10,7 @@ const navItems = [
   { to: "/transportadoras", label: "Transportadoras" },
   { to: "/pedidos", label: "Pedidos" },
   { to: "/vendas", label: "Vendas" },
+  { to: "/estoque", label: "Estoque" },
 ];
 
 export function AppLayout() {
