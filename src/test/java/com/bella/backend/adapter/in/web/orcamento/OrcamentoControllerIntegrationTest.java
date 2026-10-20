@@ -226,7 +226,7 @@ class OrcamentoControllerIntegrationTest extends IntegrationTestBase {
 
     @Test
     void listaComFiltroDeStatus() throws Exception {
-        String clienteId = criarCliente("Cliente Listagem", "998.877.665-00", "listagem@example.com");
+        String clienteId = criarCliente("Cliente Listagem", "390.533.447-05", "listagem@example.com");
         String categoriaId = criarCategoria("Categoria Listagem");
         String unidadeId = criarUnidadeMedida("Unidade Listagem", "un");
         String produtoId = criarProduto("SKU-ORC-006", "Produto Listagem", categoriaId, unidadeId);

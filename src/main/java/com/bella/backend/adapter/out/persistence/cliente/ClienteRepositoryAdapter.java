@@ -49,7 +49,7 @@ public class ClienteRepositoryAdapter implements ClienteRepositoryPort {
 
     @Override
     public List<Cliente> listar(FiltroListagem filtro) {
-        String termo = (filtro.termoBusca() == null || filtro.termoBusca().isBlank()) ? null : filtro.termoBusca();
+        String termo = (filtro.termoBusca() == null || filtro.termoBusca().isBlank()) ? "" : filtro.termoBusca();
         String status = filtro.status() == null ? null : filtro.status().name();
 
         return clienteJpaRepository.buscarIdsPorFiltro(termo, status).stream()

@@ -86,6 +86,16 @@ class VendaControllerIntegrationTest extends IntegrationTestBase {
         return objectMapper.readTree(resposta).get("id").asText();
     }
 
+    private void darEntradaNoEstoque(String produtoId) throws Exception {
+        Map<String, Object> corpo = new LinkedHashMap<>();
+        corpo.put("produtoId", produtoId);
+        corpo.put("quantidade", "100");
+        corpo.put("motivo", "Estoque inicial para o teste");
+        mockMvc.perform(post("/api/estoque/entradas").contentType("application/json")
+                        .content(objectMapper.writeValueAsString(corpo)))
+                .andExpect(status().isCreated());
+    }
+
     private String criarPedidoEntregue(String clienteId, String produtoId) throws Exception {
         Map<String, Object> item = new LinkedHashMap<>();
         item.put("produtoId", produtoId);
@@ -105,6 +115,7 @@ class VendaControllerIntegrationTest extends IntegrationTestBase {
                 .andReturn().getResponse().getContentAsString();
         String pedidoId = objectMapper.readTree(resposta).get("id").asText();
 
+        darEntradaNoEstoque(produtoId);
         mockMvc.perform(patch("/api/pedidos/" + pedidoId + "/confirmar")).andExpect(status().isOk());
         mockMvc.perform(patch("/api/pedidos/" + pedidoId + "/iniciar-separacao")).andExpect(status().isOk());
         mockMvc.perform(patch("/api/pedidos/" + pedidoId + "/marcar-pronto-para-entrega")).andExpect(status().isOk());
@@ -237,7 +248,7 @@ class VendaControllerIntegrationTest extends IntegrationTestBase {
 
     @Test
     void listaHistoricoComFiltroDeStatus() throws Exception {
-        String clienteId = criarCliente("Cliente Historico", "998.877.665-00", "historico@example.com");
+        String clienteId = criarCliente("Cliente Historico", "390.533.447-05", "historico@example.com");
         String categoriaId = criarCategoria("Categoria Historico");
         String unidadeId = criarUnidadeMedida("Unidade Historico", "un");
         String produtoId = criarProduto("SKU-VDA-005", "Produto Historico", categoriaId, unidadeId);

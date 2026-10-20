@@ -22,7 +22,7 @@ public interface ProdutoJpaRepository extends JpaRepository<ProdutoJpaEntity, UU
             SELECT p FROM ProdutoJpaEntity p
             WHERE (:status IS NULL OR p.status = :status)
             AND (:categoriaId IS NULL OR p.categoriaId = :categoriaId)
-            AND (:termo IS NULL
+            AND (:termo = ''
                  OR LOWER(p.nome) LIKE LOWER(CONCAT('%', :termo, '%'))
                  OR LOWER(p.codigoInterno) LIKE LOWER(CONCAT('%', :termo, '%')))
             ORDER BY p.nome

@@ -6,12 +6,17 @@ import com.bella.backend.domain.compra.port.in.ListarComprasUseCase.FiltroListag
 import com.bella.backend.domain.compra.port.out.CompraRepositoryPort;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 @Component
 public class CompraRepositoryAdapter implements CompraRepositoryPort {
+
+    // Limites no lugar de parâmetros nulos: o Postgres não infere o tipo de "? IS NULL" para datas.
+    private static final LocalDate DATA_MINIMA = LocalDate.of(1900, 1, 1);
+    private static final LocalDate DATA_MAXIMA = LocalDate.of(9999, 12, 31);
 
     private final CompraJpaRepository compraJpaRepository;
 
@@ -33,7 +38,9 @@ public class CompraRepositoryAdapter implements CompraRepositoryPort {
     @Override
     public List<Compra> listar(FiltroListagem filtro) {
         return compraJpaRepository
-                .buscarPorFiltro(filtro.fornecedorId(), filtro.status(), filtro.dataInicio(), filtro.dataFim())
+                .buscarPorFiltro(filtro.fornecedorId(), filtro.status(),
+                        filtro.dataInicio() == null ? DATA_MINIMA : filtro.dataInicio(),
+                        filtro.dataFim() == null ? DATA_MAXIMA : filtro.dataFim())
                 .stream()
                 .map(this::paraDominio)
                 .toList();

@@ -15,8 +15,8 @@ public interface CompraJpaRepository extends JpaRepository<CompraJpaEntity, UUID
             SELECT c FROM CompraJpaEntity c
             WHERE (:fornecedorId IS NULL OR c.fornecedorId = :fornecedorId)
             AND (:status IS NULL OR c.status = :status)
-            AND (:dataInicio IS NULL OR c.dataCompra >= :dataInicio)
-            AND (:dataFim IS NULL OR c.dataCompra <= :dataFim)
+            AND c.dataCompra >= :dataInicio
+            AND c.dataCompra <= :dataFim
             ORDER BY c.criadoEm DESC
             """)
     List<CompraJpaEntity> buscarPorFiltro(@Param("fornecedorId") UUID fornecedorId,

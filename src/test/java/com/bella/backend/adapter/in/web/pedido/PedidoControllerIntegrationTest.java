@@ -229,6 +229,16 @@ class PedidoControllerIntegrationTest extends IntegrationTestBase {
                 .andExpect(status().isUnprocessableEntity());
     }
 
+    private void darEntradaNoEstoque(String produtoId) throws Exception {
+        Map<String, Object> corpo = new LinkedHashMap<>();
+        corpo.put("produtoId", produtoId);
+        corpo.put("quantidade", "100");
+        corpo.put("motivo", "Estoque inicial para o teste");
+        mockMvc.perform(post("/api/estoque/entradas").contentType("application/json")
+                        .content(objectMapper.writeValueAsString(corpo)))
+                .andExpect(status().isCreated());
+    }
+
     @Test
     void fluxoCompletoDeStatusAteEntregue() throws Exception {
         String clienteId = criarCliente("Cliente Fluxo", "445.566.778-40", "fluxo@example.com");
@@ -241,6 +251,8 @@ class PedidoControllerIntegrationTest extends IntegrationTestBase {
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
         String id = objectMapper.readTree(resposta).get("id").asText();
+
+        darEntradaNoEstoque(produtoId);
 
         mockMvc.perform(patch("/api/pedidos/" + id + "/confirmar"))
                 .andExpect(status().isOk())
@@ -290,7 +302,7 @@ class PedidoControllerIntegrationTest extends IntegrationTestBase {
 
     @Test
     void listaComFiltroDeStatus() throws Exception {
-        String clienteId = criarCliente("Cliente Listagem Pedido", "998.877.665-00", "listagempedido@example.com");
+        String clienteId = criarCliente("Cliente Listagem Pedido", "390.533.447-05", "listagempedido@example.com");
         String categoriaId = criarCategoria("Categoria Listagem Pedido");
         String unidadeId = criarUnidadeMedida("Unidade Listagem Pedido", "un");
         String produtoId = criarProduto("SKU-PED-006", "Produto Listagem", categoriaId, unidadeId);

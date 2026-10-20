@@ -36,7 +36,7 @@ public class ParcelaContaReceberJpaEntity {
     private LocalDate vencimento;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
+    @Column(nullable = false, length = 30)
     private StatusParcela status;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)

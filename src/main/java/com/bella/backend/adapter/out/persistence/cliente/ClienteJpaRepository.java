@@ -14,7 +14,7 @@ public interface ClienteJpaRepository extends JpaRepository<ClienteJpaEntity, UU
             LEFT JOIN bella.clientes_pf pf ON pf.cliente_id = c.id
             LEFT JOIN bella.clientes_pj pj ON pj.cliente_id = c.id
             WHERE (:status IS NULL OR c.status = :status)
-            AND (:termo IS NULL
+            AND (:termo = ''
                  OR pf.nome_completo ILIKE CONCAT('%', :termo, '%')
                  OR pj.razao_social ILIKE CONCAT('%', :termo, '%'))
             ORDER BY COALESCE(pf.nome_completo, pj.razao_social)
