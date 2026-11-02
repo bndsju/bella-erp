@@ -16,6 +16,8 @@ const navItems = [
   { to: "/contas-receber", label: "Contas a receber" },
   { to: "/contas-pagar", label: "Contas a pagar" },
   { to: "/categorias-despesa", label: "Categorias de despesa" },
+  { to: "/fluxo-caixa", label: "Fluxo de caixa" },
+  { to: "/categorias-fluxo-caixa", label: "Categorias de fluxo de caixa" },
   { to: "/estoque", label: "Estoque" },
 ];
 

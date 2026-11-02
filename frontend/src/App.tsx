@@ -24,6 +24,8 @@ import { ContaPagarFormPage } from "@/pages/ContaPagarFormPage";
 import { ContaPagarDetalhePage } from "@/pages/ContaPagarDetalhePage";
 import { CategoriasDespesaPage } from "@/pages/CategoriasDespesaPage";
 import { DashboardPage } from "@/pages/DashboardPage";
+import { FluxoCaixaPage } from "@/pages/FluxoCaixaPage";
+import { CategoriasFluxoCaixaPage } from "@/pages/CategoriasFluxoCaixaPage";
 import { EstoquePage } from "@/pages/EstoquePage";
 import { MovimentacoesEstoquePage } from "@/pages/MovimentacoesEstoquePage";
 
@@ -62,6 +64,8 @@ function App() {
         <Route path="/contas-pagar/:id/editar" element={<ContaPagarFormPage />} />
         <Route path="/contas-pagar/:id" element={<ContaPagarDetalhePage />} />
         <Route path="/categorias-despesa" element={<CategoriasDespesaPage />} />
+        <Route path="/fluxo-caixa" element={<FluxoCaixaPage />} />
+        <Route path="/categorias-fluxo-caixa" element={<CategoriasFluxoCaixaPage />} />
         <Route path="/estoque" element={<EstoquePage />} />
         <Route path="/estoque/movimentacoes" element={<MovimentacoesEstoquePage />} />
       </Route>
