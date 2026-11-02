@@ -2,6 +2,7 @@ import { Outlet, NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
 const navItems = [
+  { to: "/", label: "Início" },
   { to: "/clientes", label: "Clientes" },
   { to: "/produtos", label: "Produtos" },
   { to: "/categorias", label: "Categorias" },
@@ -33,6 +34,7 @@ export function AppLayout() {
               <NavLink
                 key={item.to}
                 to={item.to}
+                end={item.to === "/"}
                 className={({ isActive }) =>
                   cn(
                     "whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium transition-colors",
