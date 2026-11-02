@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Route, Routes } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { ClientesListPage } from "@/pages/ClientesListPage";
 import { ClienteFormPage } from "@/pages/ClienteFormPage";
@@ -23,6 +23,7 @@ import { ContasPagarListPage } from "@/pages/ContasPagarListPage";
 import { ContaPagarFormPage } from "@/pages/ContaPagarFormPage";
 import { ContaPagarDetalhePage } from "@/pages/ContaPagarDetalhePage";
 import { CategoriasDespesaPage } from "@/pages/CategoriasDespesaPage";
+import { DashboardPage } from "@/pages/DashboardPage";
 import { EstoquePage } from "@/pages/EstoquePage";
 import { MovimentacoesEstoquePage } from "@/pages/MovimentacoesEstoquePage";
 
@@ -30,7 +31,7 @@ function App() {
   return (
     <Routes>
       <Route element={<AppLayout />}>
-        <Route path="/" element={<Navigate to="/clientes" replace />} />
+        <Route path="/" element={<DashboardPage />} />
         <Route path="/clientes" element={<ClientesListPage />} />
         <Route path="/clientes/novo" element={<ClienteFormPage />} />
         <Route path="/clientes/:id/editar" element={<ClienteFormPage />} />
