@@ -12,6 +12,7 @@ import com.bella.backend.domain.fluxocaixa.port.in.CancelarMovimentacaoManualCai
 import com.bella.backend.domain.fluxocaixa.port.in.ComandoLancamentoManualCaixa;
 import com.bella.backend.domain.fluxocaixa.port.in.ComandoMovimentacaoAutomaticaCaixa;
 import com.bella.backend.domain.fluxocaixa.port.in.ConsultarFluxoCaixaUseCase;
+import com.bella.backend.domain.fluxocaixa.port.in.ConsultarMovimentacaoAutomaticaCaixaUseCase;
 import com.bella.backend.domain.fluxocaixa.port.in.EditarMovimentacaoManualCaixaUseCase;
 import com.bella.backend.domain.fluxocaixa.port.in.LancarMovimentacaoManualCaixaUseCase;
 import com.bella.backend.domain.fluxocaixa.port.in.ListarMovimentacoesCaixaUseCase;
@@ -30,6 +31,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -44,7 +46,8 @@ public class FluxoCaixaService implements
         ConsultarFluxoCaixaUseCase,
         RegistrarMovimentacaoAutomaticaCaixaUseCase,
         RealizarMovimentacaoAutomaticaCaixaUseCase,
-        CancelarMovimentacaoAutomaticaCaixaUseCase {
+        CancelarMovimentacaoAutomaticaCaixaUseCase,
+        ConsultarMovimentacaoAutomaticaCaixaUseCase {
 
     private final MovimentacaoCaixaRepositoryPort movimentacaoCaixaRepositoryPort;
     private final BuscarCategoriaFluxoCaixaPorIdUseCase buscarCategoriaFluxoCaixaPorIdUseCase;
@@ -187,6 +190,12 @@ public class FluxoCaixaService implements
         MovimentacaoCaixa movimentacao = buscarPorOrigem(origem, origemReferenciaId);
         movimentacao.cancelarPorOrigem(motivo);
         return movimentacaoCaixaRepositoryPort.salvar(movimentacao);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<MovimentacaoCaixa> consultarPorOrigem(OrigemMovimentacaoCaixa origem, UUID origemReferenciaId) {
+        return movimentacaoCaixaRepositoryPort.buscarPorOrigemEReferencia(origem, origemReferenciaId);
     }
 
     private List<MovimentacaoCaixa> movimentacoesDoPeriodo(LocalDate inicio, LocalDate fim) {

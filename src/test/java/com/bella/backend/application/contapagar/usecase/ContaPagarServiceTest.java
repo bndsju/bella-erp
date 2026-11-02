@@ -52,9 +52,12 @@ class ContaPagarServiceTest {
     private static final UUID FORNECEDOR_ID = UUID.randomUUID();
     private static final UUID CATEGORIA_ID = UUID.randomUUID();
 
+    @Mock
+    private FluxoCaixaDeContaPagar fluxoCaixa;
+
     @BeforeEach
     void setUp() {
-        contaPagarService = new ContaPagarService(contaPagarRepositoryPort, buscarFornecedorPorIdUseCase,
+        contaPagarService = new ContaPagarService(contaPagarRepositoryPort, fluxoCaixa, buscarFornecedorPorIdUseCase,
                 buscarCategoriaDespesaPorIdUseCase);
     }
 

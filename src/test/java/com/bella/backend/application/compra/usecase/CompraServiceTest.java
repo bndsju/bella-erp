@@ -18,6 +18,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import com.bella.backend.domain.contapagar.port.in.CadastrarContaPagarUseCase;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -56,10 +57,13 @@ class CompraServiceTest {
     private static final UUID PRODUTO_A = UUID.randomUUID();
     private static final UUID PRODUTO_B = UUID.randomUUID();
 
+    @Mock
+    private CadastrarContaPagarUseCase cadastrarContaPagarUseCase;
+
     @BeforeEach
     void setUp() {
         compraService = new CompraService(compraRepositoryPort, buscarFornecedorPorIdUseCase,
-                buscarProdutoPorIdUseCase, registrarEntradasDeCompraUseCase);
+                buscarProdutoPorIdUseCase, registrarEntradasDeCompraUseCase, cadastrarContaPagarUseCase);
     }
 
     private Fornecedor fornecedorAtivo() {

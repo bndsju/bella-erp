@@ -1,6 +1,12 @@
 package com.bella.backend.application.compra.usecase;
 
+import com.bella.backend.domain.categoriadespesa.model.CategoriasDespesaDoSistema;
 import com.bella.backend.domain.compra.model.Compra;
+import com.bella.backend.domain.contapagar.model.OrigemContaPagar;
+import com.bella.backend.domain.contapagar.port.in.CadastrarContaPagarUseCase;
+import com.bella.backend.domain.contapagar.port.in.ComandoContaPagar;
+import com.bella.backend.domain.contapagar.port.in.ComandoParcelaContaPagar;
+import com.bella.backend.domain.shared.CondicaoPagamentoParcelas;
 import com.bella.backend.domain.compra.model.CompraItem;
 import com.bella.backend.domain.compra.model.StatusCompra;
 import com.bella.backend.domain.compra.port.in.BuscarCompraPorIdUseCase;
@@ -45,15 +51,18 @@ public class CompraService implements
     private final BuscarFornecedorPorIdUseCase buscarFornecedorPorIdUseCase;
     private final BuscarProdutoPorIdUseCase buscarProdutoPorIdUseCase;
     private final RegistrarEntradasDeCompraUseCase registrarEntradasDeCompraUseCase;
+    private final CadastrarContaPagarUseCase cadastrarContaPagarUseCase;
 
     public CompraService(CompraRepositoryPort compraRepositoryPort,
                           BuscarFornecedorPorIdUseCase buscarFornecedorPorIdUseCase,
                           BuscarProdutoPorIdUseCase buscarProdutoPorIdUseCase,
-                          RegistrarEntradasDeCompraUseCase registrarEntradasDeCompraUseCase) {
+                          RegistrarEntradasDeCompraUseCase registrarEntradasDeCompraUseCase,
+                          CadastrarContaPagarUseCase cadastrarContaPagarUseCase) {
         this.compraRepositoryPort = compraRepositoryPort;
         this.buscarFornecedorPorIdUseCase = buscarFornecedorPorIdUseCase;
         this.buscarProdutoPorIdUseCase = buscarProdutoPorIdUseCase;
         this.registrarEntradasDeCompraUseCase = registrarEntradasDeCompraUseCase;
+        this.cadastrarContaPagarUseCase = cadastrarContaPagarUseCase;
     }
 
     @Override
@@ -131,6 +140,7 @@ public class CompraService implements
                 .map(item -> new ItemEntradaCompra(item.getProdutoId(), item.getQuantidade(), item.getCustoUnitario()))
                 .toList();
         registrarEntradasDeCompraUseCase.registrarEntradasDeCompra(compra.getId(), entradas);
+        gerarContaPagar(compra);
 
         return compraRepositoryPort.salvar(compra);
     }
@@ -140,6 +150,29 @@ public class CompraService implements
         Compra compra = buscarPorId(id);
         compra.cancelar(motivo);
         return compraRepositoryPort.salvar(compra);
+    }
+
+    /** O prazo da condição de pagamento conta a partir do recebimento da mercadoria. */
+    private void gerarContaPagar(Compra compra) {
+        if (compra.getValorTotal().signum() <= 0) {
+            return;
+        }
+        List<ComandoParcelaContaPagar> parcelas = CondicaoPagamentoParcelas
+                .gerar(compra.getCondicaoPagamento(), compra.getValorTotal(), compra.getDataRecebimento())
+                .stream()
+                .map(parcela -> new ComandoParcelaContaPagar(parcela.valor(), parcela.vencimento()))
+                .toList();
+
+        cadastrarContaPagarUseCase.cadastrar(new ComandoContaPagar(
+                "Compra " + compra.getId().toString().substring(0, 8),
+                compra.getFornecedorId(),
+                CategoriasDespesaDoSistema.COMPRA_DE_MERCADORIAS,
+                compra.getValorTotal(),
+                null,
+                parcelas,
+                compra.getObservacoes(),
+                OrigemContaPagar.COMPRA,
+                compra.getId()));
     }
 
     private void validarReferencias(ComandoCompra comando) {
