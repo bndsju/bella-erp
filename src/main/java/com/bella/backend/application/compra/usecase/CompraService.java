@@ -1,5 +1,8 @@
 package com.bella.backend.application.compra.usecase;
 
+import com.bella.backend.application.auditoria.Auditado;
+import com.bella.backend.domain.auditoria.model.ModuloAuditoria;
+import com.bella.backend.domain.auditoria.model.OperacaoAuditoria;
 import com.bella.backend.domain.categoriadespesa.model.CategoriasDespesaDoSistema;
 import com.bella.backend.domain.compra.model.Compra;
 import com.bella.backend.domain.contapagar.model.OrigemContaPagar;
@@ -66,6 +69,7 @@ public class CompraService implements
     }
 
     @Override
+    @Auditado(modulo = ModuloAuditoria.COMPRA, operacao = OperacaoAuditoria.CRIACAO)
     public Compra cadastrar(ComandoCompra comando) {
         validarReferencias(comando);
 
@@ -83,6 +87,7 @@ public class CompraService implements
     }
 
     @Override
+    @Auditado(modulo = ModuloAuditoria.COMPRA, operacao = OperacaoAuditoria.ALTERACAO)
     public Compra editar(UUID id, ComandoCompra comando) {
         Compra compra = buscarPorId(id);
         validarReferencias(comando);
@@ -120,6 +125,7 @@ public class CompraService implements
     }
 
     @Override
+    @Auditado(modulo = ModuloAuditoria.COMPRA, operacao = OperacaoAuditoria.ALTERACAO_STATUS)
     public Compra confirmar(UUID id) {
         Compra compra = buscarPorId(id);
         compra.confirmar();
@@ -132,6 +138,7 @@ public class CompraService implements
      * parcial e nenhuma mudança de status são persistidas.
      */
     @Override
+    @Auditado(modulo = ModuloAuditoria.COMPRA, operacao = OperacaoAuditoria.ALTERACAO_STATUS)
     public Compra receber(UUID id, LocalDate dataRecebimento) {
         Compra compra = buscarPorId(id);
         compra.receber(dataRecebimento);
@@ -146,6 +153,7 @@ public class CompraService implements
     }
 
     @Override
+    @Auditado(modulo = ModuloAuditoria.COMPRA, operacao = OperacaoAuditoria.CANCELAMENTO)
     public Compra cancelar(UUID id, String motivo) {
         Compra compra = buscarPorId(id);
         compra.cancelar(motivo);

@@ -1,5 +1,8 @@
 package com.bella.backend.application.contapagar.usecase;
 
+import com.bella.backend.application.auditoria.Auditado;
+import com.bella.backend.domain.auditoria.model.ModuloAuditoria;
+import com.bella.backend.domain.auditoria.model.OperacaoAuditoria;
 import com.bella.backend.domain.categoriadespesa.model.StatusCategoriaDespesa;
 import com.bella.backend.domain.categoriadespesa.port.in.BuscarCategoriaDespesaPorIdUseCase;
 import com.bella.backend.domain.contapagar.model.ContaPagar;
@@ -59,6 +62,7 @@ public class ContaPagarService implements
     }
 
     @Override
+    @Auditado(modulo = ModuloAuditoria.CONTA_PAGAR, operacao = OperacaoAuditoria.CRIACAO)
     public ContaPagar cadastrar(ComandoContaPagar comando) {
         validarReferencias(comando.fornecedorId(), comando.categoriaDespesaId());
 
@@ -85,6 +89,7 @@ public class ContaPagarService implements
     }
 
     @Override
+    @Auditado(modulo = ModuloAuditoria.CONTA_PAGAR, operacao = OperacaoAuditoria.ALTERACAO)
     public ContaPagar editar(UUID id, ComandoContaPagar comando) {
         ContaPagar conta = buscarPorId(id);
         List<ParcelaContaPagar> parcelasAnteriores = List.copyOf(conta.getParcelas());
@@ -106,6 +111,7 @@ public class ContaPagarService implements
     }
 
     @Override
+    @Auditado(modulo = ModuloAuditoria.CONTA_PAGAR, operacao = OperacaoAuditoria.ALTERACAO)
     public ContaPagar editarDadosBasicos(UUID id, ComandoDadosBasicosContaPagar comando) {
         ContaPagar conta = buscarPorId(id);
         validarReferencias(comando.fornecedorId(), comando.categoriaDespesaId());
@@ -135,6 +141,7 @@ public class ContaPagarService implements
     }
 
     @Override
+    @Auditado(modulo = ModuloAuditoria.CONTA_PAGAR, operacao = OperacaoAuditoria.REGISTRO_PAGAMENTO)
     public ContaPagar registrarPagamento(UUID contaId, ComandoPagamentoContaPagar comando) {
         ContaPagar conta = buscarPorId(contaId);
         int pagamentosAnteriores = conta.getParcelas().stream()
@@ -160,6 +167,7 @@ public class ContaPagarService implements
     }
 
     @Override
+    @Auditado(modulo = ModuloAuditoria.CONTA_PAGAR, operacao = OperacaoAuditoria.CANCELAMENTO)
     public ContaPagar cancelar(UUID id, String motivo) {
         ContaPagar conta = buscarPorId(id);
         conta.cancelar(motivo);

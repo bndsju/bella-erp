@@ -1,5 +1,8 @@
 package com.bella.backend.application.cliente.usecase;
 
+import com.bella.backend.application.auditoria.Auditado;
+import com.bella.backend.domain.auditoria.model.ModuloAuditoria;
+import com.bella.backend.domain.auditoria.model.OperacaoAuditoria;
 import com.bella.backend.domain.cliente.model.Cliente;
 import com.bella.backend.domain.cliente.model.ClientePessoaFisica;
 import com.bella.backend.domain.cliente.model.ClientePessoaJuridica;
@@ -37,6 +40,7 @@ public class ClienteService implements
     }
 
     @Override
+    @Auditado(modulo = ModuloAuditoria.CLIENTE, operacao = OperacaoAuditoria.CRIACAO)
     public Cliente cadastrar(ComandoCliente comando) {
         Cliente cliente = switch (comando) {
             case ComandoClientePessoaFisica pf -> ClientePessoaFisica.novo(
@@ -51,6 +55,7 @@ public class ClienteService implements
     }
 
     @Override
+    @Auditado(modulo = ModuloAuditoria.CLIENTE, operacao = OperacaoAuditoria.ALTERACAO)
     public Cliente editar(UUID id, ComandoCliente comando) {
         Cliente existente = buscarPorId(id);
 
@@ -88,6 +93,7 @@ public class ClienteService implements
     }
 
     @Override
+    @Auditado(modulo = ModuloAuditoria.CLIENTE, operacao = OperacaoAuditoria.ALTERACAO_STATUS)
     public Cliente alterarStatus(UUID id, StatusCliente novoStatus) {
         Cliente cliente = buscarPorId(id);
         if (novoStatus == StatusCliente.ATIVO) {

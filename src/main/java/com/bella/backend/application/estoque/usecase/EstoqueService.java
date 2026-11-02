@@ -1,5 +1,8 @@
 package com.bella.backend.application.estoque.usecase;
 
+import com.bella.backend.application.auditoria.Auditado;
+import com.bella.backend.domain.auditoria.model.ModuloAuditoria;
+import com.bella.backend.domain.auditoria.model.OperacaoAuditoria;
 import com.bella.backend.domain.estoque.model.MovimentacaoEstoque;
 import com.bella.backend.domain.estoque.model.OrigemMovimentacaoEstoque;
 import com.bella.backend.domain.estoque.model.PosicaoEstoqueProduto;
@@ -73,6 +76,7 @@ public class EstoqueService implements
     }
 
     @Override
+    @Auditado(modulo = ModuloAuditoria.ESTOQUE, operacao = OperacaoAuditoria.MOVIMENTACAO_ESTOQUE)
     public MovimentacaoEstoque registrarEntrada(ComandoMovimentacaoManual comando) {
         SaldoEstoque saldo = validarProdutoAtivoEBuscarSaldo(comando.produtoId());
         saldo.registrarEntrada(comando.quantidade());
@@ -81,6 +85,7 @@ public class EstoqueService implements
     }
 
     @Override
+    @Auditado(modulo = ModuloAuditoria.ESTOQUE, operacao = OperacaoAuditoria.MOVIMENTACAO_ESTOQUE)
     public MovimentacaoEstoque registrarSaida(ComandoMovimentacaoManual comando) {
         SaldoEstoque saldo = validarProdutoAtivoEBuscarSaldo(comando.produtoId());
         saldo.registrarSaida(comando.quantidade());
@@ -89,6 +94,7 @@ public class EstoqueService implements
     }
 
     @Override
+    @Auditado(modulo = ModuloAuditoria.ESTOQUE, operacao = OperacaoAuditoria.MOVIMENTACAO_ESTOQUE)
     public MovimentacaoEstoque registrarAjusteEntrada(ComandoMovimentacaoManual comando) {
         SaldoEstoque saldo = validarProdutoAtivoEBuscarSaldo(comando.produtoId());
         saldo.registrarEntrada(comando.quantidade());
@@ -97,6 +103,7 @@ public class EstoqueService implements
     }
 
     @Override
+    @Auditado(modulo = ModuloAuditoria.ESTOQUE, operacao = OperacaoAuditoria.MOVIMENTACAO_ESTOQUE)
     public MovimentacaoEstoque registrarAjusteSaida(ComandoMovimentacaoManual comando) {
         SaldoEstoque saldo = validarProdutoAtivoEBuscarSaldo(comando.produtoId());
         saldo.registrarSaida(comando.quantidade());

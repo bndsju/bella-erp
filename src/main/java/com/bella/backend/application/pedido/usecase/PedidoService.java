@@ -1,5 +1,8 @@
 package com.bella.backend.application.pedido.usecase;
 
+import com.bella.backend.application.auditoria.Auditado;
+import com.bella.backend.domain.auditoria.model.ModuloAuditoria;
+import com.bella.backend.domain.auditoria.model.OperacaoAuditoria;
 import com.bella.backend.domain.cliente.port.in.BuscarClientePorIdUseCase;
 import com.bella.backend.domain.estoque.port.in.ConsumirReservaEstoqueParaPedidoUseCase;
 import com.bella.backend.domain.estoque.port.in.ItemMovimentacaoEstoque;
@@ -75,6 +78,7 @@ public class PedidoService implements
     }
 
     @Override
+    @Auditado(modulo = ModuloAuditoria.PEDIDO, operacao = OperacaoAuditoria.CRIACAO)
     public Pedido cadastrar(ComandoPedido comando) {
         validarReferencias(comando.clienteId(), comando.transportadoraId(), comando.itens());
 
@@ -91,6 +95,7 @@ public class PedidoService implements
     }
 
     @Override
+    @Auditado(modulo = ModuloAuditoria.PEDIDO, operacao = OperacaoAuditoria.CRIACAO)
     public Pedido criarAPartirDeOrcamento(UUID orcamentoId, UUID transportadoraId) {
         Orcamento orcamento = buscarOrcamentoPorIdUseCase.buscarPorId(orcamentoId);
         if (orcamento.getStatus() != StatusOrcamento.APROVADO) {
@@ -117,6 +122,7 @@ public class PedidoService implements
     }
 
     @Override
+    @Auditado(modulo = ModuloAuditoria.PEDIDO, operacao = OperacaoAuditoria.ALTERACAO)
     public Pedido editar(UUID id, ComandoPedido comando) {
         Pedido pedido = buscarPorId(id);
         validarReferencias(comando.clienteId(), comando.transportadoraId(), comando.itens());
@@ -146,6 +152,7 @@ public class PedidoService implements
     }
 
     @Override
+    @Auditado(modulo = ModuloAuditoria.PEDIDO, operacao = OperacaoAuditoria.ALTERACAO_STATUS)
     public Pedido confirmar(UUID id) {
         Pedido pedido = buscarPorId(id);
         pedido.confirmar();
@@ -155,6 +162,7 @@ public class PedidoService implements
     }
 
     @Override
+    @Auditado(modulo = ModuloAuditoria.PEDIDO, operacao = OperacaoAuditoria.ALTERACAO_STATUS)
     public Pedido iniciarSeparacao(UUID id) {
         Pedido pedido = buscarPorId(id);
         pedido.iniciarSeparacao();
@@ -162,6 +170,7 @@ public class PedidoService implements
     }
 
     @Override
+    @Auditado(modulo = ModuloAuditoria.PEDIDO, operacao = OperacaoAuditoria.ALTERACAO_STATUS)
     public Pedido marcarProntoParaEntrega(UUID id) {
         Pedido pedido = buscarPorId(id);
         pedido.marcarProntoParaEntrega();
@@ -169,6 +178,7 @@ public class PedidoService implements
     }
 
     @Override
+    @Auditado(modulo = ModuloAuditoria.PEDIDO, operacao = OperacaoAuditoria.ALTERACAO_STATUS)
     public Pedido entregar(UUID id) {
         Pedido pedido = buscarPorId(id);
         pedido.entregar();
@@ -178,6 +188,7 @@ public class PedidoService implements
     }
 
     @Override
+    @Auditado(modulo = ModuloAuditoria.PEDIDO, operacao = OperacaoAuditoria.CANCELAMENTO)
     public Pedido cancelar(UUID id) {
         Pedido pedido = buscarPorId(id);
         pedido.cancelar();

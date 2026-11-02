@@ -1,5 +1,8 @@
 package com.bella.backend.application.orcamento.usecase;
 
+import com.bella.backend.application.auditoria.Auditado;
+import com.bella.backend.domain.auditoria.model.ModuloAuditoria;
+import com.bella.backend.domain.auditoria.model.OperacaoAuditoria;
 import com.bella.backend.domain.cliente.port.in.BuscarClientePorIdUseCase;
 import com.bella.backend.domain.orcamento.model.Orcamento;
 import com.bella.backend.domain.orcamento.model.OrcamentoItem;
@@ -47,6 +50,7 @@ public class OrcamentoService implements
     }
 
     @Override
+    @Auditado(modulo = ModuloAuditoria.ORCAMENTO, operacao = OperacaoAuditoria.CRIACAO)
     public Orcamento cadastrar(ComandoOrcamento comando) {
         validarReferencias(comando);
 
@@ -63,6 +67,7 @@ public class OrcamentoService implements
     }
 
     @Override
+    @Auditado(modulo = ModuloAuditoria.ORCAMENTO, operacao = OperacaoAuditoria.ALTERACAO)
     public Orcamento editar(UUID id, ComandoOrcamento comando) {
         Orcamento orcamento = buscarEAtualizarExpiracao(id);
         validarReferencias(comando);
@@ -93,6 +98,7 @@ public class OrcamentoService implements
     }
 
     @Override
+    @Auditado(modulo = ModuloAuditoria.ORCAMENTO, operacao = OperacaoAuditoria.ALTERACAO_STATUS)
     public Orcamento enviar(UUID id) {
         Orcamento orcamento = buscarEAtualizarExpiracao(id);
         orcamento.enviar();
@@ -100,6 +106,7 @@ public class OrcamentoService implements
     }
 
     @Override
+    @Auditado(modulo = ModuloAuditoria.ORCAMENTO, operacao = OperacaoAuditoria.ALTERACAO_STATUS)
     public Orcamento aprovar(UUID id) {
         Orcamento orcamento = buscarEAtualizarExpiracao(id);
         orcamento.aprovar();
@@ -107,6 +114,7 @@ public class OrcamentoService implements
     }
 
     @Override
+    @Auditado(modulo = ModuloAuditoria.ORCAMENTO, operacao = OperacaoAuditoria.ALTERACAO_STATUS)
     public Orcamento recusar(UUID id) {
         Orcamento orcamento = buscarEAtualizarExpiracao(id);
         orcamento.recusar();
@@ -114,6 +122,7 @@ public class OrcamentoService implements
     }
 
     @Override
+    @Auditado(modulo = ModuloAuditoria.ORCAMENTO, operacao = OperacaoAuditoria.CANCELAMENTO)
     public Orcamento cancelar(UUID id) {
         Orcamento orcamento = buscarEAtualizarExpiracao(id);
         orcamento.cancelar();
