@@ -19,6 +19,10 @@ import { VendaDetalhePage } from "@/pages/VendaDetalhePage";
 import { ContasReceberListPage } from "@/pages/ContasReceberListPage";
 import { ContaReceberFormPage } from "@/pages/ContaReceberFormPage";
 import { ContaReceberDetalhePage } from "@/pages/ContaReceberDetalhePage";
+import { ContasPagarListPage } from "@/pages/ContasPagarListPage";
+import { ContaPagarFormPage } from "@/pages/ContaPagarFormPage";
+import { ContaPagarDetalhePage } from "@/pages/ContaPagarDetalhePage";
+import { CategoriasDespesaPage } from "@/pages/CategoriasDespesaPage";
 import { EstoquePage } from "@/pages/EstoquePage";
 import { MovimentacoesEstoquePage } from "@/pages/MovimentacoesEstoquePage";
 
@@ -52,6 +56,11 @@ function App() {
         <Route path="/contas-receber/novo" element={<ContaReceberFormPage />} />
         <Route path="/contas-receber/:id/editar" element={<ContaReceberFormPage />} />
         <Route path="/contas-receber/:id" element={<ContaReceberDetalhePage />} />
+        <Route path="/contas-pagar" element={<ContasPagarListPage />} />
+        <Route path="/contas-pagar/novo" element={<ContaPagarFormPage />} />
+        <Route path="/contas-pagar/:id/editar" element={<ContaPagarFormPage />} />
+        <Route path="/contas-pagar/:id" element={<ContaPagarDetalhePage />} />
+        <Route path="/categorias-despesa" element={<CategoriasDespesaPage />} />
         <Route path="/estoque" element={<EstoquePage />} />
         <Route path="/estoque/movimentacoes" element={<MovimentacoesEstoquePage />} />
       </Route>

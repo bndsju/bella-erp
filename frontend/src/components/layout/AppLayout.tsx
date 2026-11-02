@@ -13,6 +13,8 @@ const navItems = [
   { to: "/pedidos", label: "Pedidos" },
   { to: "/vendas", label: "Vendas" },
   { to: "/contas-receber", label: "Contas a receber" },
+  { to: "/contas-pagar", label: "Contas a pagar" },
+  { to: "/categorias-despesa", label: "Categorias de despesa" },
   { to: "/estoque", label: "Estoque" },
 ];
 
