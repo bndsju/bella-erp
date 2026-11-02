@@ -44,6 +44,12 @@ public class ContaReceberRepositoryAdapter implements ContaReceberRepositoryPort
         return contaReceberJpaRepository.existsByOrigemAndOrigemReferenciaId(origem, origemReferenciaId);
     }
 
+    @Override
+    public Optional<ContaReceber> buscarPorOrigemEReferencia(OrigemContaReceber origem, UUID origemReferenciaId) {
+        return contaReceberJpaRepository.findByOrigemAndOrigemReferenciaId(origem, origemReferenciaId)
+                .map(this::paraDominio);
+    }
+
     private ContaReceberJpaEntity paraEntidade(ContaReceber conta) {
         List<ParcelaContaReceberJpaEntity> parcelas = conta.getParcelas().stream()
                 .map(parcela -> new ParcelaContaReceberJpaEntity(

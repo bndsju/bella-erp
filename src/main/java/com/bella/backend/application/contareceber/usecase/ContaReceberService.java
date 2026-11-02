@@ -1,6 +1,8 @@
 package com.bella.backend.application.contareceber.usecase;
 
 import com.bella.backend.domain.contareceber.model.ContaReceber;
+import com.bella.backend.domain.contareceber.model.RecebimentoContaReceber;
+import com.bella.backend.domain.contareceber.model.ParcelaContaReceber;
 import com.bella.backend.domain.contareceber.model.DadosParcela;
 import com.bella.backend.domain.contareceber.model.OrigemContaReceber;
 import com.bella.backend.domain.contareceber.model.ParcelaContaReceber;
@@ -8,6 +10,7 @@ import com.bella.backend.domain.contareceber.model.SituacaoContaReceber;
 import com.bella.backend.domain.contareceber.model.StatusContaReceber;
 import com.bella.backend.domain.contareceber.port.in.BuscarContaReceberPorIdUseCase;
 import com.bella.backend.domain.contareceber.port.in.CadastrarContaReceberUseCase;
+import com.bella.backend.domain.contareceber.port.in.CancelarContaReceberPorOrigemUseCase;
 import com.bella.backend.domain.contareceber.port.in.CancelarContaReceberUseCase;
 import com.bella.backend.domain.contareceber.port.in.ComandoContaReceber;
 import com.bella.backend.domain.contareceber.port.in.ComandoDadosBasicosContaReceber;
@@ -37,14 +40,18 @@ public class ContaReceberService implements
         BuscarContaReceberPorIdUseCase,
         ListarContasReceberUseCase,
         RegistrarRecebimentoContaReceberUseCase,
-        CancelarContaReceberUseCase {
+        CancelarContaReceberUseCase,
+        CancelarContaReceberPorOrigemUseCase {
 
     private final ContaReceberRepositoryPort contaReceberRepositoryPort;
+    private final FluxoCaixaDeContaReceber fluxoCaixa;
     private final BuscarClientePorIdUseCase buscarClientePorIdUseCase;
 
     public ContaReceberService(ContaReceberRepositoryPort contaReceberRepositoryPort,
+                              FluxoCaixaDeContaReceber fluxoCaixa,
                               BuscarClientePorIdUseCase buscarClientePorIdUseCase) {
         this.contaReceberRepositoryPort = contaReceberRepositoryPort;
+        this.fluxoCaixa = fluxoCaixa;
         this.buscarClientePorIdUseCase = buscarClientePorIdUseCase;
     }
 
@@ -68,12 +75,15 @@ public class ContaReceberService implements
                 origem,
                 comando.origemReferenciaId());
 
-        return contaReceberRepositoryPort.salvar(conta);
+        ContaReceber salva = contaReceberRepositoryPort.salvar(conta);
+        fluxoCaixa.projetar(salva);
+        return salva;
     }
 
     @Override
     public ContaReceber editar(UUID id, ComandoContaReceber comando) {
         ContaReceber conta = buscarPorId(id);
+        List<ParcelaContaReceber> parcelasAnteriores = List.copyOf(conta.getParcelas());
         validarReferencias(comando.clienteId());
 
         conta.editar(
@@ -84,7 +94,10 @@ public class ContaReceberService implements
                 paraDadosParcelas(comando),
                 comando.observacoes());
 
-        return contaReceberRepositoryPort.salvar(conta);
+        ContaReceber salva = contaReceberRepositoryPort.salvar(conta);
+        fluxoCaixa.cancelarProjecoes(parcelasAnteriores, "Conta editada: parcelas substituídas");
+        fluxoCaixa.projetar(salva);
+        return salva;
     }
 
     @Override
@@ -119,8 +132,12 @@ public class ContaReceberService implements
     @Override
     public ContaReceber registrarRecebimento(UUID contaId, ComandoRecebimentoContaReceber comando) {
         ContaReceber conta = buscarPorId(contaId);
+        int recebimentosAnteriores = conta.getParcelas().stream()
+                .filter(p -> p.getId().equals(comando.parcelaId()))
+                .mapToInt(p -> p.getRecebimentos().size())
+                .findFirst().orElse(0);
 
-        conta.registrarRecebimento(
+        RecebimentoContaReceber recebimento = conta.registrarRecebimento(
                 comando.parcelaId(),
                 comando.valorRecebido(),
                 comando.dataRecebimento() == null ? LocalDate.now() : comando.dataRecebimento(),
@@ -129,14 +146,28 @@ public class ContaReceberService implements
                 comando.desconto(),
                 comando.observacao());
 
-        return contaReceberRepositoryPort.salvar(conta);
+        ContaReceber salva = contaReceberRepositoryPort.salvar(conta);
+        ParcelaContaReceber parcela = salva.getParcelas().stream()
+                .filter(p -> p.getId().equals(comando.parcelaId()))
+                .findFirst().orElseThrow();
+        fluxoCaixa.aposRecebimento(salva, parcela, recebimento, recebimentosAnteriores);
+        return salva;
     }
 
     @Override
     public ContaReceber cancelar(UUID id, String motivo) {
         ContaReceber conta = buscarPorId(id);
         conta.cancelar(motivo);
-        return contaReceberRepositoryPort.salvar(conta);
+        ContaReceber salva = contaReceberRepositoryPort.salvar(conta);
+        fluxoCaixa.cancelarProjecoes(salva.getParcelas(), "Conta cancelada: " + motivo);
+        return salva;
+    }
+
+    @Override
+    public void cancelarPorOrigem(OrigemContaReceber origem, UUID origemReferenciaId, String motivo) {
+        contaReceberRepositoryPort.buscarPorOrigemEReferencia(origem, origemReferenciaId)
+                .filter(conta -> conta.getStatus() != StatusContaReceber.CANCELADA)
+                .ifPresent(conta -> cancelar(conta.getId(), motivo));
     }
 
     private void validarReferencias(UUID clienteId) {

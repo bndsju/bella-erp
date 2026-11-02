@@ -48,9 +48,13 @@ class ContaReceberServiceTest {
 
     private static final UUID CLIENTE_ID = UUID.randomUUID();
 
+    @Mock
+    private FluxoCaixaDeContaReceber fluxoCaixa;
+
     @BeforeEach
     void setUp() {
-        contaReceberService = new ContaReceberService(contaReceberRepositoryPort, buscarClientePorIdUseCase);
+        contaReceberService = new ContaReceberService(contaReceberRepositoryPort, fluxoCaixa,
+                buscarClientePorIdUseCase);
     }
 
     private Cliente clienteAtivo() {

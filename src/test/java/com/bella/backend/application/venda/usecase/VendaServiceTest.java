@@ -14,6 +14,8 @@ import com.bella.backend.domain.venda.port.out.VendaRepositoryPort;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import com.bella.backend.domain.contareceber.port.in.CadastrarContaReceberUseCase;
+import com.bella.backend.domain.contareceber.port.in.CancelarContaReceberPorOrigemUseCase;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -45,9 +47,16 @@ class VendaServiceTest {
     private static final UUID CLIENTE_ID = UUID.randomUUID();
     private static final UUID PRODUTO_ID = UUID.randomUUID();
 
+    @Mock
+    private CadastrarContaReceberUseCase cadastrarContaReceberUseCase;
+
+    @Mock
+    private CancelarContaReceberPorOrigemUseCase cancelarContaReceberPorOrigemUseCase;
+
     @BeforeEach
     void setUp() {
-        vendaService = new VendaService(vendaRepositoryPort, buscarPedidoPorIdUseCase);
+        vendaService = new VendaService(vendaRepositoryPort, buscarPedidoPorIdUseCase,
+                cadastrarContaReceberUseCase, cancelarContaReceberPorOrigemUseCase);
     }
 
     private Pedido pedidoEntregue() {

@@ -13,6 +13,8 @@ public interface ContaReceberJpaRepository extends JpaRepository<ContaReceberJpa
 
     boolean existsByOrigemAndOrigemReferenciaId(OrigemContaReceber origem, UUID origemReferenciaId);
 
+    java.util.Optional<ContaReceberJpaEntity> findByOrigemAndOrigemReferenciaId(OrigemContaReceber origem, UUID origemReferenciaId);
+
     @Query("""
             SELECT c FROM ContaReceberJpaEntity c
             WHERE (:clienteId IS NULL OR c.clienteId = :clienteId)

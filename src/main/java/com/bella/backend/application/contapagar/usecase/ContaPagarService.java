@@ -3,6 +3,8 @@ package com.bella.backend.application.contapagar.usecase;
 import com.bella.backend.domain.categoriadespesa.model.StatusCategoriaDespesa;
 import com.bella.backend.domain.categoriadespesa.port.in.BuscarCategoriaDespesaPorIdUseCase;
 import com.bella.backend.domain.contapagar.model.ContaPagar;
+import com.bella.backend.domain.contapagar.model.PagamentoContaPagar;
+import com.bella.backend.domain.contapagar.model.ParcelaContaPagar;
 import com.bella.backend.domain.contapagar.model.DadosParcela;
 import com.bella.backend.domain.contapagar.model.OrigemContaPagar;
 import com.bella.backend.domain.contapagar.model.ParcelaContaPagar;
@@ -42,13 +44,16 @@ public class ContaPagarService implements
         CancelarContaPagarUseCase {
 
     private final ContaPagarRepositoryPort contaPagarRepositoryPort;
+    private final FluxoCaixaDeContaPagar fluxoCaixa;
     private final BuscarFornecedorPorIdUseCase buscarFornecedorPorIdUseCase;
     private final BuscarCategoriaDespesaPorIdUseCase buscarCategoriaDespesaPorIdUseCase;
 
     public ContaPagarService(ContaPagarRepositoryPort contaPagarRepositoryPort,
+                              FluxoCaixaDeContaPagar fluxoCaixa,
                               BuscarFornecedorPorIdUseCase buscarFornecedorPorIdUseCase,
                               BuscarCategoriaDespesaPorIdUseCase buscarCategoriaDespesaPorIdUseCase) {
         this.contaPagarRepositoryPort = contaPagarRepositoryPort;
+        this.fluxoCaixa = fluxoCaixa;
         this.buscarFornecedorPorIdUseCase = buscarFornecedorPorIdUseCase;
         this.buscarCategoriaDespesaPorIdUseCase = buscarCategoriaDespesaPorIdUseCase;
     }
@@ -74,12 +79,15 @@ public class ContaPagarService implements
                 origem,
                 comando.origemReferenciaId());
 
-        return contaPagarRepositoryPort.salvar(conta);
+        ContaPagar salva = contaPagarRepositoryPort.salvar(conta);
+        fluxoCaixa.projetar(salva);
+        return salva;
     }
 
     @Override
     public ContaPagar editar(UUID id, ComandoContaPagar comando) {
         ContaPagar conta = buscarPorId(id);
+        List<ParcelaContaPagar> parcelasAnteriores = List.copyOf(conta.getParcelas());
         validarReferencias(comando.fornecedorId(), comando.categoriaDespesaId());
 
         conta.editar(
@@ -91,7 +99,10 @@ public class ContaPagarService implements
                 paraDadosParcelas(comando),
                 comando.observacoes());
 
-        return contaPagarRepositoryPort.salvar(conta);
+        ContaPagar salva = contaPagarRepositoryPort.salvar(conta);
+        fluxoCaixa.cancelarProjecoes(parcelasAnteriores, "Conta editada: parcelas substituídas");
+        fluxoCaixa.projetar(salva);
+        return salva;
     }
 
     @Override
@@ -126,8 +137,12 @@ public class ContaPagarService implements
     @Override
     public ContaPagar registrarPagamento(UUID contaId, ComandoPagamentoContaPagar comando) {
         ContaPagar conta = buscarPorId(contaId);
+        int pagamentosAnteriores = conta.getParcelas().stream()
+                .filter(p -> p.getId().equals(comando.parcelaId()))
+                .mapToInt(p -> p.getPagamentos().size())
+                .findFirst().orElse(0);
 
-        conta.registrarPagamento(
+        PagamentoContaPagar pagamento = conta.registrarPagamento(
                 comando.parcelaId(),
                 comando.valorPago(),
                 comando.dataPagamento() == null ? LocalDate.now() : comando.dataPagamento(),
@@ -136,14 +151,21 @@ public class ContaPagarService implements
                 comando.desconto(),
                 comando.observacao());
 
-        return contaPagarRepositoryPort.salvar(conta);
+        ContaPagar salva = contaPagarRepositoryPort.salvar(conta);
+        ParcelaContaPagar parcela = salva.getParcelas().stream()
+                .filter(p -> p.getId().equals(comando.parcelaId()))
+                .findFirst().orElseThrow();
+        fluxoCaixa.aposPagamento(salva, parcela, pagamento, pagamentosAnteriores);
+        return salva;
     }
 
     @Override
     public ContaPagar cancelar(UUID id, String motivo) {
         ContaPagar conta = buscarPorId(id);
         conta.cancelar(motivo);
-        return contaPagarRepositoryPort.salvar(conta);
+        ContaPagar salva = contaPagarRepositoryPort.salvar(conta);
+        fluxoCaixa.cancelarProjecoes(salva.getParcelas(), "Conta cancelada: " + motivo);
+        return salva;
     }
 
     private void validarReferencias(UUID fornecedorId, UUID categoriaDespesaId) {

@@ -18,4 +18,6 @@ public interface ContaReceberRepositoryPort {
     List<ContaReceber> listar(UUID clienteId, StatusContaReceber status);
 
     boolean existePorOrigemEReferencia(OrigemContaReceber origem, UUID origemReferenciaId);
+
+    Optional<ContaReceber> buscarPorOrigemEReferencia(OrigemContaReceber origem, UUID origemReferenciaId);
 }

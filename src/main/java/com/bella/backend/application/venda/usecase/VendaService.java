@@ -1,6 +1,12 @@
 package com.bella.backend.application.venda.usecase;
 
+import com.bella.backend.domain.contareceber.model.OrigemContaReceber;
+import com.bella.backend.domain.contareceber.port.in.CadastrarContaReceberUseCase;
+import com.bella.backend.domain.contareceber.port.in.CancelarContaReceberPorOrigemUseCase;
+import com.bella.backend.domain.contareceber.port.in.ComandoContaReceber;
+import com.bella.backend.domain.contareceber.port.in.ComandoParcelaContaReceber;
 import com.bella.backend.domain.pedido.model.Pedido;
+import com.bella.backend.domain.shared.CondicaoPagamentoParcelas;
 import com.bella.backend.domain.pedido.model.StatusPedido;
 import com.bella.backend.domain.pedido.port.in.BuscarPedidoPorIdUseCase;
 import com.bella.backend.domain.shared.EntidadeNaoEncontradaException;
@@ -16,6 +22,7 @@ import com.bella.backend.domain.venda.port.out.VendaRepositoryPort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -29,10 +36,16 @@ public class VendaService implements
 
     private final VendaRepositoryPort vendaRepositoryPort;
     private final BuscarPedidoPorIdUseCase buscarPedidoPorIdUseCase;
+    private final CadastrarContaReceberUseCase cadastrarContaReceberUseCase;
+    private final CancelarContaReceberPorOrigemUseCase cancelarContaReceberPorOrigemUseCase;
 
-    public VendaService(VendaRepositoryPort vendaRepositoryPort, BuscarPedidoPorIdUseCase buscarPedidoPorIdUseCase) {
+    public VendaService(VendaRepositoryPort vendaRepositoryPort, BuscarPedidoPorIdUseCase buscarPedidoPorIdUseCase,
+                        CadastrarContaReceberUseCase cadastrarContaReceberUseCase,
+                        CancelarContaReceberPorOrigemUseCase cancelarContaReceberPorOrigemUseCase) {
         this.vendaRepositoryPort = vendaRepositoryPort;
         this.buscarPedidoPorIdUseCase = buscarPedidoPorIdUseCase;
+        this.cadastrarContaReceberUseCase = cadastrarContaReceberUseCase;
+        this.cancelarContaReceberPorOrigemUseCase = cancelarContaReceberPorOrigemUseCase;
     }
 
     @Override
@@ -59,7 +72,9 @@ public class VendaService implements
                 formaPagamento,
                 pedido.getCondicaoPagamento());
 
-        return vendaRepositoryPort.salvar(venda);
+        Venda salva = vendaRepositoryPort.salvar(venda);
+        gerarContaReceber(salva);
+        return salva;
     }
 
     @Override
@@ -79,6 +94,30 @@ public class VendaService implements
     public Venda cancelar(UUID id) {
         Venda venda = buscarPorId(id);
         venda.cancelar();
+        cancelarContaReceberPorOrigemUseCase.cancelarPorOrigem(OrigemContaReceber.VENDA, venda.getId(),
+                "Venda cancelada");
         return vendaRepositoryPort.salvar(venda);
+    }
+
+    /** O prazo da condição de pagamento conta a partir da conclusão da venda. */
+    private void gerarContaReceber(Venda venda) {
+        if (venda.getValorTotal().signum() <= 0) {
+            return;
+        }
+        List<ComandoParcelaContaReceber> parcelas = CondicaoPagamentoParcelas
+                .gerar(venda.getCondicaoPagamento(), venda.getValorTotal(), LocalDate.now())
+                .stream()
+                .map(parcela -> new ComandoParcelaContaReceber(parcela.valor(), parcela.vencimento()))
+                .toList();
+
+        cadastrarContaReceberUseCase.cadastrar(new ComandoContaReceber(
+                "Venda " + venda.getId().toString().substring(0, 8),
+                venda.getClienteId(),
+                venda.getValorTotal(),
+                null,
+                parcelas,
+                null,
+                OrigemContaReceber.VENDA,
+                venda.getId()));
     }
 }
