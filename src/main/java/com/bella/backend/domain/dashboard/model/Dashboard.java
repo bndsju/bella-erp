@@ -1,5 +1,7 @@
 package com.bella.backend.domain.dashboard.model;
 
+import com.bella.backend.domain.relatorio.model.Granularidade;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
@@ -19,11 +21,6 @@ public record Dashboard(
         List<ProdutoMaisVendido> produtosMaisVendidos,
         List<ClienteDestaque> principaisClientes
 ) {
-
-    public enum Granularidade {
-        DIA,
-        MES
-    }
 
     public record Periodo(LocalDate inicio, LocalDate fim, Granularidade granularidade) {
     }
