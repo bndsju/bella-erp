@@ -1,5 +1,8 @@
 package com.bella.backend.application.produto.usecase;
 
+import com.bella.backend.application.auditoria.Auditado;
+import com.bella.backend.domain.auditoria.model.ModuloAuditoria;
+import com.bella.backend.domain.auditoria.model.OperacaoAuditoria;
 import com.bella.backend.domain.categoria.port.in.BuscarCategoriaPorIdUseCase;
 import com.bella.backend.domain.produto.model.Produto;
 import com.bella.backend.domain.produto.model.StatusProduto;
@@ -40,6 +43,7 @@ public class ProdutoService implements
     }
 
     @Override
+    @Auditado(modulo = ModuloAuditoria.PRODUTO, operacao = OperacaoAuditoria.CRIACAO)
     public Produto cadastrar(CadastrarProdutoUseCase.Comando comando) {
         validarReferencias(comando.categoriaId(), comando.unidadeMedidaId());
         validarCodigoInternoUnico(comando.codigoInterno(), null);
@@ -53,6 +57,7 @@ public class ProdutoService implements
     }
 
     @Override
+    @Auditado(modulo = ModuloAuditoria.PRODUTO, operacao = OperacaoAuditoria.ALTERACAO)
     public Produto editar(UUID id, EditarProdutoUseCase.Comando comando) {
         Produto produto = buscarPorId(id);
 
@@ -79,6 +84,7 @@ public class ProdutoService implements
     }
 
     @Override
+    @Auditado(modulo = ModuloAuditoria.PRODUTO, operacao = OperacaoAuditoria.ALTERACAO_STATUS)
     public Produto alterarStatus(UUID id, StatusProduto novoStatus) {
         Produto produto = buscarPorId(id);
         if (novoStatus == StatusProduto.ATIVO) {

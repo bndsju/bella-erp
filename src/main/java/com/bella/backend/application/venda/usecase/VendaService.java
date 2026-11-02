@@ -1,5 +1,8 @@
 package com.bella.backend.application.venda.usecase;
 
+import com.bella.backend.application.auditoria.Auditado;
+import com.bella.backend.domain.auditoria.model.ModuloAuditoria;
+import com.bella.backend.domain.auditoria.model.OperacaoAuditoria;
 import com.bella.backend.domain.contareceber.model.OrigemContaReceber;
 import com.bella.backend.domain.contareceber.port.in.CadastrarContaReceberUseCase;
 import com.bella.backend.domain.contareceber.port.in.CancelarContaReceberPorOrigemUseCase;
@@ -49,6 +52,7 @@ public class VendaService implements
     }
 
     @Override
+    @Auditado(modulo = ModuloAuditoria.VENDA, operacao = OperacaoAuditoria.CRIACAO)
     public Venda concluir(UUID pedidoId, FormaPagamento formaPagamento) {
         Pedido pedido = buscarPedidoPorIdUseCase.buscarPorId(pedidoId);
 
@@ -91,6 +95,7 @@ public class VendaService implements
     }
 
     @Override
+    @Auditado(modulo = ModuloAuditoria.VENDA, operacao = OperacaoAuditoria.CANCELAMENTO)
     public Venda cancelar(UUID id) {
         Venda venda = buscarPorId(id);
         venda.cancelar();

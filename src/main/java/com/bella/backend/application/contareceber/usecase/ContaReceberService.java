@@ -1,5 +1,8 @@
 package com.bella.backend.application.contareceber.usecase;
 
+import com.bella.backend.application.auditoria.Auditado;
+import com.bella.backend.domain.auditoria.model.ModuloAuditoria;
+import com.bella.backend.domain.auditoria.model.OperacaoAuditoria;
 import com.bella.backend.domain.contareceber.model.ContaReceber;
 import com.bella.backend.domain.contareceber.model.RecebimentoContaReceber;
 import com.bella.backend.domain.contareceber.model.ParcelaContaReceber;
@@ -56,6 +59,7 @@ public class ContaReceberService implements
     }
 
     @Override
+    @Auditado(modulo = ModuloAuditoria.CONTA_RECEBER, operacao = OperacaoAuditoria.CRIACAO)
     public ContaReceber cadastrar(ComandoContaReceber comando) {
         validarReferencias(comando.clienteId());
 
@@ -81,6 +85,7 @@ public class ContaReceberService implements
     }
 
     @Override
+    @Auditado(modulo = ModuloAuditoria.CONTA_RECEBER, operacao = OperacaoAuditoria.ALTERACAO)
     public ContaReceber editar(UUID id, ComandoContaReceber comando) {
         ContaReceber conta = buscarPorId(id);
         List<ParcelaContaReceber> parcelasAnteriores = List.copyOf(conta.getParcelas());
@@ -101,6 +106,7 @@ public class ContaReceberService implements
     }
 
     @Override
+    @Auditado(modulo = ModuloAuditoria.CONTA_RECEBER, operacao = OperacaoAuditoria.ALTERACAO)
     public ContaReceber editarDadosBasicos(UUID id, ComandoDadosBasicosContaReceber comando) {
         ContaReceber conta = buscarPorId(id);
         validarReferencias(comando.clienteId());
@@ -130,6 +136,7 @@ public class ContaReceberService implements
     }
 
     @Override
+    @Auditado(modulo = ModuloAuditoria.CONTA_RECEBER, operacao = OperacaoAuditoria.REGISTRO_PAGAMENTO)
     public ContaReceber registrarRecebimento(UUID contaId, ComandoRecebimentoContaReceber comando) {
         ContaReceber conta = buscarPorId(contaId);
         int recebimentosAnteriores = conta.getParcelas().stream()
@@ -155,6 +162,7 @@ public class ContaReceberService implements
     }
 
     @Override
+    @Auditado(modulo = ModuloAuditoria.CONTA_RECEBER, operacao = OperacaoAuditoria.CANCELAMENTO)
     public ContaReceber cancelar(UUID id, String motivo) {
         ContaReceber conta = buscarPorId(id);
         conta.cancelar(motivo);
