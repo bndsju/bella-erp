@@ -26,6 +26,9 @@ class IntegracaoEntreModulosIntegrationTest extends IntegrationTestBase {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Autowired
+    private org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
+
     private JsonNode enviar(org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder requisicao,
                             Object corpo, int statusEsperado) throws Exception {
         if (corpo != null) {
@@ -202,14 +205,18 @@ class IntegracaoEntreModulosIntegrationTest extends IntegrationTestBase {
 
     @Test
     void editarValorEParcelasSubstituiAsProjecoes() throws Exception {
-        String compraId = criarCompraRecebida("30 dias", "D");
-        JsonNode conta = contaPagarDaCompra(compraId);
+        String categoria = criarId("/api/categorias-despesa", Map.of("nome", "Categoria edicao D"));
+        Map<String, Object> manual = new LinkedHashMap<>();
+        manual.put("descricao", "Conta manual editavel");
+        manual.put("categoriaDespesaId", categoria);
+        manual.put("valorTotal", "100.00");
+        manual.put("vencimento", LocalDate.now().plusDays(30).toString());
+        JsonNode conta = enviar(post("/api/contas-pagar"), manual, 201);
         String parcelaAntiga = conta.get("parcelas").get(0).get("id").asText();
 
         Map<String, Object> edicao = new LinkedHashMap<>();
         edicao.put("descricao", conta.get("descricao").asText());
-        edicao.put("fornecedorId", conta.get("fornecedorId").asText());
-        edicao.put("categoriaDespesaId", conta.get("categoriaDespesaId").asText());
+        edicao.put("categoriaDespesaId", categoria);
         edicao.put("valorTotal", "100.00");
         edicao.put("parcelas", List.of(
                 Map.of("valor", "70.00", "vencimento", LocalDate.now().plusDays(10).toString()),
@@ -239,7 +246,8 @@ class IntegracaoEntreModulosIntegrationTest extends IntegrationTestBase {
         cliente.put("tipoPessoa", "PF");
         cliente.put("nomeCompleto", "Cliente " + sufixo);
         cliente.put("dataNascimento", "1990-05-10");
-        cliente.put("cpf", Map.of("E", "111.444.777-35", "F", "390.533.447-05", "G", "529.982.247-25").get(sufixo));
+        cliente.put("cpf", Map.of("E", "111.444.777-35", "F", "390.533.447-05", "G", "529.982.247-25",
+                "H", "123.456.780-62", "I", "234.567.891-73").get(sufixo));
         cliente.put("celular", "11999998888");
         cliente.put("email", "cliente-" + sufixo.toLowerCase() + "@example.com");
         cliente.put("endereco", endereco);
@@ -344,5 +352,267 @@ class IntegracaoEntreModulosIntegrationTest extends IntegrationTestBase {
         mockMvc.perform(get("/api/vendas/" + vendaId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("CONCLUIDA"));
+    }
+
+    // ---- Ajustes e validações dos fluxos financeiros integrados ----
+
+    private JsonNode criarContaPagarManual(String descricao, String valor) throws Exception {
+        String categoria = criarId("/api/categorias-despesa", Map.of("nome", "Cat " + descricao));
+        Map<String, Object> corpo = new LinkedHashMap<>();
+        corpo.put("descricao", descricao);
+        corpo.put("categoriaDespesaId", categoria);
+        corpo.put("valorTotal", valor);
+        corpo.put("vencimento", LocalDate.now().plusDays(15).toString());
+        return enviar(post("/api/contas-pagar"), corpo, 201);
+    }
+
+    private void pagar(JsonNode conta, String valorPago, String desconto) throws Exception {
+        Map<String, Object> pagamento = new LinkedHashMap<>();
+        pagamento.put("parcelaId", conta.get("parcelas").get(0).get("id").asText());
+        pagamento.put("valorPago", valorPago);
+        if (desconto != null) {
+            pagamento.put("desconto", desconto);
+        }
+        enviar(post("/api/contas-pagar/" + conta.get("id").asText() + "/pagamentos"), pagamento, 201);
+    }
+
+    private List<JsonNode> movimentacoesDaConta(String origem, String prefixoDescricao) throws Exception {
+        List<JsonNode> doConta = new java.util.ArrayList<>();
+        for (JsonNode movimentacao : movimentacoes(origem)) {
+            if (movimentacao.get("descricao").asText().startsWith(prefixoDescricao)) {
+                doConta.add(movimentacao);
+            }
+        }
+        return doConta;
+    }
+
+    private java.math.BigDecimal somar(List<JsonNode> movimentacoes, String situacao, boolean incluirCanceladas) {
+        java.math.BigDecimal total = java.math.BigDecimal.ZERO;
+        for (JsonNode movimentacao : movimentacoes) {
+            boolean cancelada = movimentacao.get("cancelada").asBoolean();
+            if (movimentacao.get("situacao").asText().equals(situacao) && (incluirCanceladas || !cancelada)) {
+                total = total.add(movimentacao.get("valor").decimalValue());
+            }
+        }
+        return total;
+    }
+
+    /** O caixa deve refletir a conta: previsto vigente = saldo pendente e realizado = total desembolsado. */
+    private void conferirCaixaDaConta(String contaId, String origem, String prefixo) throws Exception {
+        boolean pagar = origem.equals("CONTA_PAGAR");
+        JsonNode conta = enviar(get((pagar ? "/api/contas-pagar/" : "/api/contas-receber/") + contaId),
+                null, 200);
+        java.math.BigDecimal liquidado = java.math.BigDecimal.ZERO;
+        for (JsonNode parcela : conta.get("parcelas")) {
+            for (JsonNode lancamento : parcela.get(pagar ? "pagamentos" : "recebimentos")) {
+                liquidado = liquidado.add(lancamento.get(pagar ? "valorDesembolsado" : "valorTotalRecebido")
+                        .decimalValue());
+            }
+        }
+        List<JsonNode> doConta = movimentacoesDaConta(origem, prefixo);
+
+        org.assertj.core.api.Assertions.assertThat(somar(doConta, "PREVISTO", false))
+                .isEqualByComparingTo(conta.get("saldoPendente").decimalValue());
+        org.assertj.core.api.Assertions.assertThat(somar(doConta, "REALIZADO", false))
+                .isEqualByComparingTo(liquidado);
+    }
+
+    @Test
+    void descontoQuitaAParcelaSemEntrarNoCaixa() throws Exception {
+        JsonNode conta = criarContaPagarManual("Conta com desconto", "100.00");
+
+        pagar(conta, "90.00", "10.00");
+
+        JsonNode atualizada = enviar(get("/api/contas-pagar/" + conta.get("id").asText()), null, 200);
+        org.assertj.core.api.Assertions.assertThat(atualizada.get("status").asText()).isEqualTo("PAGA");
+        List<JsonNode> doConta = movimentacoesDaConta("CONTA_PAGAR", "Conta a pagar: Conta com desconto (");
+        org.assertj.core.api.Assertions.assertThat(somar(doConta, "REALIZADO", false))
+                .isEqualByComparingTo("90.00");
+        org.assertj.core.api.Assertions.assertThat(somar(doConta, "PREVISTO", false)).isEqualByComparingTo("0");
+        conferirCaixaDaConta(conta.get("id").asText(), "CONTA_PAGAR", "Conta a pagar: Conta com desconto (");
+    }
+
+    @Test
+    void parcelaQuitadaEmDoisPagamentosNaoDeixaPrevisaoSobrando() throws Exception {
+        JsonNode conta = criarContaPagarManual("Conta em duas vezes", "100.00");
+        String prefixo = "Conta a pagar: Conta em duas vezes (";
+
+        pagar(conta, "30.00", null);
+        conferirCaixaDaConta(conta.get("id").asText(), "CONTA_PAGAR", prefixo);
+        pagar(conta, "70.00", null);
+
+        JsonNode atualizada = enviar(get("/api/contas-pagar/" + conta.get("id").asText()), null, 200);
+        org.assertj.core.api.Assertions.assertThat(atualizada.get("status").asText()).isEqualTo("PAGA");
+        List<JsonNode> doConta = movimentacoesDaConta("CONTA_PAGAR", prefixo);
+        org.assertj.core.api.Assertions.assertThat(somar(doConta, "PREVISTO", false)).isEqualByComparingTo("0");
+        org.assertj.core.api.Assertions.assertThat(somar(doConta, "REALIZADO", false))
+                .isEqualByComparingTo("100.00");
+        conferirCaixaDaConta(conta.get("id").asText(), "CONTA_PAGAR", prefixo);
+    }
+
+    @Test
+    void contaAnteriorAIntegracaoSemPrevisaoAceitaPagamento() throws Exception {
+        JsonNode conta = criarContaPagarManual("Conta antiga sem previsao", "100.00");
+        String parcelaId = conta.get("parcelas").get(0).get("id").asText();
+        jdbcTemplate.update("DELETE FROM bella.movimentacoes_caixa WHERE origem_referencia_id = ?::uuid",
+                parcelaId);
+
+        pagar(conta, "40.00", null);
+
+        String prefixo = "Conta a pagar: Conta antiga sem previsao (";
+        List<JsonNode> doConta = movimentacoesDaConta("CONTA_PAGAR", prefixo);
+        org.assertj.core.api.Assertions.assertThat(somar(doConta, "REALIZADO", false)).isEqualByComparingTo("40.00");
+        org.assertj.core.api.Assertions.assertThat(somar(doConta, "PREVISTO", false)).isEqualByComparingTo("60.00");
+        conferirCaixaDaConta(conta.get("id").asText(), "CONTA_PAGAR", prefixo);
+    }
+
+    @Test
+    void recebimentoComJurosEMultaConferemComOCaixa() throws Exception {
+        Map<String, Object> corpo = new LinkedHashMap<>();
+        corpo.put("descricao", "Receita avulsa conferida");
+        corpo.put("valorTotal", "200.00");
+        corpo.put("parcelas", List.of(
+                Map.of("valor", "100.00", "vencimento", LocalDate.now().plusDays(5).toString()),
+                Map.of("valor", "100.00", "vencimento", LocalDate.now().plusDays(35).toString())));
+        JsonNode conta = enviar(post("/api/contas-receber"), corpo, 201);
+        String contaId = conta.get("id").asText();
+
+        Map<String, Object> recebimento = new LinkedHashMap<>();
+        recebimento.put("parcelaId", conta.get("parcelas").get(0).get("id").asText());
+        recebimento.put("valorRecebido", "60.00");
+        recebimento.put("juros", "3.00");
+        recebimento.put("multa", "2.00");
+        enviar(post("/api/contas-receber/" + contaId + "/recebimentos"), recebimento, 201);
+
+        conferirCaixaDaConta(contaId, "CONTA_RECEBER", "Conta a receber: Receita avulsa conferida (");
+        List<JsonNode> doConta = movimentacoesDaConta("CONTA_RECEBER", "Conta a receber: Receita avulsa conferida (");
+        org.assertj.core.api.Assertions.assertThat(somar(doConta, "REALIZADO", false))
+                .isEqualByComparingTo("65.00");
+        org.assertj.core.api.Assertions.assertThat(somar(doConta, "PREVISTO", false)).isEqualByComparingTo("140.00");
+    }
+
+    @Test
+    void cancelarVendaComContaJaCanceladaManualmenteFunciona() throws Exception {
+        String vendaId = criarVendaConcluida("À vista", "H");
+        JsonNode conta = contaReceberDaVenda(vendaId);
+        enviar(patch("/api/contas-receber/" + conta.get("id").asText() + "/cancelar"),
+                Map.of("motivo", "Cancelada manualmente"), 200);
+
+        JsonNode venda = enviar(patch("/api/vendas/" + vendaId + "/cancelar"), null, 200);
+
+        org.assertj.core.api.Assertions.assertThat(venda.get("status").asText()).isEqualTo("CANCELADA");
+        org.assertj.core.api.Assertions.assertThat(
+                enviar(get("/api/contas-receber/" + conta.get("id").asText()), null, 200).get("status").asText())
+                .isEqualTo("CANCELADA");
+    }
+
+    @Test
+    void contasGeradasPorCompraEVendaNaoTemValorNemParcelasAlterados() throws Exception {
+        JsonNode contaDaCompra = contaPagarDaCompra(criarCompraRecebida("30 dias", "J"));
+        Map<String, Object> edicaoPagar = new LinkedHashMap<>();
+        edicaoPagar.put("descricao", "Nova descricao");
+        edicaoPagar.put("categoriaDespesaId", contaDaCompra.get("categoriaDespesaId").asText());
+        edicaoPagar.put("valorTotal", "999.00");
+        edicaoPagar.put("vencimento", LocalDate.now().plusDays(10).toString());
+        enviar(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+                .put("/api/contas-pagar/" + contaDaCompra.get("id").asText()), edicaoPagar, 422);
+
+        Map<String, Object> dadosBasicos = new LinkedHashMap<>();
+        dadosBasicos.put("descricao", "Descricao corrigida");
+        dadosBasicos.put("fornecedorId", contaDaCompra.get("fornecedorId").asText());
+        dadosBasicos.put("categoriaDespesaId", contaDaCompra.get("categoriaDespesaId").asText());
+        JsonNode corrigida = enviar(patch("/api/contas-pagar/" + contaDaCompra.get("id").asText()
+                + "/dados-basicos"), dadosBasicos, 200);
+        org.assertj.core.api.Assertions.assertThat(corrigida.get("descricao").asText())
+                .isEqualTo("Descricao corrigida");
+
+        String vendaId = criarVendaConcluida("À vista", "I");
+        JsonNode contaDaVenda = contaReceberDaVenda(vendaId);
+        Map<String, Object> edicaoReceber = new LinkedHashMap<>();
+        edicaoReceber.put("descricao", "Nova descricao");
+        edicaoReceber.put("clienteId", contaDaVenda.get("clienteId").asText());
+        edicaoReceber.put("valorTotal", "1.00");
+        edicaoReceber.put("vencimento", LocalDate.now().plusDays(10).toString());
+        enviar(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+                .put("/api/contas-receber/" + contaDaVenda.get("id").asText()), edicaoReceber, 422);
+    }
+
+    @Test
+    void categoriaDoSistemaNaoPodeSerInativadaNemRenomeadaMasContinuaAceitandoCompras() throws Exception {
+        String categoriaDoSistema = "00000000-0000-0000-0000-0000000c0001";
+
+        enviar(patch("/api/categorias-despesa/" + categoriaDoSistema + "/status"), Map.of("status", "INATIVO"), 422);
+        enviar(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+                .put("/api/categorias-despesa/" + categoriaDoSistema), Map.of("nome", "Outro nome"), 422);
+
+        JsonNode categoria = enviar(get("/api/categorias-despesa/" + categoriaDoSistema), null, 200);
+        org.assertj.core.api.Assertions.assertThat(categoria.get("nome").asText()).isEqualTo("Compra de mercadorias");
+        org.assertj.core.api.Assertions.assertThat(categoria.get("status").asText()).isEqualTo("ATIVO");
+        org.assertj.core.api.Assertions.assertThat(contaPagarDaCompra(criarCompraRecebida("avista", "K")))
+                .isNotNull();
+    }
+
+    @Test
+    void migracaoPreencheAsPrevisoesQueFaltamExatamenteComoOSistemaCria() throws Exception {
+        criarContaPagarManual("Migracao sem pagamento", "100.00");
+        JsonNode parcial = criarContaPagarManual("Migracao parcial", "100.00");
+        pagar(parcial, "25.00", "5.00");
+        JsonNode quitada = criarContaPagarManual("Migracao quitada", "50.00");
+        pagar(quitada, "50.00", null);
+        JsonNode cancelada = criarContaPagarManual("Migracao cancelada", "70.00");
+        enviar(patch("/api/contas-pagar/" + cancelada.get("id").asText() + "/cancelar"),
+                Map.of("motivo", "Teste"), 200);
+        Map<String, Object> receita = new LinkedHashMap<>();
+        receita.put("descricao", "Migracao receita " + "x".repeat(178));
+        receita.put("valorTotal", "300.00");
+        receita.put("parcelas", List.of(
+                Map.of("valor", "100.00", "vencimento", LocalDate.now().plusDays(5).toString()),
+                Map.of("valor", "200.00", "vencimento", LocalDate.now().plusDays(35).toString())));
+        JsonNode contaReceber = enviar(post("/api/contas-receber"), receita, 201);
+        Map<String, Object> recebimento = new LinkedHashMap<>();
+        recebimento.put("parcelaId", contaReceber.get("parcelas").get(1).get("id").asText());
+        recebimento.put("valorRecebido", "80.00");
+        enviar(post("/api/contas-receber/" + contaReceber.get("id").asText() + "/recebimentos"), recebimento, 201);
+
+        Map<String, String[]> esperado = previsoesVigentes();
+        org.assertj.core.api.Assertions.assertThat(esperado).isNotEmpty();
+
+        jdbcTemplate.update("DELETE FROM bella.movimentacoes_caixa WHERE situacao = 'PREVISTO'"
+                + " AND origem IN ('CONTA_PAGAR', 'CONTA_RECEBER')");
+        org.assertj.core.api.Assertions.assertThat(previsoesVigentes()).isEmpty();
+
+        String migracao = new String(new org.springframework.core.io.ClassPathResource(
+                "db/migration/V33__preencher_previsoes_caixa_contas_antigas.sql").getInputStream().readAllBytes(),
+                java.nio.charset.StandardCharsets.UTF_8);
+        jdbcTemplate.execute(migracao);
+
+        Map<String, String[]> preenchido = previsoesVigentes();
+        org.assertj.core.api.Assertions.assertThat(preenchido.keySet()).containsExactlyInAnyOrderElementsOf(
+                esperado.keySet());
+        for (Map.Entry<String, String[]> entrada : esperado.entrySet()) {
+            String[] obtido = preenchido.get(entrada.getKey());
+            org.assertj.core.api.Assertions.assertThat(new java.math.BigDecimal(obtido[0]))
+                    .isEqualByComparingTo(new java.math.BigDecimal(entrada.getValue()[0]));
+            org.assertj.core.api.Assertions.assertThat(obtido[1]).isEqualTo(entrada.getValue()[1]);
+            org.assertj.core.api.Assertions.assertThat(obtido[2]).isEqualTo(entrada.getValue()[2]);
+            org.assertj.core.api.Assertions.assertThat(obtido[3]).hasSizeLessThanOrEqualTo(200);
+        }
+
+        jdbcTemplate.execute(migracao);
+        org.assertj.core.api.Assertions.assertThat(previsoesVigentes()).hasSameSizeAs(esperado);
+    }
+
+    /** Previsões vigentes das contas, indexadas pela referência de origem: valor, data, tipo e descrição. */
+    private Map<String, String[]> previsoesVigentes() throws Exception {
+        Map<String, String[]> resultado = new LinkedHashMap<>();
+        for (String origem : List.of("CONTA_PAGAR", "CONTA_RECEBER")) {
+            for (JsonNode movimentacao : enviar(get("/api/fluxo-caixa/movimentacoes").param("origem", origem)
+                    .param("situacao", "PREVISTO"), null, 200)) {
+                resultado.put(movimentacao.get("origemReferenciaId").asText(), new String[] {
+                        movimentacao.get("valor").asText(), movimentacao.get("dataPrevista").asText(),
+                        movimentacao.get("tipo").asText(), movimentacao.get("descricao").asText()});
+            }
+        }
+        return resultado;
     }
 }

@@ -25,6 +25,8 @@ import java.util.UUID;
 @Component
 class FluxoCaixaDeContaPagar {
 
+    /** Tamanho da coluna de descrição da movimentação de caixa. */
+    private static final int LIMITE_DESCRICAO = 200;
     private static final OrigemMovimentacaoCaixa ORIGEM = OrigemMovimentacaoCaixa.CONTA_PAGAR;
 
     private final RegistrarMovimentacaoAutomaticaCaixaUseCase registrar;
@@ -99,7 +101,11 @@ class FluxoCaixaDeContaPagar {
     }
 
     private String descricao(ContaPagar conta, ParcelaContaPagar parcela) {
-        return "Conta a pagar: " + conta.getDescricao() + " (parcela " + parcela.getNumero() + "/"
-                + conta.getParcelas().size() + ")";
+        String sufixo = " (parcela " + parcela.getNumero() + "/" + conta.getParcelas().size() + ")";
+        int espaco = LIMITE_DESCRICAO - "Conta a pagar: ".length() - sufixo.length();
+        String descricao = conta.getDescricao().length() > espaco
+                ? conta.getDescricao().substring(0, espaco)
+                : conta.getDescricao();
+        return "Conta a pagar: " + descricao + sufixo;
     }
 }

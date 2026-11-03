@@ -72,7 +72,7 @@ export function ContaReceberFormPage() {
       .buscarPorId(id)
       .then((conta: ContaReceberResponse) => {
         const temRecebimentos = conta.parcelas.some((parcela) => parcela.recebimentos.length > 0);
-        if (conta.status === "CANCELADA" || temRecebimentos) {
+        if (conta.status === "CANCELADA" || temRecebimentos || conta.origem !== "MANUAL") {
           toast.error("Esta conta não pode mais ter valor ou parcelas alterados");
           navigate(`/contas-receber/${id}`);
           return;

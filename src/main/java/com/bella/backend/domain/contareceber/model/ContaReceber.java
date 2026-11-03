@@ -77,6 +77,10 @@ public class ContaReceber {
     public void editar(String descricao, UUID clienteId, BigDecimal valorTotal,
                         LocalDate vencimento, List<DadosParcela> dadosParcelas, String observacoes) {
         garantirNaoCancelada();
+        if (origem != OrigemContaReceber.MANUAL) {
+            throw new RegraDeNegocioException(
+                    "Conta gerada automaticamente por uma venda não pode ter valor ou parcelas alterados");
+        }
         if (temRecebimentos()) {
             throw new RegraDeNegocioException(
                     "Conta com recebimentos registrados não pode ter valor ou parcelas alterados");

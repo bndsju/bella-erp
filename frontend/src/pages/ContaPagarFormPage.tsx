@@ -77,7 +77,7 @@ export function ContaPagarFormPage() {
       .buscarPorId(id)
       .then((conta: ContaPagarResponse) => {
         const temPagamentos = conta.parcelas.some((parcela) => parcela.pagamentos.length > 0);
-        if (conta.status === "CANCELADA" || temPagamentos) {
+        if (conta.status === "CANCELADA" || temPagamentos || conta.origem !== "MANUAL") {
           toast.error("Esta conta não pode mais ter valor ou parcelas alterados");
           navigate(`/contas-pagar/${id}`);
           return;

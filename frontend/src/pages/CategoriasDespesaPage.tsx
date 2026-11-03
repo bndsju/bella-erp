@@ -22,6 +22,9 @@ import { CategoriaDespesaFormDialog } from "@/components/categoriasdespesa/Categ
 import { categoriaDespesaApi } from "@/lib/categoriaDespesaApi";
 import type { CategoriaDespesaResponse, StatusCategoriaDespesa } from "@/types/categoriaDespesa";
 
+/** Categoria criada pelo sistema (usada nas contas geradas por compras): não pode ser editada nem inativada. */
+const CATEGORIA_DO_SISTEMA = "00000000-0000-0000-0000-0000000c0001";
+
 export function CategoriasDespesaPage() {
   const [categorias, setCategorias] = useState<CategoriaDespesaResponse[]>([]);
   const [carregando, setCarregando] = useState(true);
@@ -106,12 +109,18 @@ export function CategoriasDespesaPage() {
                     <Badge variant={categoria.status === "ATIVO" ? "default" : "outline"}>
                       {categoria.status === "ATIVO" ? "Ativo" : "Inativo"}
                     </Badge>
+                    {categoria.id === CATEGORIA_DO_SISTEMA && (
+                      <Badge variant="outline" className="ml-2">
+                        Do sistema
+                      </Badge>
+                    )}
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
                       <Button
                         variant="ghost"
                         size="sm"
+                        disabled={categoria.id === CATEGORIA_DO_SISTEMA}
                         onClick={() => {
                           setCategoriaEmEdicao(categoria);
                           setDialogAberto(true);
@@ -119,7 +128,12 @@ export function CategoriasDespesaPage() {
                       >
                         Editar
                       </Button>
-                      <Button variant="ghost" size="sm" onClick={() => alternarStatus(categoria)}>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        disabled={categoria.id === CATEGORIA_DO_SISTEMA}
+                        onClick={() => alternarStatus(categoria)}
+                      >
                         {categoria.status === "ATIVO" ? "Inativar" : "Ativar"}
                       </Button>
                     </div>

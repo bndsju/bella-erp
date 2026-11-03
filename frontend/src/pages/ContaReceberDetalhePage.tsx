@@ -97,15 +97,15 @@ export function ContaReceberDetalhePage() {
               Editar dados
             </Button>
           )}
+          {!cancelada && !temRecebimentos && conta.origem === "MANUAL" && (
+            <Button variant="outline" asChild>
+              <Link to={`/contas-receber/${conta.id}/editar`}>Editar valor e parcelas</Link>
+            </Button>
+          )}
           {!cancelada && !temRecebimentos && (
-            <>
-              <Button variant="outline" asChild>
-                <Link to={`/contas-receber/${conta.id}/editar`}>Editar valor e parcelas</Link>
-              </Button>
-              <Button variant="outline" onClick={() => setDialogCancelarAberto(true)}>
-                Cancelar conta
-              </Button>
-            </>
+            <Button variant="outline" onClick={() => setDialogCancelarAberto(true)}>
+              Cancelar conta
+            </Button>
           )}
         </div>
       </div>
