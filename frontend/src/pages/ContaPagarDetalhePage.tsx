@@ -71,10 +71,10 @@ export function ContaPagarDetalhePage() {
   if (carregando || !conta) {
     return (
       <Card>
-        <CardContent className="space-y-4 pt-6">
-          <Skeleton className="h-9 w-full" />
-          <Skeleton className="h-9 w-full" />
-          <Skeleton className="h-9 w-full" />
+        <CardContent className="space-y-4">
+          <Skeleton className="h-11 w-full" />
+          <Skeleton className="h-11 w-full" />
+          <Skeleton className="h-11 w-full" />
         </CardContent>
       </Card>
     );
@@ -85,90 +85,85 @@ export function ContaPagarDetalhePage() {
   const podeRegistrarPagamento = !cancelada;
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <CabecalhoPagina titulo={conta.descricao} />
-          <StatusContaPagarBadge status={conta.status} vencida={conta.vencida} />
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Button variant="outline" asChild>
-            <Link to="/contas-pagar">Voltar</Link>
-          </Button>
-          {!cancelada && (
-            <Button variant="outline" onClick={() => setDialogDadosAberto(true)}>
-              Editar dados
-            </Button>
-          )}
-          {!cancelada && !temPagamentos && conta.origem === "MANUAL" && (
+    <>
+      <CabecalhoPagina
+        titulo={conta.descricao}
+        acao={
+          <>
+            <StatusContaPagarBadge status={conta.status} vencida={conta.vencida} />
             <Button variant="outline" asChild>
-              <Link to={`/contas-pagar/${conta.id}/editar`}>Editar valor e parcelas</Link>
+              <Link to="/contas-pagar">Voltar</Link>
             </Button>
-          )}
-          {!cancelada && !temPagamentos && (
-            <Button variant="outline" onClick={() => setDialogCancelarAberto(true)}>
-              Cancelar conta
-            </Button>
-          )}
-        </div>
-      </div>
+            {!cancelada && (
+              <Button variant="outline" onClick={() => setDialogDadosAberto(true)}>
+                Editar dados
+              </Button>
+            )}
+            {!cancelada && !temPagamentos && conta.origem === "MANUAL" && (
+              <Button variant="outline" asChild>
+                <Link to={`/contas-pagar/${conta.id}/editar`}>Editar valor e parcelas</Link>
+              </Button>
+            )}
+            {!cancelada && !temPagamentos && (
+              <Button variant="outline" onClick={() => setDialogCancelarAberto(true)}>
+                Cancelar conta
+              </Button>
+            )}
+          </>
+        }
+      />
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <Card>
-          <CardContent className="pt-6">
-            <p className="text-xs text-muted-foreground">Valor total</p>
-            <p className="text-lg font-medium">{formatarMoeda(conta.valorTotal)}</p>
-          </CardContent>
+      <div className="grade grade--3">
+        <Card className="indicador">
+          <div className="indicador__rotulo">Valor total</div>
+          <div className="indicador__valor">{formatarMoeda(conta.valorTotal)}</div>
         </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <p className="text-xs text-muted-foreground">Pago</p>
-            <p className="text-lg font-medium text-primary">{formatarMoeda(conta.valorPago)}</p>
-          </CardContent>
+        <Card className="indicador">
+          <div className="indicador__rotulo">Pago</div>
+          <div className="indicador__valor">{formatarMoeda(conta.valorPago)}</div>
         </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <p className="text-xs text-muted-foreground">Saldo pendente</p>
-            <p className="text-lg font-medium">{formatarMoeda(conta.saldoPendente)}</p>
-          </CardContent>
+        <Card className="indicador">
+          <div className="indicador__rotulo">Saldo pendente</div>
+          <div className="indicador__valor">{formatarMoeda(conta.saldoPendente)}</div>
         </Card>
       </div>
 
       <Card>
-        <CardContent className="grid grid-cols-2 gap-4 pt-6 text-sm sm:grid-cols-4">
-          <div>
-            <p className="text-muted-foreground">Fornecedor</p>
-            <p className="font-medium">{conta.fornecedorNome ?? "—"}</p>
+        <CardTitle>Dados</CardTitle>
+        <div>
+          <div className="linha">
+            <span>Fornecedor</span>
+            <span>{conta.fornecedorNome ?? "—"}</span>
           </div>
-          <div>
-            <p className="text-muted-foreground">Categoria</p>
-            <p className="font-medium">{conta.categoriaDespesaNome}</p>
+          <div className="linha">
+            <span>Categoria</span>
+            <span>{conta.categoriaDespesaNome}</span>
           </div>
-          <div>
-            <p className="text-muted-foreground">Data de lançamento</p>
-            <p className="font-medium">{formatarData(conta.dataLancamento)}</p>
+          <div className="linha">
+            <span>Data de lançamento</span>
+            <span>{formatarData(conta.dataLancamento)}</span>
           </div>
-          <div>
-            <p className="text-muted-foreground">Origem</p>
-            <p className="font-medium">{conta.origem === "MANUAL" ? "Lançamento manual" : "Compra"}</p>
+          <div className="linha">
+            <span>Origem</span>
+            <span>{conta.origem === "MANUAL" ? "Lançamento manual" : "Compra"}</span>
           </div>
-          <div>
-            <p className="text-muted-foreground">Parcelas</p>
-            <p className="font-medium">{conta.parcelas.length}</p>
+          <div className="linha">
+            <span>Parcelas</span>
+            <span>{conta.parcelas.length}</span>
           </div>
           {conta.observacoes && (
-            <div className="col-span-2 sm:col-span-4">
-              <p className="text-muted-foreground">Observações</p>
-              <p className="font-medium">{conta.observacoes}</p>
-            </div>
+            <div className="linha">
+            <span>Observações</span>
+            <span>{conta.observacoes}</span>
+          </div>
           )}
           {cancelada && (
-            <div className="col-span-2 sm:col-span-4">
-              <p className="text-muted-foreground">Motivo do cancelamento</p>
-              <p className="font-medium">{conta.motivoCancelamento}</p>
-            </div>
+            <div className="linha">
+            <span>Motivo do cancelamento</span>
+            <span>{conta.motivoCancelamento}</span>
+          </div>
           )}
-        </CardContent>
+        </div>
       </Card>
 
       <Card>
@@ -176,7 +171,7 @@ export function ContaPagarDetalhePage() {
           <CardTitle>Parcelas e pagamentos</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="rounded-xl border border-border">
+          <div>
             <Table>
               <TableHeader>
                 <TableRow>
@@ -193,7 +188,7 @@ export function ContaPagarDetalhePage() {
                 {conta.parcelas.map((parcela) => (
                   <Fragment key={parcela.id}>
                     <TableRow>
-                      <TableCell className="font-medium">{parcela.numero}ª</TableCell>
+                      <TableCell className="tabela__forte">{parcela.numero}ª</TableCell>
                       <TableCell>{formatarData(parcela.vencimento)}</TableCell>
                       <TableCell className="text-right">{formatarMoeda(parcela.valor)}</TableCell>
                       <TableCell className="text-right">{formatarMoeda(parcela.valorPago)}</TableCell>
@@ -261,6 +256,6 @@ export function ContaPagarDetalhePage() {
         processando={cancelando}
         onConfirmar={cancelar}
       />
-    </div>
+    </>
   );
 }

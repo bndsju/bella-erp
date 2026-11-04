@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
@@ -55,7 +56,7 @@ export function TransportadorasPage() {
   }
 
   return (
-    <div className="space-y-4">
+    <>
       <CabecalhoPagina
         titulo="Transportadoras"
         acao={
@@ -72,20 +73,25 @@ export function TransportadorasPage() {
         }
       />
 
-      <div className="cartao">
-  <Select value={status} onValueChange={(v) => setStatus(v as StatusTransportadora | "TODOS")}>
-          <SelectTrigger className="w-52">
+      <Card>
+        <div className="barra-filtros">
+          <div className="campo">
+            <label htmlFor="filtro-status">Status</label>
+            <Select value={status} onValueChange={(v) => setStatus(v as StatusTransportadora | "TODOS")}>
+            <SelectTrigger id="filtro-status" className="w-full">
             <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
+            </SelectTrigger>
+            <SelectContent>
             <SelectItem value="TODOS">Todos os status</SelectItem>
             <SelectItem value="ATIVO">Ativo</SelectItem>
             <SelectItem value="INATIVO">Inativo</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+            </SelectContent>
+            </Select>
+          </div>
+        </div>
+      </Card>
 
-      <div className="rounded-cartao bg-card p-2">
+      <Card>
         <Table>
           <TableHeader>
             <TableRow>
@@ -104,14 +110,17 @@ export function TransportadorasPage() {
               </TableRow>
             ) : transportadoras.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={4} className="py-8 text-center text-muted-foreground">
-                  Nenhuma transportadora encontrada.
+                <TableCell colSpan={4}>
+                  <div className="vazio">
+                    <h3>Nenhuma transportadora encontrada</h3>
+                    <p>Ajuste os filtros ou cadastre um novo registro.</p>
+                  </div>
                 </TableCell>
               </TableRow>
             ) : (
               transportadoras.map((transportadora) => (
                 <TableRow key={transportadora.id}>
-                  <TableCell className="font-medium">{transportadora.nome}</TableCell>
+                  <TableCell className="tabela__forte">{transportadora.nome}</TableCell>
                   <TableCell>{transportadora.telefone ?? "—"}</TableCell>
                   <TableCell>
                     <Badge variant={transportadora.status === "ATIVO" ? "default" : "outline"}>
@@ -143,7 +152,7 @@ export function TransportadorasPage() {
             )}
           </TableBody>
         </Table>
-      </div>
+      </Card>
 
       <TransportadoraFormDialog
         open={dialogAberto}
@@ -151,6 +160,6 @@ export function TransportadorasPage() {
         transportadora={transportadoraEmEdicao}
         onSalvo={carregar}
       />
-    </div>
+    </>
   );
 }

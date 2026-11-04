@@ -89,7 +89,7 @@ export function ContasPagarListPage() {
   const pago = contas.reduce((total, conta) => total + conta.valorPago, 0);
 
   return (
-    <div className="space-y-4">
+    <>
       <CabecalhoPagina
         titulo="Contas a pagar"
         acao={
@@ -122,67 +122,81 @@ export function ContasPagarListPage() {
         </Card>
       </div>
 
-      <div className="cartao flex flex-wrap items-end gap-3">
-        <Select value={categoriaId} onValueChange={setCategoriaId}>
-          <SelectTrigger className="w-56">
+      <Card>
+        <div className="barra-filtros">
+          <div className="campo">
+            <label htmlFor="filtro-categoria">Categoria</label>
+            <Select value={categoriaId} onValueChange={setCategoriaId}>
+            <SelectTrigger id="filtro-categoria" className="w-full">
             <SelectValue placeholder="Categoria" />
-          </SelectTrigger>
-          <SelectContent>
+            </SelectTrigger>
+            <SelectContent>
             <SelectItem value="TODAS">Todas as categorias</SelectItem>
             {categorias.map((categoria) => (
-              <SelectItem key={categoria.id} value={categoria.id}>
-                {categoria.nome}
-              </SelectItem>
+            <SelectItem key={categoria.id} value={categoria.id}>
+            {categoria.nome}
+            </SelectItem>
             ))}
-          </SelectContent>
-        </Select>
-        <Select value={fornecedorId} onValueChange={setFornecedorId}>
-          <SelectTrigger className="w-56">
+            </SelectContent>
+            </Select>
+          </div>
+          <div className="campo">
+            <label htmlFor="filtro-fornecedor">Fornecedor</label>
+            <Select value={fornecedorId} onValueChange={setFornecedorId}>
+            <SelectTrigger id="filtro-fornecedor" className="w-full">
             <SelectValue placeholder="Fornecedor" />
-          </SelectTrigger>
-          <SelectContent>
+            </SelectTrigger>
+            <SelectContent>
             <SelectItem value="TODOS">Todos os fornecedores</SelectItem>
             {fornecedores.map((fornecedor) => (
-              <SelectItem key={fornecedor.id} value={fornecedor.id}>
-                {nomeExibicaoFornecedor(fornecedor)}
-              </SelectItem>
+            <SelectItem key={fornecedor.id} value={fornecedor.id}>
+            {nomeExibicaoFornecedor(fornecedor)}
+            </SelectItem>
             ))}
-          </SelectContent>
-        </Select>
-        <Select value={situacao} onValueChange={(v) => setSituacao(v as SituacaoContaPagar | "TODAS")}>
-          <SelectTrigger className="w-52">
+            </SelectContent>
+            </Select>
+          </div>
+          <div className="campo">
+            <label htmlFor="filtro-situacao">Situação</label>
+            <Select value={situacao} onValueChange={(v) => setSituacao(v as SituacaoContaPagar | "TODAS")}>
+            <SelectTrigger id="filtro-situacao" className="w-full">
             <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
+            </SelectTrigger>
+            <SelectContent>
             <SelectItem value="TODAS">Todas as situações</SelectItem>
             <SelectItem value="EM_ABERTO">Em aberto</SelectItem>
             <SelectItem value="VENCIDAS">Vencidas</SelectItem>
             <SelectItem value="PAGAS">Pagas</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select value={status} onValueChange={(v) => setStatus(v as StatusContaPagar | "TODOS")}>
-          <SelectTrigger className="w-56">
+            </SelectContent>
+            </Select>
+          </div>
+          <div className="campo">
+            <label htmlFor="filtro-status">Status</label>
+            <Select value={status} onValueChange={(v) => setStatus(v as StatusContaPagar | "TODOS")}>
+            <SelectTrigger id="filtro-status" className="w-full">
             <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
+            </SelectTrigger>
+            <SelectContent>
             <SelectItem value="TODOS">Todos os status</SelectItem>
             <SelectItem value="PENDENTE">Pendente</SelectItem>
             <SelectItem value="PARCIALMENTE_PAGA">Parcialmente paga</SelectItem>
             <SelectItem value="PAGA">Paga</SelectItem>
             <SelectItem value="CANCELADA">Cancelada</SelectItem>
-          </SelectContent>
-        </Select>
+            </SelectContent>
+            </Select>
+          </div>
         <div className="campo">
-          <label>Vencimento de</label>
-          <Input type="date" className="w-40" value={vencimentoInicio} onChange={(e) => setVencimentoInicio(e.target.value)} />
+          <label htmlFor="filtro-vencimento-de">Vencimento de</label>
+          <Input id="filtro-vencimento-de" type="date" value={vencimentoInicio} onChange={(e) => setVencimentoInicio(e.target.value)} />
         </div>
         <div className="campo">
-          <label>até</label>
-          <Input type="date" className="w-40" value={vencimentoFim} onChange={(e) => setVencimentoFim(e.target.value)} />
+          <label htmlFor="filtro-ate">Até</label>
+          <Input id="filtro-ate" type="date" value={vencimentoFim} onChange={(e) => setVencimentoFim(e.target.value)} />
         </div>
-      </div>
+        </div>
+      </Card>
 
-      <div className="rounded-cartao bg-card p-2">
+      <Card>
         <Table>
           <TableHeader>
             <TableRow>
@@ -207,14 +221,17 @@ export function ContasPagarListPage() {
               ))
             ) : contas.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="py-8 text-center text-muted-foreground">
-                  Nenhuma conta a pagar encontrada.
+                <TableCell colSpan={8}>
+                  <div className="vazio">
+                    <h3>Nenhuma conta a pagar encontrada</h3>
+                    <p>Ajuste os filtros ou cadastre um novo registro.</p>
+                  </div>
                 </TableCell>
               </TableRow>
             ) : (
               contas.map((conta) => (
                 <TableRow key={conta.id} className="cursor-pointer" onClick={() => navigate(`/contas-pagar/${conta.id}`)}>
-                  <TableCell className="font-medium">{conta.descricao}</TableCell>
+                  <TableCell className="tabela__forte">{conta.descricao}</TableCell>
                   <TableCell>{conta.fornecedorNome ?? "—"}</TableCell>
                   <TableCell>{conta.categoriaDespesaNome}</TableCell>
                   <TableCell>{formatarData(proximoVencimento(conta))}</TableCell>
@@ -231,7 +248,7 @@ export function ContasPagarListPage() {
             )}
           </TableBody>
         </Table>
-      </div>
-    </div>
+      </Card>
+    </>
   );
 }

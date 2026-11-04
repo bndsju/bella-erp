@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
@@ -58,7 +59,7 @@ export function CategoriasDespesaPage() {
   }
 
   return (
-    <div className="space-y-4">
+    <>
       <CabecalhoPagina
         titulo="Categorias de despesa"
         acao={
@@ -75,20 +76,25 @@ export function CategoriasDespesaPage() {
         }
       />
 
-      <div className="cartao">
-  <Select value={status} onValueChange={(v) => setStatus(v as StatusCategoriaDespesa | "TODOS")}>
-          <SelectTrigger className="w-52">
+      <Card>
+        <div className="barra-filtros">
+          <div className="campo">
+            <label htmlFor="filtro-status">Status</label>
+            <Select value={status} onValueChange={(v) => setStatus(v as StatusCategoriaDespesa | "TODOS")}>
+            <SelectTrigger id="filtro-status" className="w-full">
             <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
+            </SelectTrigger>
+            <SelectContent>
             <SelectItem value="TODOS">Todos os status</SelectItem>
             <SelectItem value="ATIVO">Ativo</SelectItem>
             <SelectItem value="INATIVO">Inativo</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+            </SelectContent>
+            </Select>
+          </div>
+        </div>
+      </Card>
 
-      <div className="rounded-cartao bg-card p-2">
+      <Card>
         <Table>
           <TableHeader>
             <TableRow>
@@ -106,14 +112,17 @@ export function CategoriasDespesaPage() {
               </TableRow>
             ) : categorias.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={3} className="py-8 text-center text-muted-foreground">
-                  Nenhuma categoria de despesa encontrada.
+                <TableCell colSpan={3}>
+                  <div className="vazio">
+                    <h3>Nenhuma categoria de despesa encontrada</h3>
+                    <p>Ajuste os filtros ou cadastre um novo registro.</p>
+                  </div>
                 </TableCell>
               </TableRow>
             ) : (
               categorias.map((categoria) => (
                 <TableRow key={categoria.id}>
-                  <TableCell className="font-medium">{categoria.nome}</TableCell>
+                  <TableCell className="tabela__forte">{categoria.nome}</TableCell>
                   <TableCell>
                     <Badge variant={categoria.status === "ATIVO" ? "default" : "outline"}>
                       {categoria.status === "ATIVO" ? "Ativo" : "Inativo"}
@@ -151,7 +160,7 @@ export function CategoriasDespesaPage() {
             )}
           </TableBody>
         </Table>
-      </div>
+      </Card>
 
       <CategoriaDespesaFormDialog
         open={dialogAberto}
@@ -159,6 +168,6 @@ export function CategoriasDespesaPage() {
         categoria={categoriaEmEdicao}
         onSalvo={carregar}
       />
-    </div>
+    </>
   );
 }

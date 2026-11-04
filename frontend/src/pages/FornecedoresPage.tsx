@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
@@ -55,7 +56,7 @@ export function FornecedoresPage() {
   }
 
   return (
-    <div className="space-y-4">
+    <>
       <CabecalhoPagina
         titulo="Fornecedores"
         acao={
@@ -72,20 +73,25 @@ export function FornecedoresPage() {
         }
       />
 
-      <div className="cartao">
-  <Select value={status} onValueChange={(v) => setStatus(v as StatusFornecedor | "TODOS")}>
-          <SelectTrigger className="w-52">
+      <Card>
+        <div className="barra-filtros">
+          <div className="campo">
+            <label htmlFor="filtro-status">Status</label>
+            <Select value={status} onValueChange={(v) => setStatus(v as StatusFornecedor | "TODOS")}>
+            <SelectTrigger id="filtro-status" className="w-full">
             <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
+            </SelectTrigger>
+            <SelectContent>
             <SelectItem value="TODOS">Todos os status</SelectItem>
             <SelectItem value="ATIVO">Ativo</SelectItem>
             <SelectItem value="INATIVO">Inativo</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+            </SelectContent>
+            </Select>
+          </div>
+        </div>
+      </Card>
 
-      <div className="rounded-cartao bg-card p-2">
+      <Card>
         <Table>
           <TableHeader>
             <TableRow>
@@ -104,14 +110,17 @@ export function FornecedoresPage() {
               </TableRow>
             ) : fornecedores.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={4} className="py-8 text-center text-muted-foreground">
-                  Nenhum fornecedor encontrado.
+                <TableCell colSpan={4}>
+                  <div className="vazio">
+                    <h3>Nenhum fornecedor encontrado</h3>
+                    <p>Ajuste os filtros ou cadastre um novo registro.</p>
+                  </div>
                 </TableCell>
               </TableRow>
             ) : (
               fornecedores.map((fornecedor) => (
                 <TableRow key={fornecedor.id}>
-                  <TableCell className="font-medium">{fornecedor.nome}</TableCell>
+                  <TableCell className="tabela__forte">{fornecedor.nome}</TableCell>
                   <TableCell>{fornecedor.telefone ?? "—"}</TableCell>
                   <TableCell>
                     <Badge variant={fornecedor.status === "ATIVO" ? "default" : "outline"}>
@@ -143,7 +152,7 @@ export function FornecedoresPage() {
             )}
           </TableBody>
         </Table>
-      </div>
+      </Card>
 
       <FornecedorFormDialog
         open={dialogAberto}
@@ -151,6 +160,6 @@ export function FornecedoresPage() {
         fornecedor={fornecedorEmEdicao}
         onSalvo={carregar}
       />
-    </div>
+    </>
   );
 }
