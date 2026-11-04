@@ -3,6 +3,7 @@ import {
   ArrowUpFromLine,
   Boxes,
   Building2,
+  ChartColumn,
   ClipboardList,
   FileText,
   Landmark,
@@ -77,7 +78,10 @@ export const grupos: GrupoMenu[] = [
 /** Menu "Mais" do topo: o que não cabe nos grupos (hoje, só os ajustes). */
 export const mais: GrupoMenu = {
   titulo: "Mais",
-  itens: [{ to: "/ajustes", label: "Ajustes", icon: Settings }],
+  itens: [
+    { to: "/relatorios", label: "Relatórios", icon: ChartColumn },
+    { to: "/ajustes", label: "Ajustes", icon: Settings },
+  ],
 };
 
 /** Itens fixos da barra inferior no celular (como no arquivo-mestre); o resto fica em "Mais". */
