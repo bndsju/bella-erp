@@ -78,7 +78,7 @@ export function VendasListPage() {
             </SelectContent>
           </Select>
           <Select value={status} onValueChange={(v) => setStatus(v as StatusVenda | "TODOS")}>
-            <SelectTrigger className="w-44">
+            <SelectTrigger className="w-52">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

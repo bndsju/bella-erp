@@ -131,7 +131,7 @@ export function ContasReceberListPage() {
           </SelectContent>
         </Select>
         <Select value={situacao} onValueChange={(v) => setSituacao(v as SituacaoContaReceber | "TODAS")}>
-          <SelectTrigger className="w-44">
+          <SelectTrigger className="w-52">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

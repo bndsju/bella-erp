@@ -215,7 +215,7 @@ export function FluxoCaixaPage() {
           <Input type="date" className="w-40" value={dataFim} onChange={(e) => setDataFim(e.target.value)} />
         </div>
         <Select value={tipo} onValueChange={(v) => setTipo(v as TipoMovimentacaoCaixa | "TODOS")}>
-          <SelectTrigger className="w-40">
+          <SelectTrigger className="w-52">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -225,7 +225,7 @@ export function FluxoCaixaPage() {
           </SelectContent>
         </Select>
         <Select value={situacao} onValueChange={(v) => setSituacao(v as SituacaoMovimentacaoCaixa | "TODAS")}>
-          <SelectTrigger className="w-44">
+          <SelectTrigger className="w-52">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -235,7 +235,7 @@ export function FluxoCaixaPage() {
           </SelectContent>
         </Select>
         <Select value={origem} onValueChange={(v) => setOrigem(v as OrigemMovimentacaoCaixa | "TODAS")}>
-          <SelectTrigger className="w-48">
+          <SelectTrigger className="w-52">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -248,7 +248,7 @@ export function FluxoCaixaPage() {
           </SelectContent>
         </Select>
         <Select value={categoriaId} onValueChange={setCategoriaId}>
-          <SelectTrigger className="w-48">
+          <SelectTrigger className="w-52">
             <SelectValue placeholder="Categoria" />
           </SelectTrigger>
           <SelectContent>

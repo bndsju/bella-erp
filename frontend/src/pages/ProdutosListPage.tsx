@@ -109,7 +109,7 @@ export function ProdutosListPage() {
           className="max-w-sm"
         />
         <Select value={categoriaId} onValueChange={setCategoriaId}>
-          <SelectTrigger className="w-48">
+          <SelectTrigger className="w-52">
             <SelectValue placeholder="Categoria" />
           </SelectTrigger>
           <SelectContent>
@@ -122,7 +122,7 @@ export function ProdutosListPage() {
           </SelectContent>
         </Select>
         <Select value={status} onValueChange={(v) => setStatus(v as StatusProduto | "TODOS")}>
-          <SelectTrigger className="w-40">
+          <SelectTrigger className="w-52">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

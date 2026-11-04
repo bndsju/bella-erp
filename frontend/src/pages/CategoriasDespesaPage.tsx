@@ -77,7 +77,7 @@ export function CategoriasDespesaPage() {
 
       <div className="cartao">
   <Select value={status} onValueChange={(v) => setStatus(v as StatusCategoriaDespesa | "TODOS")}>
-          <SelectTrigger className="w-40">
+          <SelectTrigger className="w-52">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

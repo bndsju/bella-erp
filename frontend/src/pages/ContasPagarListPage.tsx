@@ -150,7 +150,7 @@ export function ContasPagarListPage() {
           </SelectContent>
         </Select>
         <Select value={situacao} onValueChange={(v) => setSituacao(v as SituacaoContaPagar | "TODAS")}>
-          <SelectTrigger className="w-44">
+          <SelectTrigger className="w-52">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

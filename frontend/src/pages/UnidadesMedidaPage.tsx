@@ -74,7 +74,7 @@ export function UnidadesMedidaPage() {
 
       <div className="cartao">
   <Select value={status} onValueChange={(v) => setStatus(v as StatusUnidadeMedida | "TODOS")}>
-          <SelectTrigger className="w-40">
+          <SelectTrigger className="w-52">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
