@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
@@ -28,6 +29,7 @@ import { CabecalhoPagina } from "@/components/layout/CabecalhoPagina";
 export function CategoriasPage() {
   const [categorias, setCategorias] = useState<CategoriaResponse[]>([]);
   const [carregando, setCarregando] = useState(true);
+  const [busca, setBusca] = useState("");
   const [status, setStatus] = useState<StatusCategoria | "TODOS">("TODOS");
   const [dialogAberto, setDialogAberto] = useState(false);
   const [categoriaEmEdicao, setCategoriaEmEdicao] = useState<CategoriaResponse | null>(null);
@@ -42,6 +44,15 @@ export function CategoriasPage() {
   }, [status]);
 
   useEffect(carregar, [carregar]);
+
+  // Compara sem acento e sem diferenciar maiúsculas: "bebida" encontra "Bebidas".
+  const visiveis = useMemo(() => {
+    const normalizar = (t: string) => t.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase().trim();
+    const termo = normalizar(busca);
+    return termo === "" ? categorias : categorias.filter((c) => normalizar(c.nome).includes(termo));
+  }, [categorias, busca]);
+
+  const temFiltro = busca !== "" || status !== "TODOS";
 
   async function alternarStatus(categoria: CategoriaResponse) {
     const novoStatus = categoria.status === "ATIVO" ? "INATIVO" : "ATIVO";
@@ -72,18 +83,42 @@ export function CategoriasPage() {
         }
       />
 
-      <div className="cartao">
-  <Select value={status} onValueChange={(v) => setStatus(v as StatusCategoria | "TODOS")}>
-          <SelectTrigger className="w-52">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="TODOS">Todos os status</SelectItem>
-            <SelectItem value="ATIVO">Ativo</SelectItem>
-            <SelectItem value="INATIVO">Inativo</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+      <Card>
+        <div className="barra-filtros">
+          <div className="campo">
+            <label htmlFor="filtro-busca">Buscar</label>
+            <input
+              id="filtro-busca"
+              placeholder="Nome da categoria"
+              value={busca}
+              onChange={(e) => setBusca(e.target.value)}
+            />
+          </div>
+          <div className="campo">
+            <label htmlFor="filtro-status">Status</label>
+            <Select value={status} onValueChange={(v) => setStatus(v as StatusCategoria | "TODOS")}>
+              <SelectTrigger id="filtro-status" className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="TODOS">Todos os status</SelectItem>
+                <SelectItem value="ATIVO">Ativo</SelectItem>
+                <SelectItem value="INATIVO">Inativo</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <Button
+            variant="secondary"
+            disabled={!temFiltro}
+            onClick={() => {
+              setBusca("");
+              setStatus("TODOS");
+            }}
+          >
+            Limpar filtros
+          </Button>
+        </div>
+      </Card>
 
       <div className="rounded-cartao bg-card p-2">
         <Table>
@@ -101,14 +136,14 @@ export function CategoriasPage() {
                   <Skeleton className="h-6 w-full" />
                 </TableCell>
               </TableRow>
-            ) : categorias.length === 0 ? (
+            ) : visiveis.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={3} className="py-8 text-center text-muted-foreground">
                   Nenhuma categoria encontrada.
                 </TableCell>
               </TableRow>
             ) : (
-              categorias.map((categoria) => (
+              visiveis.map((categoria) => (
                 <TableRow key={categoria.id}>
                   <TableCell className="font-medium">{categoria.nome}</TableCell>
                   <TableCell>
