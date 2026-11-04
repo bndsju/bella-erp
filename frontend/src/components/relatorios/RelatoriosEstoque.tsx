@@ -7,6 +7,7 @@ import { Paginacao } from "@/components/relatorios/Paginacao";
 import { SecaoRelatorio } from "@/components/relatorios/SecaoRelatorio";
 import { categoriaApi } from "@/lib/categoriaApi";
 import { ROTULO_ORIGEM, ROTULO_TIPO, formatarQuantidade, quantidadeComSinal } from "@/lib/estoqueFormatos";
+import { todasAsPaginas, textoDoPeriodo } from "@/lib/pdf";
 import { relatorioApi } from "@/lib/relatorioApi";
 import { formatarDataHora } from "@/lib/relatorioRotulos";
 import type { CategoriaResponse } from "@/types/categoria";
@@ -33,6 +34,43 @@ function SecaoPosicao() {
     <SecaoRelatorio
       titulo="Posição do estoque"
       chave={`${categoriaId}|${apenasAbaixo}|${pagina}`}
+      exportar={async () => {
+        const categoria = categorias.find((item) => item.id === categoriaId);
+        const { primeira, itens } = await todasAsPaginas(
+          (p, t) =>
+            relatorioApi.estoquePosicao({
+              categoriaId: categoriaId === TODOS ? undefined : categoriaId,
+              apenasAbaixoDoMinimo: apenasAbaixo,
+              pagina: p,
+              tamanho: t,
+            }),
+          (resposta) => resposta.produtos,
+        );
+        return {
+          titulo: "Posição do estoque",
+          nomeArquivo: "posicao-do-estoque",
+          filtros: [...(categoria ? [`Categoria: ${categoria.nome}`] : []), ...(apenasAbaixo ? ["Só abaixo do mínimo"] : [])],
+          resumo: [
+            ["Produtos", String(primeira.totalProdutos)],
+            ["Abaixo do mínimo", String(primeira.produtosAbaixoDoMinimo)],
+          ],
+          tabelas: [
+            {
+              colunas: ["Produto", "Categoria", "Físico", "Reservado", "Disponível", "Mínimo", "Situação"],
+              linhas: itens.map((produto) => [
+                `${produto.codigoInterno} — ${produto.nome}`,
+                produto.categoriaNome ?? "—",
+                formatarQuantidade(produto.estoqueFisico),
+                formatarQuantidade(produto.quantidadeReservada),
+                formatarQuantidade(produto.quantidadeDisponivel),
+                formatarQuantidade(produto.estoqueMinimo),
+                produto.abaixoDoMinimo ? "Repor" : "Em dia",
+              ]),
+              direita: [2, 3, 4, 5],
+            },
+          ],
+        };
+      }}
       buscar={() =>
         relatorioApi.estoquePosicao({
           categoriaId: categoriaId === TODOS ? undefined : categoriaId,
@@ -137,6 +175,43 @@ function SecaoMovimentacoes({ inicio, fim }: Props) {
     <SecaoRelatorio
       titulo="Movimentações de estoque"
       chave={`${inicio}|${fim}|${tipo}|${pagina}`}
+      exportar={async () => {
+        const { primeira, itens } = await todasAsPaginas(
+          (p, t) =>
+            relatorioApi.estoqueMovimentacoes({
+              inicio,
+              fim,
+              tipo: tipo === TODOS ? undefined : tipo,
+              pagina: p,
+              tamanho: t,
+            }),
+          (resposta) => resposta.movimentacoes,
+        );
+        return {
+          titulo: "Movimentações de estoque",
+          nomeArquivo: `movimentacoes-estoque-${inicio}-a-${fim}`,
+          periodo: textoDoPeriodo(inicio, fim),
+          filtros: tipo === TODOS ? [] : [`Tipo: ${ROTULO_TIPO[tipo as TipoMovimentacaoEstoque]}`],
+          resumo: primeira.totaisPorTipo.map((total): [string, string] => [
+            ROTULO_TIPO[total.tipo],
+            `${formatarQuantidade(total.quantidadeTotal)} (${total.quantidadeMovimentacoes} mov.)`,
+          ]),
+          tabelas: [
+            {
+              colunas: ["Data", "Produto", "Tipo", "Quantidade", "Origem", "Responsável"],
+              linhas: itens.map((mov) => [
+                formatarDataHora(mov.dataHora),
+                mov.produtoNome,
+                ROTULO_TIPO[mov.tipo],
+                quantidadeComSinal(mov.tipo, mov.quantidade),
+                ROTULO_ORIGEM[mov.origem],
+                mov.usuarioResponsavel ?? "—",
+              ]),
+              direita: [3],
+            },
+          ],
+        };
+      }}
       buscar={() =>
         relatorioApi.estoqueMovimentacoes({
           inicio,

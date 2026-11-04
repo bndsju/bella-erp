@@ -8,7 +8,8 @@ import { Indicador, SemRegistros } from "@/components/relatorios/Indicador";
 import { Paginacao } from "@/components/relatorios/Paginacao";
 import { SecaoRelatorio } from "@/components/relatorios/SecaoRelatorio";
 import { clienteApi } from "@/lib/clienteApi";
-import { opcoesDeClientes } from "@/lib/clienteOpcoes";
+import { nomeDoCliente, opcoesDeClientes } from "@/lib/clienteOpcoes";
+import { todasAsPaginas, textoDoPeriodo } from "@/lib/pdf";
 import { formatarData, formatarMoeda } from "@/lib/formatos";
 import { FORMAS_PAGAMENTO, labelFormaPagamento } from "@/lib/formaPagamento";
 import { formatarQuantidade } from "@/lib/estoqueFormatos";
@@ -20,6 +21,7 @@ import {
   rotuloDoPonto,
 } from "@/lib/relatorioRotulos";
 import type { ClienteResponse } from "@/types/cliente";
+import type { FormaPagamento } from "@/types/venda";
 
 const TODOS = "TODOS";
 
@@ -41,6 +43,10 @@ export function RelatoriosComerciais({ inicio, fim }: Props) {
 
   const filtroCliente = clienteId === TODOS ? undefined : clienteId;
   const base = { inicio, fim, clienteId: filtroCliente };
+  const periodo = textoDoPeriodo(inicio, fim);
+  const clienteEscolhido = clientes.find((cliente) => cliente.id === clienteId);
+  const filtrosCliente = clienteEscolhido ? [`Cliente: ${nomeDoCliente(clienteEscolhido)}`] : [];
+  const arquivo = (nome: string) => `${nome}-${inicio}-a-${fim}`;
 
   return (
     <>
@@ -70,6 +76,48 @@ export function RelatoriosComerciais({ inicio, fim }: Props) {
       <SecaoRelatorio
         titulo="Vendas"
         chave={`${inicio}|${fim}|${clienteId}|${forma}|${pagina}`}
+        exportar={async () => {
+          const { primeira, itens } = await todasAsPaginas(
+            (p, t) =>
+              relatorioApi.vendas({
+                ...base,
+                formaPagamento: forma === TODOS ? undefined : forma,
+                pagina: p,
+                tamanho: t,
+              }),
+            (resposta) => resposta.vendas,
+          );
+          return {
+            titulo: "Relatório de vendas",
+            nomeArquivo: arquivo("vendas"),
+            periodo,
+            filtros: [
+              ...filtrosCliente,
+              ...(forma === TODOS ? [] : [`Pagamento: ${labelFormaPagamento(forma as FormaPagamento)}`]),
+            ],
+            resumo: [
+              ["Faturamento", formatarMoeda(primeira.resumo.faturamento)],
+              ["Vendas", String(primeira.resumo.quantidade)],
+              ["Ticket médio", formatarMoeda(primeira.resumo.ticketMedio)],
+              ["Descontos", formatarMoeda(primeira.resumo.descontoTotal)],
+              ["Frete", formatarMoeda(primeira.resumo.freteTotal)],
+            ],
+            tabelas: [
+              {
+                colunas: ["Data", "Cliente", "Pagamento", "Desconto", "Frete", "Total"],
+                linhas: itens.map((venda) => [
+                  formatarData(venda.data),
+                  venda.clienteNome,
+                  labelFormaPagamento(venda.formaPagamento),
+                  formatarMoeda(venda.valorDesconto),
+                  formatarMoeda(venda.valorFrete),
+                  formatarMoeda(venda.valorTotal),
+                ]),
+                direita: [3, 4, 5],
+              },
+            ],
+          };
+        }}
         buscar={() =>
           relatorioApi.vendas({
             ...base,
@@ -161,6 +209,30 @@ export function RelatoriosComerciais({ inicio, fim }: Props) {
           titulo="Pedidos por status"
           chave={`${inicio}|${fim}|${clienteId}`}
           buscar={() => relatorioApi.pedidosPorStatus(base)}
+          exportar={async () => {
+            const dados = await relatorioApi.pedidosPorStatus(base);
+            return {
+              titulo: "Pedidos por status",
+              nomeArquivo: arquivo("pedidos-por-status"),
+              periodo,
+              filtros: filtrosCliente,
+              resumo: [
+                ["Pedidos (sem cancelados)", String(dados.quantidadeValidos)],
+                ["Valor", formatarMoeda(dados.valorValidos)],
+              ],
+              tabelas: [
+                {
+                  colunas: ["Status", "Pedidos", "Valor"],
+                  linhas: dados.porStatus.map((linha) => [
+                    ROTULO_STATUS_PEDIDO[linha.status],
+                    String(linha.quantidade),
+                    formatarMoeda(linha.valorTotal),
+                  ]),
+                  direita: [1, 2],
+                },
+              ],
+            };
+          }}
         >
           {(dados) =>
             dados.porStatus.length === 0 ? (
@@ -198,6 +270,33 @@ export function RelatoriosComerciais({ inicio, fim }: Props) {
           titulo="Orçamentos"
           chave={`${inicio}|${fim}|${clienteId}`}
           buscar={() => relatorioApi.orcamentos(base)}
+          exportar={async () => {
+            const dados = await relatorioApi.orcamentos(base);
+            return {
+              titulo: "Relatório de orçamentos",
+              nomeArquivo: arquivo("orcamentos"),
+              periodo,
+              filtros: filtrosCliente,
+              resumo: [
+                ["Emitidos", `${dados.emitidos} · ${formatarMoeda(dados.valorEmitidos)}`],
+                ["Aprovados / recusados", `${dados.aprovados} / ${dados.recusados}`],
+                ["Taxa de aprovação", formatarPercentual(dados.taxaAprovacao)],
+                ["Viraram pedido", formatarPercentual(dados.taxaConversaoPedidos)],
+                ["Viraram venda", formatarPercentual(dados.taxaConversaoVendas)],
+              ],
+              tabelas: [
+                {
+                  colunas: ["Status", "Quantidade", "Valor"],
+                  linhas: dados.porStatus.map((linha) => [
+                    ROTULO_STATUS_ORCAMENTO[linha.status],
+                    String(linha.quantidade),
+                    formatarMoeda(linha.valorTotal),
+                  ]),
+                  direita: [1, 2],
+                },
+              ],
+            };
+          }}
         >
           {(dados) => (
             <>
@@ -255,6 +354,29 @@ export function RelatoriosComerciais({ inicio, fim }: Props) {
           titulo="Produtos mais vendidos"
           chave={`${inicio}|${fim}|${clienteId}`}
           buscar={() => relatorioApi.produtosMaisVendidos({ ...base, limite: 10 })}
+          exportar={async () => {
+            const dados = await relatorioApi.produtosMaisVendidos({ ...base, limite: 50 });
+            return {
+              titulo: "Produtos mais vendidos",
+              nomeArquivo: arquivo("produtos-mais-vendidos"),
+              periodo,
+              filtros: filtrosCliente,
+              tabelas: [
+                {
+                  colunas: ["Código", "Produto", "Categoria", "Quantidade", "Vendas", "Valor"],
+                  linhas: dados.produtos.map((produto) => [
+                    produto.codigoInterno,
+                    produto.nome,
+                    produto.categoriaNome ?? "—",
+                    formatarQuantidade(produto.quantidade),
+                    String(produto.quantidadeVendas),
+                    formatarMoeda(produto.valor),
+                  ]),
+                  direita: [3, 4, 5],
+                },
+              ],
+            };
+          }}
         >
           {(dados) =>
             dados.produtos.length === 0 ? (
@@ -290,6 +412,28 @@ export function RelatoriosComerciais({ inicio, fim }: Props) {
           titulo="Clientes de maior volume"
           chave={`${inicio}|${fim}`}
           buscar={() => relatorioApi.clientesMaiorVolume({ inicio, fim, limite: 10 })}
+          exportar={async () => {
+            const dados = await relatorioApi.clientesMaiorVolume({ inicio, fim, limite: 50 });
+            return {
+              titulo: "Clientes de maior volume",
+              nomeArquivo: arquivo("clientes-maior-volume"),
+              periodo,
+              resumo: [["Faturamento total do período", formatarMoeda(dados.faturamentoTotal)]],
+              tabelas: [
+                {
+                  colunas: ["Cliente", "Vendas", "Valor", "Ticket médio", "Participação"],
+                  linhas: dados.clientes.map((cliente) => [
+                    cliente.nome,
+                    String(cliente.quantidadeVendas),
+                    formatarMoeda(cliente.valor),
+                    formatarMoeda(cliente.ticketMedio),
+                    formatarPercentual(cliente.participacaoPercentual),
+                  ]),
+                  direita: [1, 2, 3, 4],
+                },
+              ],
+            };
+          }}
         >
           {(dados) =>
             dados.clientes.length === 0 ? (

@@ -8,6 +8,7 @@ import { Paginacao } from "@/components/relatorios/Paginacao";
 import { SecaoRelatorio } from "@/components/relatorios/SecaoRelatorio";
 import { ROTULO_ORIGEM } from "@/lib/fluxoCaixaRotulos";
 import { formatarData, formatarMoeda } from "@/lib/formatos";
+import { todasAsPaginas, textoDoPeriodo } from "@/lib/pdf";
 import { relatorioApi } from "@/lib/relatorioApi";
 import { ROTULO_STATUS_CONTA, rotuloDoPonto } from "@/lib/relatorioRotulos";
 
@@ -25,6 +26,39 @@ function SecaoContas({ tipo, inicio, fim }: Props & { tipo: "RECEBER" | "PAGAR" 
     <SecaoRelatorio
       titulo={receber ? "Contas a receber" : "Contas a pagar"}
       chave={`${tipo}|${inicio}|${fim}|${pagina}`}
+      exportar={async () => {
+        const consultar = receber ? relatorioApi.contasReceber : relatorioApi.contasPagar;
+        const { primeira, itens } = await todasAsPaginas(
+          (p, t) => consultar({ inicio, fim, pagina: p, tamanho: t }),
+          (resposta) => resposta.contas,
+        );
+        return {
+          titulo: receber ? "Contas a receber" : "Contas a pagar",
+          nomeArquivo: `contas-${receber ? "receber" : "pagar"}-${inicio}-a-${fim}`,
+          periodo: `Vencimento de ${textoDoPeriodo(inicio, fim)}`,
+          resumo: [
+            [receber ? "A receber" : "A pagar", formatarMoeda(primeira.totais.saldoPendente)],
+            ["Vencido", formatarMoeda(primeira.totais.saldoVencido)],
+            ["A vencer", formatarMoeda(primeira.totais.saldoAVencer)],
+            ["Contas", String(primeira.totais.quantidadeContas)],
+            ["Valor total", formatarMoeda(primeira.totais.valorTotal)],
+          ],
+          tabelas: [
+            {
+              colunas: ["Descrição", receber ? "Cliente" : "Fornecedor", "Vencimento", "Status", "Total", "Saldo"],
+              linhas: itens.map((conta) => [
+                conta.descricao,
+                conta.parceiroNome || "—",
+                formatarData(conta.proximoVencimento),
+                conta.vencida ? "Vencida" : (ROTULO_STATUS_CONTA[conta.status] ?? conta.status),
+                formatarMoeda(conta.valorTotal),
+                formatarMoeda(conta.saldoPendente),
+              ]),
+              direita: [4, 5],
+            },
+          ],
+        };
+      }}
       buscar={() =>
         (receber ? relatorioApi.contasReceber : relatorioApi.contasPagar)({ inicio, fim, pagina, tamanho: 10 })
       }
@@ -89,6 +123,61 @@ function SecaoVencimentos({ inicio, fim }: Props) {
     <SecaoRelatorio
       titulo="Vencimentos"
       chave={`${inicio}|${fim}|${tipo}|${apenasVencidos}|${pagina}`}
+      exportar={async () => {
+        const { primeira, itens } = await todasAsPaginas(
+          (p, t) =>
+            relatorioApi.vencimentos({
+              inicio,
+              fim,
+              tipo: tipo === TODOS ? undefined : tipo,
+              apenasVencidos,
+              pagina: p,
+              tamanho: t,
+            }),
+          (resposta) => resposta.titulos,
+        );
+        return {
+          titulo: "Vencimentos",
+          nomeArquivo: `vencimentos-${inicio}-a-${fim}`,
+          periodo: `Vencimento de ${textoDoPeriodo(inicio, fim)}`,
+          filtros: [
+            ...(tipo === TODOS ? [] : [tipo === "RECEBER" ? "Só a receber" : "Só a pagar"]),
+            ...(apenasVencidos ? ["Só vencidos"] : []),
+          ],
+          resumo: [
+            ["Receber vencido", formatarMoeda(primeira.totais.vencidoReceber)],
+            ["Receber a vencer", formatarMoeda(primeira.totais.aVencerReceber)],
+            ["Pagar vencido", formatarMoeda(primeira.totais.vencidoPagar)],
+            ["Pagar a vencer", formatarMoeda(primeira.totais.aVencerPagar)],
+          ],
+          tabelas: [
+            {
+              titulo: "Por faixa de vencimento",
+              colunas: ["Faixa", "A receber", "A pagar"],
+              linhas: primeira.faixas.map((faixa) => [
+                faixa.faixa,
+                formatarMoeda(faixa.receber),
+                formatarMoeda(faixa.pagar),
+              ]),
+              direita: [1, 2],
+            },
+            {
+              titulo: "Títulos",
+              colunas: ["Tipo", "Descrição", "Parte", "Parcela", "Vencimento", "Atraso", "Saldo"],
+              linhas: itens.map((titulo) => [
+                titulo.tipo === "RECEBER" ? "Receber" : "Pagar",
+                titulo.descricao,
+                titulo.parceiroNome || "—",
+                String(titulo.parcela),
+                formatarData(titulo.vencimento),
+                titulo.diasEmAtraso > 0 ? `${titulo.diasEmAtraso} dia(s)` : "—",
+                formatarMoeda(titulo.saldoPendente),
+              ]),
+              direita: [5, 6],
+            },
+          ],
+        };
+      }}
       buscar={() =>
         relatorioApi.vencimentos({
           inicio,
@@ -208,6 +297,58 @@ function SecaoFluxo({ inicio, fim }: Props) {
     <SecaoRelatorio
       titulo="Fluxo de caixa"
       chave={`${inicio}|${fim}|${situacao}|${pagina}`}
+      exportar={async () => {
+        const { primeira, itens } = await todasAsPaginas(
+          (p, t) =>
+            relatorioApi.fluxoCaixa({
+              inicio,
+              fim,
+              situacao: situacao === TODOS ? undefined : situacao,
+              pagina: p,
+              tamanho: t,
+            }),
+          (resposta) => resposta.movimentacoes,
+        );
+        return {
+          titulo: "Fluxo de caixa",
+          nomeArquivo: `fluxo-de-caixa-${inicio}-a-${fim}`,
+          periodo: textoDoPeriodo(inicio, fim),
+          filtros: situacao === TODOS ? [] : [`Situação: ${situacao === "REALIZADO" ? "Realizado" : "Previsto"}`],
+          resumo: [
+            ["Entradas realizadas", formatarMoeda(primeira.resumo.entradasRealizadas)],
+            ["Saídas realizadas", formatarMoeda(primeira.resumo.saidasRealizadas)],
+            ["Saldo realizado", formatarMoeda(primeira.resumo.saldoRealizado)],
+            ["Saldo projetado", formatarMoeda(primeira.resumo.saldoProjetado)],
+            ["Saldo acumulado", formatarMoeda(primeira.saldoAcumuladoAteFim)],
+          ],
+          tabelas: [
+            {
+              titulo: "Por categoria",
+              colunas: ["Categoria", "Entradas", "Saídas", "Saldo realizado"],
+              linhas: primeira.porCategoria.map((linha) => [
+                linha.categoriaNome ?? "Sem categoria",
+                formatarMoeda(linha.resumo.entradasRealizadas),
+                formatarMoeda(linha.resumo.saidasRealizadas),
+                formatarMoeda(linha.resumo.saldoRealizado),
+              ]),
+              direita: [1, 2, 3],
+            },
+            {
+              titulo: "Movimentações",
+              colunas: ["Data", "Descrição", "Categoria", "Origem", "Situação", "Valor"],
+              linhas: itens.map((mov) => [
+                formatarData(mov.data),
+                mov.descricao,
+                mov.categoriaNome ?? "—",
+                ROTULO_ORIGEM[mov.origem],
+                mov.situacao === "REALIZADO" ? "Realizado" : "Previsto",
+                `${mov.tipo === "SAIDA" ? "- " : ""}${formatarMoeda(mov.valor)}`,
+              ]),
+              direita: [5],
+            },
+          ],
+        };
+      }}
       buscar={() =>
         relatorioApi.fluxoCaixa({
           inicio,
