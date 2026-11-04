@@ -66,7 +66,7 @@ export function CategoriasPage() {
   }
 
   return (
-    <div className="space-y-4">
+    <>
       <CabecalhoPagina
         titulo="Categorias"
         acao={
@@ -120,7 +120,7 @@ export function CategoriasPage() {
         </div>
       </Card>
 
-      <div className="rounded-cartao bg-card p-2">
+      <Card>
         <Table>
           <TableHeader>
             <TableRow>
@@ -138,14 +138,17 @@ export function CategoriasPage() {
               </TableRow>
             ) : visiveis.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={3} className="py-8 text-center text-muted-foreground">
-                  Nenhuma categoria encontrada.
+                <TableCell colSpan={3}>
+                  <div className="vazio">
+                    <h3>{temFiltro ? "Nenhuma categoria com esses filtros" : "Nenhuma categoria ainda"}</h3>
+                    <p>{temFiltro ? "Ajuste ou limpe os filtros para ver mais." : "Sua primeira categoria aparece aqui."}</p>
+                  </div>
                 </TableCell>
               </TableRow>
             ) : (
               visiveis.map((categoria) => (
                 <TableRow key={categoria.id}>
-                  <TableCell className="font-medium">{categoria.nome}</TableCell>
+                  <TableCell className="tabela__forte">{categoria.nome}</TableCell>
                   <TableCell>
                     <Badge variant={categoria.status === "ATIVO" ? "default" : "outline"}>
                       {categoria.status === "ATIVO" ? "Ativo" : "Inativo"}
@@ -176,7 +179,7 @@ export function CategoriasPage() {
             )}
           </TableBody>
         </Table>
-      </div>
+      </Card>
 
       <CategoriaFormDialog
         open={dialogAberto}
@@ -184,6 +187,6 @@ export function CategoriasPage() {
         categoria={categoriaEmEdicao}
         onSalvo={carregar}
       />
-    </div>
+    </>
   );
 }

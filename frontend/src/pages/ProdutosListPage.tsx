@@ -3,7 +3,7 @@ import { SelecaoPesquisavel } from "@/components/ui/selecao-pesquisavel";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
@@ -76,6 +76,13 @@ export function ProdutosListPage() {
     return () => clearTimeout(timeout);
   }, [carregar]);
 
+  const temFiltro = busca !== "" || status !== "TODOS" || categoriaId !== "TODAS";
+  const limpar = () => {
+    setBusca("");
+    setStatus("TODOS");
+    setCategoriaId("TODAS");
+  };
+
   async function confirmarAlterarStatus() {
     if (!produtoParaAlterarStatus) return;
 
@@ -95,7 +102,7 @@ export function ProdutosListPage() {
   }
 
   return (
-    <div className="space-y-4">
+    <>
       <CabecalhoPagina
         titulo="Produtos"
         acao={
@@ -107,36 +114,50 @@ export function ProdutosListPage() {
         }
       />
 
-      <div className="cartao flex flex-wrap items-end gap-3">
-        <Input
-          placeholder="Buscar por nome ou código interno"
-          value={busca}
-          onChange={(e) => setBusca(e.target.value)}
-          className="max-w-sm"
-        />
-        <SelecaoPesquisavel
-          className="w-52"
-          value={categoriaId}
-          onChange={setCategoriaId}
-          opcoes={opcoesCategorias}
-          valorTodos="TODAS"
-          rotuloTodos="Todas as categorias"
-          placeholderBusca="Buscar categoria"
-          textoVazio="Nenhuma categoria encontrada"
-        />
-        <Select value={status} onValueChange={(v) => setStatus(v as StatusProduto | "TODOS")}>
-          <SelectTrigger className="w-52">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="TODOS">Todos os status</SelectItem>
-            <SelectItem value="ATIVO">Ativo</SelectItem>
-            <SelectItem value="INATIVO">Inativo</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+      <Card>
+        <div className="barra-filtros">
+          <div className="campo">
+            <label htmlFor="filtro-busca">Buscar</label>
+            <input
+              id="filtro-busca"
+              placeholder="Nome ou código interno"
+              value={busca}
+              onChange={(e) => setBusca(e.target.value)}
+            />
+          </div>
+          <div className="campo">
+            <label htmlFor="filtro-categoria">Categoria</label>
+            <SelecaoPesquisavel
+              id="filtro-categoria"
+              value={categoriaId}
+              onChange={setCategoriaId}
+              opcoes={opcoesCategorias}
+              valorTodos="TODAS"
+              rotuloTodos="Todas as categorias"
+              placeholderBusca="Buscar categoria"
+              textoVazio="Nenhuma categoria encontrada"
+            />
+          </div>
+          <div className="campo">
+            <label htmlFor="filtro-status">Status</label>
+            <Select value={status} onValueChange={(v) => setStatus(v as StatusProduto | "TODOS")}>
+              <SelectTrigger id="filtro-status" className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="TODOS">Todos os status</SelectItem>
+                <SelectItem value="ATIVO">Ativo</SelectItem>
+                <SelectItem value="INATIVO">Inativo</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <Button variant="secondary" disabled={!temFiltro} onClick={limpar}>
+            Limpar filtros
+          </Button>
+        </div>
+      </Card>
 
-      <div className="rounded-cartao bg-card p-2">
+      <Card>
         <Table>
           <TableHeader>
             <TableRow>
@@ -144,7 +165,7 @@ export function ProdutosListPage() {
               <TableHead>Nome</TableHead>
               <TableHead>Categoria</TableHead>
               <TableHead>Unidade</TableHead>
-              <TableHead>Preço de venda</TableHead>
+              <TableHead className="text-right">Preço de venda</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>
@@ -160,18 +181,21 @@ export function ProdutosListPage() {
               ))
             ) : produtos.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="py-8 text-center text-muted-foreground">
-                  Nenhum produto encontrado.
+                <TableCell colSpan={7}>
+                  <div className="vazio">
+                    <h3>{temFiltro ? "Nenhum produto com esses filtros" : "Nenhum produto ainda"}</h3>
+                    <p>{temFiltro ? "Ajuste ou limpe os filtros para ver mais." : "Seu primeiro produto aparece aqui."}</p>
+                  </div>
                 </TableCell>
               </TableRow>
             ) : (
               produtos.map((produto) => (
                 <TableRow key={produto.id}>
-                  <TableCell className="font-mono text-sm">{produto.codigoInterno}</TableCell>
-                  <TableCell className="font-medium">{produto.nome}</TableCell>
+                  <TableCell>{produto.codigoInterno}</TableCell>
+                  <TableCell className="tabela__forte">{produto.nome}</TableCell>
                   <TableCell>{produto.categoria.nome}</TableCell>
                   <TableCell>{produto.unidadeMedida.sigla}</TableCell>
-                  <TableCell>{formatoMoeda.format(produto.precoVenda)}</TableCell>
+                  <TableCell className="text-right">{formatoMoeda.format(produto.precoVenda)}</TableCell>
                   <TableCell>
                     <Badge variant={produto.status === "ATIVO" ? "default" : "outline"}>
                       {produto.status === "ATIVO" ? "Ativo" : "Inativo"}
@@ -195,7 +219,7 @@ export function ProdutosListPage() {
             )}
           </TableBody>
         </Table>
-      </div>
+      </Card>
 
       <Dialog
         open={produtoParaAlterarStatus !== null}
@@ -213,7 +237,7 @@ export function ProdutosListPage() {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setProdutoParaAlterarStatus(null)}>
+            <Button variant="secondary" onClick={() => setProdutoParaAlterarStatus(null)}>
               Cancelar
             </Button>
             <Button onClick={confirmarAlterarStatus} disabled={alterandoStatus}>
@@ -222,6 +246,6 @@ export function ProdutosListPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   );
 }

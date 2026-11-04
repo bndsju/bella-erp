@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
@@ -43,6 +44,9 @@ export function UnidadesMedidaPage() {
 
   useEffect(carregar, [carregar]);
 
+  const temFiltro = status !== "TODOS";
+  const limpar = () => setStatus("TODOS");
+
   async function alternarStatus(unidade: UnidadeMedidaResponse) {
     const novoStatus = unidade.status === "ATIVO" ? "INATIVO" : "ATIVO";
     try {
@@ -55,7 +59,7 @@ export function UnidadesMedidaPage() {
   }
 
   return (
-    <div className="space-y-4">
+    <>
       <CabecalhoPagina
         titulo="Unidades de medida"
         acao={
@@ -72,20 +76,29 @@ export function UnidadesMedidaPage() {
         }
       />
 
-      <div className="cartao">
-  <Select value={status} onValueChange={(v) => setStatus(v as StatusUnidadeMedida | "TODOS")}>
-          <SelectTrigger className="w-52">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="TODOS">Todos os status</SelectItem>
-            <SelectItem value="ATIVO">Ativo</SelectItem>
-            <SelectItem value="INATIVO">Inativo</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+      <Card>
+        <div className="barra-filtros">
 
-      <div className="rounded-cartao bg-card p-2">
+          <div className="campo">
+            <label htmlFor="filtro-status">Status</label>
+            <Select value={status} onValueChange={(v) => setStatus(v as StatusUnidadeMedida | "TODOS")}>
+              <SelectTrigger id="filtro-status" className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="TODOS">Todos os status</SelectItem>
+                <SelectItem value="ATIVO">Ativo</SelectItem>
+                <SelectItem value="INATIVO">Inativo</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <Button variant="secondary" disabled={!temFiltro} onClick={limpar}>
+            Limpar filtros
+          </Button>
+        </div>
+      </Card>
+
+      <Card>
         <Table>
           <TableHeader>
             <TableRow>
@@ -104,14 +117,17 @@ export function UnidadesMedidaPage() {
               </TableRow>
             ) : unidades.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={4} className="py-8 text-center text-muted-foreground">
-                  Nenhuma unidade de medida encontrada.
+                <TableCell colSpan={4}>
+                  <div className="vazio">
+                    <h3>{temFiltro ? "Nenhuma unidade com esse filtro" : "Nenhuma unidade de medida ainda"}</h3>
+                    <p>{temFiltro ? "Ajuste ou limpe o filtro para ver mais." : "Sua primeira unidade aparece aqui."}</p>
+                  </div>
                 </TableCell>
               </TableRow>
             ) : (
               unidades.map((unidade) => (
                 <TableRow key={unidade.id}>
-                  <TableCell className="font-medium">{unidade.nome}</TableCell>
+                  <TableCell className="tabela__forte">{unidade.nome}</TableCell>
                   <TableCell>{unidade.sigla}</TableCell>
                   <TableCell>
                     <Badge variant={unidade.status === "ATIVO" ? "default" : "outline"}>
@@ -143,7 +159,7 @@ export function UnidadesMedidaPage() {
             )}
           </TableBody>
         </Table>
-      </div>
+      </Card>
 
       <UnidadeMedidaFormDialog
         open={dialogAberto}
@@ -151,6 +167,6 @@ export function UnidadesMedidaPage() {
         unidadeMedida={unidadeEmEdicao}
         onSalvo={carregar}
       />
-    </div>
+    </>
   );
 }
