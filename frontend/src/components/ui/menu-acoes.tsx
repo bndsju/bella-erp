@@ -19,13 +19,9 @@ export interface ItemAcao {
   oculto?: boolean;
 }
 
-const CLASSE_ITEM =
-  "flex cursor-pointer select-none items-center gap-2 rounded-full px-3.5 py-2 text-sm font-semibold outline-none transition-colors " +
-  "data-[disabled]:pointer-events-none data-[disabled]:opacity-50";
-
 /**
- * Menu de ações de uma linha de tabela (botão "⋯"). Ações destrutivas ficam no fim, separadas e em
- * vermelho. Sem nenhum item visível, o menu não é desenhado.
+ * Menu de ações de uma linha de tabela (botão "⋯"), no mesmo painel escuro do submenu do menu principal.
+ * Ações destrutivas ficam no fim, separadas. Sem nenhum item visível, o menu não é desenhado.
  */
 export function MenuAcoes({ itens }: { itens: ItemAcao[] }) {
   const visiveis = itens.filter((item) => !item.oculto);
@@ -37,9 +33,8 @@ export function MenuAcoes({ itens }: { itens: ItemAcao[] }) {
     <DropdownMenu.Root>
       <DropdownMenu.Trigger asChild>
         <Button
-          variant="ghost"
+          variant="secondary"
           size="icon"
-          className="size-8 text-muted-foreground hover:text-foreground"
           aria-label="Mais ações"
           onClick={(evento) => evento.stopPropagation()}
         >
@@ -49,29 +44,22 @@ export function MenuAcoes({ itens }: { itens: ItemAcao[] }) {
       <DropdownMenu.Portal>
         <DropdownMenu.Content
           align="end"
-          sideOffset={4}
-          className="z-50 min-w-48 rounded-2xl border border-border bg-popover p-1.5 text-popover-foreground"
+          sideOffset={6}
+          className="painel"
           onClick={(evento) => evento.stopPropagation()}
         >
           {visiveis.map((item, indice) => {
             const Icone = item.icone;
-            const classe = cn(
-              CLASSE_ITEM,
-              item.perigo
-                ? "text-destructive data-[highlighted]:bg-destructive/10"
-                : "data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground",
-            );
+            const classe = cn("painel__item", item.perigo && "painel__item--perigo");
             const conteudo = (
               <>
-                <Icone className="size-4 shrink-0" />
+                <Icone className="size-4 shrink-0" aria-hidden="true" />
                 {item.rotulo}
               </>
             );
             return (
               <Fragment key={item.rotulo}>
-                {indice === primeiroPerigo && indice > 0 && (
-                  <DropdownMenu.Separator className="-mx-1.5 my-1.5 h-px bg-border" />
-                )}
+                {indice === primeiroPerigo && indice > 0 && <DropdownMenu.Separator className="painel__separador" />}
                 {item.para ? (
                   <DropdownMenu.Item asChild className={classe} disabled={item.desabilitado}>
                     <Link to={item.para}>{conteudo}</Link>

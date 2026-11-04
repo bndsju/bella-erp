@@ -8,7 +8,9 @@ import {
   Landmark,
   Layers,
   LayoutDashboard,
+  House,
   Package,
+  Settings,
   Receipt,
   Ruler,
   ShoppingCart,
@@ -72,12 +74,18 @@ export const grupos: GrupoMenu[] = [
   },
 ];
 
-/** Itens fixos da barra inferior no celular; o resto fica em "Mais". */
+/** Menu "Mais" do topo: o que não cabe nos grupos (hoje, só os ajustes). */
+export const mais: GrupoMenu = {
+  titulo: "Mais",
+  itens: [{ to: "/ajustes", label: "Ajustes", icon: Settings }],
+};
+
+/** Itens fixos da barra inferior no celular (como no arquivo-mestre); o resto fica em "Mais". */
 export const atalhosCelular: ItemMenu[] = [
-  inicio,
+  { to: "/", label: "Início", icon: House },
   { to: "/vendas", label: "Vendas", icon: Receipt },
   { to: "/estoque", label: "Estoque", icon: Boxes },
-  { to: "/fluxo-caixa", label: "Caixa", icon: Wallet },
+  { to: "/clientes", label: "Clientes", icon: Users },
 ];
 
 export function estaAtivo(item: ItemMenu, caminho: string): boolean {
