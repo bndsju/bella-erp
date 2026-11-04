@@ -44,8 +44,8 @@ export function RealizarMovimentacaoCaixaDialog({
               : ""}
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Data de realização</label>
+        <div className="campo">
+          <label>Data de realização</label>
           <Input type="date" max={dataDeHoje()} value={data} onChange={(e) => setData(e.target.value)} />
         </div>
         <DialogFooter>

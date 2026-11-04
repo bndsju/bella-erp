@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
@@ -21,10 +22,14 @@ import { Badge } from "@/components/ui/badge";
 import { CategoriaFormDialog } from "@/components/categorias/CategoriaFormDialog";
 import { categoriaApi } from "@/lib/categoriaApi";
 import type { CategoriaResponse, StatusCategoria } from "@/types/categoria";
+import { CircleCheck, Pencil, Power } from "lucide-react";
+import { MenuAcoes } from "@/components/ui/menu-acoes";
+import { CabecalhoPagina } from "@/components/layout/CabecalhoPagina";
 
 export function CategoriasPage() {
   const [categorias, setCategorias] = useState<CategoriaResponse[]>([]);
   const [carregando, setCarregando] = useState(true);
+  const [busca, setBusca] = useState("");
   const [status, setStatus] = useState<StatusCategoria | "TODOS">("TODOS");
   const [dialogAberto, setDialogAberto] = useState(false);
   const [categoriaEmEdicao, setCategoriaEmEdicao] = useState<CategoriaResponse | null>(null);
@@ -40,6 +45,15 @@ export function CategoriasPage() {
 
   useEffect(carregar, [carregar]);
 
+  // Compara sem acento e sem diferenciar maiúsculas: "bebida" encontra "Bebidas".
+  const visiveis = useMemo(() => {
+    const normalizar = (t: string) => t.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase().trim();
+    const termo = normalizar(busca);
+    return termo === "" ? categorias : categorias.filter((c) => normalizar(c.nome).includes(termo));
+  }, [categorias, busca]);
+
+  const temFiltro = busca !== "" || status !== "TODOS";
+
   async function alternarStatus(categoria: CategoriaResponse) {
     const novoStatus = categoria.status === "ATIVO" ? "INATIVO" : "ATIVO";
     try {
@@ -52,31 +66,61 @@ export function CategoriasPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-medium">Categorias</h1>
-        <Button
-          onClick={() => {
-            setCategoriaEmEdicao(null);
-            setDialogAberto(true);
-          }}
-        >
-          Nova categoria
-        </Button>
-      </div>
+    <>
+      <CabecalhoPagina
+        titulo="Categorias"
+        acao={
+          <>
+          <Button
+            onClick={() => {
+              setCategoriaEmEdicao(null);
+              setDialogAberto(true);
+            }}
+          >
+            Nova categoria
+          </Button>
+          </>
+        }
+      />
 
-      <Select value={status} onValueChange={(v) => setStatus(v as StatusCategoria | "TODOS")}>
-        <SelectTrigger className="w-40">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="TODOS">Todos os status</SelectItem>
-          <SelectItem value="ATIVO">Ativo</SelectItem>
-          <SelectItem value="INATIVO">Inativo</SelectItem>
-        </SelectContent>
-      </Select>
+      <Card>
+        <div className="barra-filtros">
+          <div className="campo">
+            <label htmlFor="filtro-busca">Buscar</label>
+            <input
+              id="filtro-busca"
+              placeholder="Nome da categoria"
+              value={busca}
+              onChange={(e) => setBusca(e.target.value)}
+            />
+          </div>
+          <div className="campo">
+            <label htmlFor="filtro-status">Status</label>
+            <Select value={status} onValueChange={(v) => setStatus(v as StatusCategoria | "TODOS")}>
+              <SelectTrigger id="filtro-status" className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="TODOS">Todos os status</SelectItem>
+                <SelectItem value="ATIVO">Ativo</SelectItem>
+                <SelectItem value="INATIVO">Inativo</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <Button
+            variant="secondary"
+            disabled={!temFiltro}
+            onClick={() => {
+              setBusca("");
+              setStatus("TODOS");
+            }}
+          >
+            Limpar filtros
+          </Button>
+        </div>
+      </Card>
 
-      <div className="rounded-lg border border-border">
+      <Card>
         <Table>
           <TableHeader>
             <TableRow>
@@ -92,44 +136,50 @@ export function CategoriasPage() {
                   <Skeleton className="h-6 w-full" />
                 </TableCell>
               </TableRow>
-            ) : categorias.length === 0 ? (
+            ) : visiveis.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={3} className="py-8 text-center text-muted-foreground">
-                  Nenhuma categoria encontrada.
+                <TableCell colSpan={3}>
+                  <div className="vazio">
+                    <h3>{temFiltro ? "Nenhuma categoria com esses filtros" : "Nenhuma categoria ainda"}</h3>
+                    <p>{temFiltro ? "Ajuste ou limpe os filtros para ver mais." : "Sua primeira categoria aparece aqui."}</p>
+                  </div>
                 </TableCell>
               </TableRow>
             ) : (
-              categorias.map((categoria) => (
+              visiveis.map((categoria) => (
                 <TableRow key={categoria.id}>
-                  <TableCell className="font-medium">{categoria.nome}</TableCell>
+                  <TableCell className="tabela__forte">{categoria.nome}</TableCell>
                   <TableCell>
                     <Badge variant={categoria.status === "ATIVO" ? "default" : "outline"}>
                       {categoria.status === "ATIVO" ? "Ativo" : "Inativo"}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setCategoriaEmEdicao(categoria);
-                          setDialogAberto(true);
-                        }}
-                      >
-                        Editar
-                      </Button>
-                      <Button variant="ghost" size="sm" onClick={() => alternarStatus(categoria)}>
-                        {categoria.status === "ATIVO" ? "Inativar" : "Ativar"}
-                      </Button>
-                    </div>
+                    <MenuAcoes
+                      itens={[
+                        {
+                          rotulo: "Editar",
+                          icone: Pencil,
+                          aoClicar: () => {
+                            setCategoriaEmEdicao(categoria);
+                            setDialogAberto(true);
+                          },
+                        },
+                        {
+                          rotulo: categoria.status === "ATIVO" ? "Inativar" : "Ativar",
+                          icone: categoria.status === "ATIVO" ? Power : CircleCheck,
+                          perigo: categoria.status === "ATIVO",
+                          aoClicar: () => alternarStatus(categoria),
+                        },
+                      ]}
+                    />
                   </TableCell>
                 </TableRow>
               ))
             )}
           </TableBody>
         </Table>
-      </div>
+      </Card>
 
       <CategoriaFormDialog
         open={dialogAberto}
@@ -137,6 +187,6 @@ export function CategoriasPage() {
         categoria={categoriaEmEdicao}
         onSalvo={carregar}
       />
-    </div>
+    </>
   );
 }

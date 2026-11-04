@@ -34,3 +34,11 @@ export function dividirEmParcelas(valorTotal: number, quantidade: number): numbe
   parcelas[quantidade - 1] += totalCentavos - base * quantidade;
   return parcelas.map((centavos) => centavos / 100);
 }
+
+/** Data local (yyyy-mm-dd) de um instante ISO, ex.: a data em que um registro foi criado. */
+export function dataDoInstante(instante: string): string {
+  const d = new Date(instante);
+  const mes = String(d.getMonth() + 1).padStart(2, "0");
+  const dia = String(d.getDate()).padStart(2, "0");
+  return `${d.getFullYear()}-${mes}-${dia}`;
+}

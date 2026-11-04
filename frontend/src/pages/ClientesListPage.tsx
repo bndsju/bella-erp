@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import { CircleCheck, Pencil, Power } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
@@ -27,9 +28,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { MenuAcoes } from "@/components/ui/menu-acoes";
+import { CabecalhoPagina } from "@/components/layout/CabecalhoPagina";
 import { StatusBadge } from "@/components/clientes/StatusBadge";
 import { clienteApi } from "@/lib/clienteApi";
-import { formatarCnpj, formatarCpf } from "@/lib/documento";
+import { apenasDigitos, formatarCnpj, formatarCpf } from "@/lib/documento";
 import type { ClienteResponse, StatusCliente } from "@/types/cliente";
 
 function nomeExibicao(cliente: ClienteResponse): string {
@@ -46,6 +49,7 @@ export function ClientesListPage() {
   const [clientes, setClientes] = useState<ClienteResponse[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [busca, setBusca] = useState("");
+  const [documento, setDocumento] = useState("");
   const [status, setStatus] = useState<StatusCliente | "TODOS">("TODOS");
   const [clienteParaAlterarStatus, setClienteParaAlterarStatus] = useState<ClienteResponse | null>(null);
   const [alterandoStatus, setAlterandoStatus] = useState(false);
@@ -63,6 +67,28 @@ export function ClientesListPage() {
     const timeout = setTimeout(carregar, 300);
     return () => clearTimeout(timeout);
   }, [carregar]);
+
+  // O servidor busca por nome; o documento (CPF ou CNPJ) é comparado aqui, só pelos dígitos digitados.
+  const digitosDocumento = apenasDigitos(documento);
+  const visiveis = useMemo(
+    () =>
+      digitosDocumento === ""
+        ? clientes
+        : clientes.filter((cliente) =>
+            apenasDigitos(cliente.tipoPessoa === "PF" ? (cliente.cpf ?? "") : (cliente.cnpj ?? "")).includes(
+              digitosDocumento,
+            ),
+          ),
+    [clientes, digitosDocumento],
+  );
+
+  const temFiltro = busca !== "" || documento !== "" || status !== "TODOS";
+
+  function limparFiltros() {
+    setBusca("");
+    setDocumento("");
+    setStatus("TODOS");
+  }
 
   async function confirmarAlterarStatus() {
     if (!clienteParaAlterarStatus) return;
@@ -84,34 +110,57 @@ export function ClientesListPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-medium">Clientes</h1>
-        <Button asChild>
-          <Link to="/clientes/novo">Novo cliente</Link>
-        </Button>
-      </div>
+    <>
+      <CabecalhoPagina
+        titulo="Clientes"
+        acao={
+          <Button asChild>
+            <Link to="/clientes/novo">Novo cliente</Link>
+          </Button>
+        }
+      />
 
-      <div className="flex gap-3">
-        <Input
-          placeholder="Buscar por nome ou razão social"
-          value={busca}
-          onChange={(e) => setBusca(e.target.value)}
-          className="max-w-sm"
-        />
-        <Select value={status} onValueChange={(v) => setStatus(v as StatusCliente | "TODOS")}>
-          <SelectTrigger className="w-40">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="TODOS">Todos os status</SelectItem>
-            <SelectItem value="ATIVO">Ativo</SelectItem>
-            <SelectItem value="INATIVO">Inativo</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+      <Card>
+        <div className="barra-filtros">
+          <div className="campo">
+            <label htmlFor="filtro-busca">Buscar</label>
+            <input
+              id="filtro-busca"
+              placeholder="Nome ou razão social"
+              value={busca}
+              onChange={(e) => setBusca(e.target.value)}
+            />
+          </div>
+          <div className="campo">
+            <label htmlFor="filtro-documento">CPF ou CNPJ</label>
+            <input
+              id="filtro-documento"
+              inputMode="numeric"
+              placeholder="Somente números"
+              value={documento}
+              onChange={(e) => setDocumento(e.target.value)}
+            />
+          </div>
+          <div className="campo">
+            <label htmlFor="filtro-status">Status</label>
+            <Select value={status} onValueChange={(v) => setStatus(v as StatusCliente | "TODOS")}>
+              <SelectTrigger id="filtro-status" className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="TODOS">Todos os status</SelectItem>
+                <SelectItem value="ATIVO">Ativo</SelectItem>
+                <SelectItem value="INATIVO">Inativo</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <Button variant="secondary" onClick={limparFiltros} disabled={!temFiltro}>
+            Limpar filtros
+          </Button>
+        </div>
+      </Card>
 
-      <div className="rounded-lg border border-border">
+      <Card>
         <Table>
           <TableHeader>
             <TableRow>
@@ -133,16 +182,23 @@ export function ClientesListPage() {
                   </TableCell>
                 </TableRow>
               ))
-            ) : clientes.length === 0 ? (
+            ) : visiveis.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="py-8 text-center text-muted-foreground">
-                  Nenhum cliente encontrado.
+                <TableCell colSpan={7}>
+                  <div className="vazio">
+                    <h3>{temFiltro ? "Nenhum cliente com esses filtros" : "Nenhum cliente ainda"}</h3>
+                    <p>
+                      {temFiltro
+                        ? "Ajuste ou limpe os filtros para ver mais."
+                        : "Seu primeiro cliente aparece aqui."}
+                    </p>
+                  </div>
                 </TableCell>
               </TableRow>
             ) : (
-              clientes.map((cliente) => (
+              visiveis.map((cliente) => (
                 <TableRow key={cliente.id}>
-                  <TableCell className="font-medium">{nomeExibicao(cliente)}</TableCell>
+                  <TableCell className="tabela__forte">{nomeExibicao(cliente)}</TableCell>
                   <TableCell>{cliente.tipoPessoa === "PF" ? "Física" : "Jurídica"}</TableCell>
                   <TableCell>{documentoExibicao(cliente)}</TableCell>
                   <TableCell>{cliente.email}</TableCell>
@@ -151,25 +207,24 @@ export function ClientesListPage() {
                     <StatusBadge status={cliente.status} />
                   </TableCell>
                   <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button variant="ghost" size="sm" asChild>
-                        <Link to={`/clientes/${cliente.id}/editar`}>Editar</Link>
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setClienteParaAlterarStatus(cliente)}
-                      >
-                        {cliente.status === "ATIVO" ? "Inativar" : "Ativar"}
-                      </Button>
-                    </div>
+                    <MenuAcoes
+                      itens={[
+                        { rotulo: "Editar", icone: Pencil, para: `/clientes/${cliente.id}/editar` },
+                        {
+                          rotulo: cliente.status === "ATIVO" ? "Inativar" : "Ativar",
+                          icone: cliente.status === "ATIVO" ? Power : CircleCheck,
+                          perigo: cliente.status === "ATIVO",
+                          aoClicar: () => setClienteParaAlterarStatus(cliente),
+                        },
+                      ]}
+                    />
                   </TableCell>
                 </TableRow>
               ))
             )}
           </TableBody>
         </Table>
-      </div>
+      </Card>
 
       <Dialog
         open={clienteParaAlterarStatus !== null}
@@ -187,15 +242,19 @@ export function ClientesListPage() {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setClienteParaAlterarStatus(null)}>
+            <Button variant="secondary" onClick={() => setClienteParaAlterarStatus(null)}>
               Cancelar
             </Button>
-            <Button onClick={confirmarAlterarStatus} disabled={alterandoStatus}>
-              Confirmar
+            <Button
+              variant={clienteParaAlterarStatus?.status === "ATIVO" ? "destructive" : "default"}
+              onClick={confirmarAlterarStatus}
+              disabled={alterandoStatus}
+            >
+              {clienteParaAlterarStatus?.status === "ATIVO" ? "Inativar" : "Ativar"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   );
 }

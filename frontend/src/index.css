@@ -1,96 +1,101 @@
+@import "@fontsource-variable/manrope";
 @import "tailwindcss";
+@import "./styles/bella.css";
+@import "./styles/extensoes.css";
+
+/* Tema escuro: o atributo data-tema="dark" vai no <html> (ver lib/tema.ts e o script do index.html). */
+@custom-variant dark (&:where([data-tema="dark"], [data-tema="dark"] *));
+
+/*
+ * Os tokens e componentes da Bella vêm de styles/bella.css (cópia do arquivo-mestre). Aqui só os expomos
+ * ao Tailwind (bg-cartao, text-titulo...) e mantemos apelidos para os componentes shadcn existentes.
+ */
+:root {
+  --background: var(--fundo-pagina);
+  --foreground: var(--texto);
+  --card: var(--fundo-cartao);
+  --popover: var(--fundo-cartao);
+  --popover-foreground: var(--texto);
+  --secondary: var(--fundo-suave);
+  --border: var(--borda);
+  --radius: var(--raio-campo);
+  color-scheme: light;
+}
+
+[data-tema="dark"] {
+  color-scheme: dark;
+}
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-  --color-popover: var(--popover);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-destructive: var(--destructive);
-  --color-border: var(--border);
-  --color-input: var(--input);
-  --color-ring: var(--ring);
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
+  --color-marca: var(--cor-marca);
+  --color-marca-texto: var(--cor-marca-texto);
+  --color-marca-hover: var(--cor-marca-hover);
+  --color-marca-hover-texto: var(--cor-marca-hover-texto);
+  --color-pagina: var(--fundo-pagina);
+  --color-cartao: var(--fundo-cartao);
+  --color-campo: var(--fundo-campo);
+  --color-barra: var(--fundo-barra);
+  --color-destaque: var(--fundo-destaque);
+  --color-suave: var(--fundo-suave);
+  --color-selecionado: var(--fundo-selecionado);
+  --color-texto: var(--texto);
+  --color-auxiliar: var(--texto-auxiliar);
+  --color-titulo: var(--titulo);
+  --color-valor: var(--valor);
+  --color-link: var(--link);
+  --color-borda: var(--borda);
+  --color-borda-campo: var(--borda-campo);
+  --color-foco: var(--foco);
+  --color-sobre-escuro: var(--sobre-escuro);
+  --color-sobre-suave: var(--sobre-suave);
+  --color-atencao: var(--atencao);
+  --color-erro: var(--erro);
+  --color-sucesso: var(--sucesso);
+  --color-grafico-1: var(--grafico-1);
+  --color-grafico-2: var(--grafico-2);
+  --color-grafico-3: var(--grafico-3);
+  --color-grafico-4: var(--grafico-4);
+
+  /* apelidos dos componentes shadcn */
+  --color-background: var(--fundo-pagina);
+  --color-foreground: var(--texto);
+  --color-card: var(--fundo-cartao);
+  --color-card-foreground: var(--texto);
+  --color-popover: var(--fundo-cartao);
+  --color-popover-foreground: var(--texto);
+  --color-primary: var(--cor-marca);
+  --color-primary-foreground: var(--cor-marca-texto);
+  --color-secondary: var(--fundo-suave);
+  --color-secondary-foreground: var(--sobre-suave);
+  --color-muted: var(--fundo-selecionado);
+  --color-muted-foreground: var(--texto-auxiliar);
+  --color-accent: var(--fundo-selecionado);
+  --color-accent-foreground: var(--texto);
+  --color-destructive: var(--erro);
+  --color-border: var(--borda);
+  --color-input: var(--borda-campo);
+  --color-ring: var(--foco);
+
+  --radius-cartao: var(--raio-cartao);
+  --radius-campo: var(--raio-campo);
 }
 
-:root {
-  --radius: 0.5rem;
+@theme {
+  --font-sans: "Manrope Variable", "Manrope", ui-sans-serif, system-ui, sans-serif;
 
-  --background: #ffffff;
-  --foreground: #16181b;
-
-  --card: #ffffff;
-  --card-foreground: #16181b;
-
-  --popover: #ffffff;
-  --popover-foreground: #16181b;
-
-  --primary: #5f8f2e;
-  --primary-foreground: #ffffff;
-
-  --secondary: #f1f3f0;
-  --secondary-foreground: #16181b;
-
-  --muted: #f5f6f4;
-  --muted-foreground: #6b7076;
-
-  --accent: #e8f3d9;
-  --accent-foreground: #2f4a16;
-
-  --destructive: #dc2626;
-
-  --border: #e2e4e5;
-  --input: #e2e4e5;
-  --ring: #8fc24e;
-}
-
-.dark {
-  --background: #16181b;
-  --foreground: #f4f5f3;
-
-  --card: #1d1f23;
-  --card-foreground: #f4f5f3;
-
-  --popover: #1d1f23;
-  --popover-foreground: #f4f5f3;
-
-  --primary: #8fc24e;
-  --primary-foreground: #16181b;
-
-  --secondary: #2a2d31;
-  --secondary-foreground: #f4f5f3;
-
-  --muted: #24262a;
-  --muted-foreground: #9ca0a3;
-
-  --accent: #2a3a1c;
-  --accent-foreground: #c3e39a;
-
-  --destructive: #f87171;
-
-  --border: #2e3134;
-  --input: #2e3134;
-  --ring: #8fc24e;
-}
-
-@layer base {
-  * {
-    @apply border-border outline-ring/50;
-  }
-
-  body {
-    @apply bg-background text-foreground;
-  }
+  /* 13 px é o tamanho mínimo do sistema; 15 px o texto padrão */
+  --text-xs: 0.8125rem;
+  --text-xs--line-height: 1.45;
+  --text-sm: 0.9375rem;
+  --text-sm--line-height: 1.45;
+  --text-base: 0.9375rem;
+  --text-base--line-height: 1.45;
+  --text-lg: 1.0625rem;
+  --text-lg--line-height: 1.45;
+  --text-xl: 1.25rem;
+  --text-xl--line-height: 1.3;
+  --text-2xl: 1.75rem;
+  --text-2xl--line-height: 1.2;
+  --text-3xl: 2.125rem;
+  --text-3xl--line-height: 1.2;
 }

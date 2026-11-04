@@ -2,20 +2,14 @@ import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { CabecalhoPagina } from "@/components/layout/CabecalhoPagina";
 import { GraficoBarras } from "@/components/dashboard/GraficoBarras";
 import { dashboardApi } from "@/lib/dashboardApi";
-import { formatarMoeda } from "@/lib/formatos";
+import { dataDeHoje, formatarMoeda } from "@/lib/formatos";
+import { saudacao, useUsuarioAtual } from "@/lib/usuario";
 import type { DashboardResponse, GranularidadeDashboard, PosicaoContas } from "@/types/dashboard";
 
 function paraIso(data: Date): string {
@@ -79,64 +73,54 @@ function formatarQuantidade(valor: number): string {
   return valor.toLocaleString("pt-BR", { maximumFractionDigits: 3 });
 }
 
-function Indicador({
-  titulo,
-  valor,
-  detalhe,
-  classeValor,
-}: {
-  titulo: string;
-  valor: string;
-  detalhe?: string;
-  classeValor?: string;
-}) {
+function Indicador({ rotulo, valor, nota }: { rotulo: string; valor: string; nota?: string }) {
   return (
-    <Card>
-      <CardContent className="pt-6">
-        <p className="text-xs text-muted-foreground">{titulo}</p>
-        <p className={`text-lg font-medium ${classeValor ?? ""}`}>{valor}</p>
-        {detalhe && <p className="text-xs text-muted-foreground">{detalhe}</p>}
-      </CardContent>
+    <Card className="indicador">
+      <div className="indicador__rotulo">{rotulo}</div>
+      <div className="indicador__valor">{valor}</div>
+      {nota && <div className="indicador__nota">{nota}</div>}
     </Card>
+  );
+}
+
+function Linha({ rotulo, valor, destaque }: { rotulo: string; valor: string; destaque?: "erro" }) {
+  return (
+    <div className="linha">
+      <span>{rotulo}</span>
+      <span className={destaque === "erro" ? "font-extrabold text-erro" : "font-extrabold"}>{valor}</span>
+    </div>
   );
 }
 
 function CartaoContas({ titulo, posicao, rota }: { titulo: string; posicao: PosicaoContas; rota: string }) {
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
+      <CardHeader>
         <CardTitle>{titulo}</CardTitle>
-        <Button variant="ghost" size="sm" asChild>
+        <Button variant="secondary" size="sm" asChild>
           <Link to={rota}>Ver contas</Link>
         </Button>
       </CardHeader>
-      <CardContent className="grid grid-cols-3 gap-3 text-sm">
-        <div>
-          <p className="text-xs text-muted-foreground">Em aberto</p>
-          <p className="font-medium">{formatarMoeda(posicao.emAberto)}</p>
-          <p className="text-xs text-muted-foreground">{posicao.quantidadeContasEmAberto} conta(s)</p>
-        </div>
-        <div>
-          <p className="text-xs text-muted-foreground">Vencido</p>
-          <p className="font-medium text-destructive">{formatarMoeda(posicao.vencido)}</p>
-          <p className="text-xs text-muted-foreground">{posicao.quantidadeContasVencidas} conta(s)</p>
-        </div>
-        <div>
-          <p className="text-xs text-muted-foreground">A vencer</p>
-          <p className="font-medium">{formatarMoeda(posicao.aVencer)}</p>
-          <p className="text-xs text-muted-foreground">No período: {formatarMoeda(posicao.vencendoNoPeriodo)}</p>
-        </div>
-      </CardContent>
+      <Linha rotulo={`Em aberto (${posicao.quantidadeContasEmAberto})`} valor={formatarMoeda(posicao.emAberto)} />
+      <Linha
+        rotulo={`Vencido (${posicao.quantidadeContasVencidas})`}
+        valor={formatarMoeda(posicao.vencido)}
+        destaque={posicao.vencido > 0 ? "erro" : undefined}
+      />
+      <Linha rotulo="A vencer" valor={formatarMoeda(posicao.aVencer)} />
+      <Linha rotulo="Vencendo no período" valor={formatarMoeda(posicao.vencendoNoPeriodo)} />
     </Card>
   );
 }
 
 export function DashboardPage() {
+  const { nome } = useUsuarioAtual();
   const [inicioPadrao, fimPadrao] = PERIODOS[0].intervalo();
   const [inicio, setInicio] = useState(inicioPadrao);
   const [fim, setFim] = useState(fimPadrao);
   const [dados, setDados] = useState<DashboardResponse | null>(null);
   const [carregando, setCarregando] = useState(true);
+  const [falhou, setFalhou] = useState(false);
 
   const carregar = useCallback(() => {
     if (!inicio || !fim) return;
@@ -145,27 +129,41 @@ export function DashboardPage() {
       return;
     }
     setCarregando(true);
+    setFalhou(false);
     dashboardApi
       .consultar(inicio, fim)
       .then(setDados)
-      .catch(() => toast.error("Não foi possível carregar o painel"))
+      .catch(() => {
+        setFalhou(true);
+        toast.error("Não foi possível carregar o painel");
+      })
       .finally(() => setCarregando(false));
   }, [inicio, fim]);
 
   useEffect(carregar, [carregar]);
 
   const granularidade = dados?.periodo.granularidade ?? "DIA";
+  const hoje = dataDeHoje();
+  const frase = dados ? `Neste período você vendeu ${formatarMoeda(dados.comercial.faturamento)}.` : undefined;
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <h1 className="text-xl font-medium">Início</h1>
-        <div className="flex flex-wrap items-end gap-2">
+    <>
+      <CabecalhoPagina titulo={saudacao(nome)} frase={frase} faixaAlta />
+
+      <Card>
+        <div className="barra-filtros">
+          <div className="campo">
+            <label htmlFor="periodo-de">De</label>
+            <input id="periodo-de" type="date" value={inicio} onChange={(e) => setInicio(e.target.value)} />
+          </div>
+          <div className="campo">
+            <label htmlFor="periodo-ate">Até</label>
+            <input id="periodo-ate" type="date" value={fim} onChange={(e) => setFim(e.target.value)} />
+          </div>
           {PERIODOS.map((periodo) => (
             <Button
               key={periodo.rotulo}
-              variant="outline"
-              size="sm"
+              variant="secondary"
               onClick={() => {
                 const [de, ate] = periodo.intervalo();
                 setInicio(de);
@@ -175,215 +173,198 @@ export function DashboardPage() {
               {periodo.rotulo}
             </Button>
           ))}
-          <div className="space-y-1">
-            <label className="text-xs text-muted-foreground">De</label>
-            <Input type="date" className="w-40" value={inicio} onChange={(e) => setInicio(e.target.value)} />
-          </div>
-          <div className="space-y-1">
-            <label className="text-xs text-muted-foreground">Até</label>
-            <Input type="date" className="w-40" value={fim} onChange={(e) => setFim(e.target.value)} />
-          </div>
         </div>
-      </div>
+      </Card>
 
-      {carregando && !dados ? (
-        <div className="space-y-3">
-          <Skeleton className="h-24 w-full" />
-          <Skeleton className="h-48 w-full" />
-          <Skeleton className="h-24 w-full" />
-        </div>
+      {falhou && !dados ? (
+        <Card>
+          <div className="vazio">
+            <h3>Não consegui carregar o painel</h3>
+            <p>Confira se o sistema está no ar e tente de novo.</p>
+            <Button onClick={carregar}>Tentar de novo</Button>
+          </div>
+        </Card>
+      ) : carregando && !dados ? (
+        <>
+          <Skeleton className="h-28 w-full rounded-[20px]" />
+          <Skeleton className="h-64 w-full rounded-[20px]" />
+        </>
       ) : dados ? (
-        <div className={carregando ? "space-y-8 opacity-60 transition-opacity" : "space-y-8"}>
-          <section className="space-y-3">
-            <h2 className="text-base font-medium">Comercial</h2>
-            <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
-              <Indicador
-                titulo="Faturamento"
-                valor={formatarMoeda(dados.comercial.faturamento)}
-                detalhe={`Ticket médio: ${formatarMoeda(dados.comercial.ticketMedio)}`}
+        <div className={carregando ? "contents opacity-60" : "contents"}>
+          <div className="grade grade--4">
+            <Indicador
+              rotulo="Faturamento"
+              valor={formatarMoeda(dados.comercial.faturamento)}
+              nota={`Ticket médio: ${formatarMoeda(dados.comercial.ticketMedio)}`}
+            />
+            <Indicador
+              rotulo="Saldo do caixa"
+              valor={formatarMoeda(dados.financeiro.saldoAtual)}
+              nota={`Projetado no período: ${formatarMoeda(dados.financeiro.saldoPeriodo)}`}
+            />
+            <Indicador
+              rotulo="A receber"
+              valor={formatarMoeda(dados.financeiro.contasReceber.emAberto)}
+              nota={`${formatarMoeda(dados.financeiro.contasReceber.vencido)} vencidos`}
+            />
+            <Indicador
+              rotulo="A pagar"
+              valor={formatarMoeda(dados.financeiro.contasPagar.emAberto)}
+              nota={`${formatarMoeda(dados.financeiro.contasPagar.vencido)} vencidos`}
+            />
+          </div>
+
+          <div className="grade grade--principal">
+            <Card variante="destaque">
+              <CardTitle>Vendas por {granularidade === "MES" ? "mês" : "dia"}</CardTitle>
+              <GraficoBarras
+                sobreDestaque
+                series={[{ nome: "Vendas" }]}
+                pontos={dados.comercial.vendasPorPeriodo.map((ponto) => ({
+                  rotulo: rotuloDoPonto(ponto.data, granularidade),
+                  valores: [ponto.valor],
+                  atual: ponto.data === hoje,
+                }))}
+                vazio={{ titulo: "Nenhuma venda no período", texto: "Sua primeira venda aparece aqui." }}
               />
-              <Indicador
-                titulo="Vendas realizadas"
-                valor={String(dados.comercial.quantidadeVendas)}
-                detalhe="Concluídas no período"
-              />
-              <Indicador
-                titulo="Pedidos"
-                valor={String(dados.comercial.quantidadePedidos)}
-                detalhe={`${dados.comercial.quantidadePedidosCancelados} cancelado(s)`}
-              />
-              <Indicador
-                titulo="Orçamentos emitidos"
-                valor={String(dados.comercial.orcamentosEmitidos)}
-                detalhe={formatarMoeda(dados.comercial.valorOrcamentosEmitidos)}
-              />
-              <Indicador
-                titulo="Conversão de orçamentos"
-                valor={formatarPercentual(dados.comercial.taxaConversaoPedidos)}
-                detalhe={`Em venda: ${formatarPercentual(dados.comercial.taxaConversaoVendas)}`}
-              />
-            </div>
-            <Card>
+            </Card>
+            <Card variante="suave">
               <CardHeader>
-                <CardTitle>Vendas por {granularidade === "MES" ? "mês" : "dia"}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <GraficoBarras
-                  series={[{ nome: "Vendas", classe: "fill-primary" }]}
-                  pontos={dados.comercial.vendasPorPeriodo.map((ponto) => ({
-                    rotulo: rotuloDoPonto(ponto.data, granularidade),
-                    valores: [ponto.valor],
-                  }))}
-                  vazio="Nenhuma venda no período."
-                />
-              </CardContent>
-            </Card>
-          </section>
-
-          <section className="space-y-3">
-            <h2 className="text-base font-medium">Financeiro</h2>
-            <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-              <Indicador titulo="Saldo atual do caixa" valor={formatarMoeda(dados.financeiro.saldoAtual)} />
-              <Indicador
-                titulo="Entradas no período"
-                valor={formatarMoeda(dados.financeiro.entradasPeriodo)}
-                classeValor="text-primary"
-                detalhe={`Previstas: ${formatarMoeda(dados.financeiro.entradasPrevistasPeriodo)}`}
-              />
-              <Indicador
-                titulo="Saídas no período"
-                valor={formatarMoeda(dados.financeiro.saidasPeriodo)}
-                classeValor="text-destructive"
-                detalhe={`Previstas: ${formatarMoeda(dados.financeiro.saidasPrevistasPeriodo)}`}
-              />
-              <Indicador titulo="Saldo do período" valor={formatarMoeda(dados.financeiro.saldoPeriodo)} />
-            </div>
-            <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
-              <CartaoContas titulo="Contas a receber" posicao={dados.financeiro.contasReceber} rota="/contas-receber" />
-              <CartaoContas titulo="Contas a pagar" posicao={dados.financeiro.contasPagar} rota="/contas-pagar" />
-            </div>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle>Entradas e saídas por {granularidade === "MES" ? "mês" : "dia"}</CardTitle>
-                <Button variant="ghost" size="sm" asChild>
-                  <Link to="/fluxo-caixa">Ver fluxo de caixa</Link>
-                </Button>
-              </CardHeader>
-              <CardContent>
-                <GraficoBarras
-                  series={[
-                    { nome: "Entradas", classe: "fill-primary" },
-                    { nome: "Saídas", classe: "fill-destructive" },
-                  ]}
-                  pontos={dados.financeiro.fluxoPorPeriodo.map((ponto) => ({
-                    rotulo: rotuloDoPonto(ponto.data, granularidade),
-                    valores: [ponto.entradas, ponto.saidas],
-                  }))}
-                  vazio="Nenhuma movimentação realizada no período."
-                />
-              </CardContent>
-            </Card>
-          </section>
-
-          <section className="space-y-3">
-            <h2 className="text-base font-medium">Destaques</h2>
-            <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Produtos mais vendidos</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {dados.produtosMaisVendidos.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">Nenhuma venda no período.</p>
-                  ) : (
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Produto</TableHead>
-                          <TableHead className="text-right">Quantidade</TableHead>
-                          <TableHead className="text-right">Valor</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {dados.produtosMaisVendidos.map((produto) => (
-                          <TableRow key={produto.produtoId}>
-                            <TableCell className="font-medium">{produto.nome}</TableCell>
-                            <TableCell className="text-right">{formatarQuantidade(produto.quantidade)}</TableCell>
-                            <TableCell className="text-right">{formatarMoeda(produto.valor)}</TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  )}
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader>
-                  <CardTitle>Principais clientes</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {dados.principaisClientes.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">Nenhuma venda no período.</p>
-                  ) : (
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Cliente</TableHead>
-                          <TableHead className="text-right">Vendas</TableHead>
-                          <TableHead className="text-right">Valor</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {dados.principaisClientes.map((cliente) => (
-                          <TableRow key={cliente.clienteId}>
-                            <TableCell className="font-medium">{cliente.nome}</TableCell>
-                            <TableCell className="text-right">{cliente.quantidadeVendas}</TableCell>
-                            <TableCell className="text-right">{formatarMoeda(cliente.valor)}</TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle>Estoque abaixo do mínimo ({dados.totalProdutosAbaixoDoMinimo})</CardTitle>
-                <Button variant="ghost" size="sm" asChild>
+                <CardTitle>Repor em breve</CardTitle>
+                <Button variant="faixa" size="sm" asChild>
                   <Link to="/estoque">Ver estoque</Link>
                 </Button>
               </CardHeader>
-              <CardContent>
-                {dados.produtosAbaixoDoMinimo.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">Nenhum produto abaixo do estoque mínimo.</p>
-                ) : (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Produto</TableHead>
-                        <TableHead className="text-right">Disponível</TableHead>
-                        <TableHead className="text-right">Mínimo</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {dados.produtosAbaixoDoMinimo.map((produto) => (
-                        <TableRow key={produto.produtoId}>
-                          <TableCell className="font-medium">{produto.nome}</TableCell>
-                          <TableCell className="text-right text-destructive">
-                            {formatarQuantidade(produto.quantidadeDisponivel)}
-                          </TableCell>
-                          <TableCell className="text-right">{formatarQuantidade(produto.estoqueMinimo)}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                )}
-              </CardContent>
+              {dados.produtosAbaixoDoMinimo.length === 0 ? (
+                <p>Nenhum produto abaixo do mínimo.</p>
+              ) : (
+                dados.produtosAbaixoDoMinimo.map((produto) => (
+                  <div key={produto.produtoId} className="linha">
+                    <span>{produto.nome}</span>
+                    <span>
+                      {formatarQuantidade(produto.quantidadeDisponivel)} de {formatarQuantidade(produto.estoqueMinimo)}
+                    </span>
+                  </div>
+                ))
+              )}
+              {dados.totalProdutosAbaixoDoMinimo > dados.produtosAbaixoDoMinimo.length && (
+                <p className="mt-3 text-[13px] font-semibold">
+                  E mais {dados.totalProdutosAbaixoDoMinimo - dados.produtosAbaixoDoMinimo.length} produto(s).
+                </p>
+              )}
             </Card>
-          </section>
+          </div>
+
+          <div className="grade grade--2">
+            <Card>
+              <CardTitle>Comercial</CardTitle>
+              <Linha rotulo="Vendas realizadas" valor={String(dados.comercial.quantidadeVendas)} />
+              <Linha
+                rotulo="Pedidos"
+                valor={`${dados.comercial.quantidadePedidos} (${dados.comercial.quantidadePedidosCancelados} cancelados)`}
+              />
+              <Linha
+                rotulo="Orçamentos emitidos"
+                valor={`${dados.comercial.orcamentosEmitidos} · ${formatarMoeda(dados.comercial.valorOrcamentosEmitidos)}`}
+              />
+              <Linha rotulo="Conversão em pedido" valor={formatarPercentual(dados.comercial.taxaConversaoPedidos)} />
+              <Linha rotulo="Conversão em venda" valor={formatarPercentual(dados.comercial.taxaConversaoVendas)} />
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle>Caixa no período</CardTitle>
+                <Button variant="secondary" size="sm" asChild>
+                  <Link to="/fluxo-caixa">Ver fluxo de caixa</Link>
+                </Button>
+              </CardHeader>
+              <Linha rotulo="Entradas realizadas" valor={formatarMoeda(dados.financeiro.entradasPeriodo)} />
+              <Linha rotulo="Entradas previstas" valor={formatarMoeda(dados.financeiro.entradasPrevistasPeriodo)} />
+              <Linha rotulo="Saídas realizadas" valor={formatarMoeda(dados.financeiro.saidasPeriodo)} />
+              <Linha rotulo="Saídas previstas" valor={formatarMoeda(dados.financeiro.saidasPrevistasPeriodo)} />
+              <Linha rotulo="Saldo do período" valor={formatarMoeda(dados.financeiro.saldoPeriodo)} />
+            </Card>
+          </div>
+
+          <div className="grade grade--2">
+            <CartaoContas titulo="Contas a receber" posicao={dados.financeiro.contasReceber} rota="/contas-receber" />
+            <CartaoContas titulo="Contas a pagar" posicao={dados.financeiro.contasPagar} rota="/contas-pagar" />
+          </div>
+
+          <Card>
+            <CardTitle>Entradas e saídas por {granularidade === "MES" ? "mês" : "dia"}</CardTitle>
+            <GraficoBarras
+              series={[
+                { nome: "Entradas", cor: "var(--grafico-2)" },
+                { nome: "Saídas", cor: "var(--grafico-4)" },
+              ]}
+              pontos={dados.financeiro.fluxoPorPeriodo.map((ponto) => ({
+                rotulo: rotuloDoPonto(ponto.data, granularidade),
+                valores: [ponto.entradas, ponto.saidas],
+              }))}
+              vazio={{ titulo: "Nenhuma movimentação no período", texto: "Entradas e saídas realizadas aparecem aqui." }}
+            />
+          </Card>
+
+          <div className="grade grade--2">
+            <Card>
+              <CardTitle>Produtos mais vendidos</CardTitle>
+              {dados.produtosMaisVendidos.length === 0 ? (
+                <div className="vazio">
+                  <h3>Nenhuma venda no período</h3>
+                  <p>Os produtos mais vendidos aparecem aqui.</p>
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Produto</TableHead>
+                      <TableHead className="text-right">Quantidade</TableHead>
+                      <TableHead className="text-right">Valor</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {dados.produtosMaisVendidos.map((produto) => (
+                      <TableRow key={produto.produtoId}>
+                        <TableCell className="tabela__forte">{produto.nome}</TableCell>
+                        <TableCell className="text-right">{formatarQuantidade(produto.quantidade)}</TableCell>
+                        <TableCell className="text-right">{formatarMoeda(produto.valor)}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </Card>
+            <Card>
+              <CardTitle>Principais clientes</CardTitle>
+              {dados.principaisClientes.length === 0 ? (
+                <div className="vazio">
+                  <h3>Nenhuma venda no período</h3>
+                  <p>Quem mais compra de você aparece aqui.</p>
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Cliente</TableHead>
+                      <TableHead className="text-right">Vendas</TableHead>
+                      <TableHead className="text-right">Valor</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {dados.principaisClientes.map((cliente) => (
+                      <TableRow key={cliente.clienteId}>
+                        <TableCell className="tabela__forte">{cliente.nome}</TableCell>
+                        <TableCell className="text-right">{cliente.quantidadeVendas}</TableCell>
+                        <TableCell className="text-right">{formatarMoeda(cliente.valor)}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </Card>
+          </div>
         </div>
       ) : null}
-    </div>
+    </>
   );
 }

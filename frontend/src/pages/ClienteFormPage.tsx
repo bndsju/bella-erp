@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
+import { CabecalhoPagina } from "@/components/layout/CabecalhoPagina";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ClienteForm } from "@/components/clientes/ClienteForm";
 import { clienteApi } from "@/lib/clienteApi";
@@ -86,27 +87,28 @@ export function ClienteFormPage() {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{modo === "editar" ? "Editar cliente" : "Novo cliente"}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        {carregando ? (
+    <>
+      <CabecalhoPagina
+        titulo={modo === "editar" ? "Editar cliente" : "Novo cliente"}
+        frase={modo === "editar" ? "Atualize os dados do cliente." : "Preencha os dados para cadastrar."}
+      />
+      {carregando ? (
+        <Card>
           <div className="space-y-4">
-            <Skeleton className="h-9 w-full" />
-            <Skeleton className="h-9 w-full" />
-            <Skeleton className="h-9 w-full" />
+            <Skeleton className="h-11 w-full" />
+            <Skeleton className="h-11 w-full" />
+            <Skeleton className="h-11 w-full" />
           </div>
-        ) : (
-          <ClienteForm
-            modo={modo}
-            tipoPessoaInicial={tipoPessoa}
-            valoresIniciais={valoresIniciais}
-            enviando={enviando}
-            onSubmit={handleSubmit}
-          />
-        )}
-      </CardContent>
-    </Card>
+        </Card>
+      ) : (
+        <ClienteForm
+          modo={modo}
+          tipoPessoaInicial={tipoPessoa}
+          valoresIniciais={valoresIniciais}
+          enviando={enviando}
+          onSubmit={handleSubmit}
+        />
+      )}
+    </>
   );
 }

@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useFieldArray, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import {
   Form,
   FormControl,
@@ -30,6 +30,7 @@ import { ApiError } from "@/lib/api";
 import { adicionarMeses, dataDeHoje, dividirEmParcelas, formatarMoeda } from "@/lib/formatos";
 import type { ClienteResponse } from "@/types/cliente";
 import type { ContaReceberResponse } from "@/types/contaReceber";
+import { CabecalhoPagina } from "@/components/layout/CabecalhoPagina";
 
 const SEM_CLIENTE = "SEM_CLIENTE";
 
@@ -143,10 +144,10 @@ export function ContaReceberFormPage() {
   if (carregando) {
     return (
       <Card>
-        <CardContent className="space-y-4 pt-6">
-          <Skeleton className="h-9 w-full" />
-          <Skeleton className="h-9 w-full" />
-          <Skeleton className="h-9 w-full" />
+        <CardContent className="space-y-4">
+          <Skeleton className="h-11 w-full" />
+          <Skeleton className="h-11 w-full" />
+          <Skeleton className="h-11 w-full" />
         </CardContent>
       </Card>
     );
@@ -155,19 +156,19 @@ export function ContaReceberFormPage() {
   const erroParcelas = form.formState.errors.parcelas?.message ?? form.formState.errors.parcelas?.root?.message;
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-xl font-medium">{modoTela === "editar" ? "Editar conta a receber" : "Nova conta a receber"}</h1>
+    <>
+      <CabecalhoPagina titulo={modoTela === "editar" ? "Editar conta a receber" : "Nova conta a receber"} />
 
-      <Card>
-        <CardContent className="pt-6">
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <div className="grid grid-cols-2 gap-4">
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="contents">
+          <Card>
+            <CardTitle>Dados da conta</CardTitle>
+            <div className="grade grade--2">
                 <FormField
                   control={form.control}
                   name="descricao"
                   render={({ field }) => (
-                    <FormItem className="col-span-2">
+                    <FormItem className="col-span-full">
                       <FormLabel>Descrição</FormLabel>
                       <FormControl>
                         <Input placeholder="Mensalidade, serviço prestado..." {...field} />
@@ -256,26 +257,27 @@ export function ContaReceberFormPage() {
                     )}
                   />
                 )}
-              </div>
+            </div>
+          </Card>
 
-              {modo === "PARCELADO" && (
-                <div className="space-y-4 rounded-lg border border-border p-4">
-                  <div className="flex flex-wrap items-end gap-3">
-                    <div className="space-y-1">
-                      <label className="text-xs text-muted-foreground">Quantidade de parcelas</label>
+          {modo === "PARCELADO" && (
+            <Card>
+              <CardTitle>Parcelas</CardTitle>
+              <div className="space-y-4">
+                  <div className="barra-filtros">
+                    <div className="campo">
+                      <label>Quantidade de parcelas</label>
                       <Input
                         type="number"
                         min="1"
-                        className="w-32"
                         value={quantidadeParcelas}
                         onChange={(e) => setQuantidadeParcelas(Math.max(1, Math.floor(e.target.valueAsNumber) || 1))}
                       />
                     </div>
-                    <div className="space-y-1">
-                      <label className="text-xs text-muted-foreground">Primeiro vencimento</label>
+                    <div className="campo">
+                      <label>Primeiro vencimento</label>
                       <Input
                         type="date"
-                        className="w-44"
                         value={primeiroVencimento}
                         onChange={(e) => setPrimeiroVencimento(e.target.value)}
                       />
@@ -337,14 +339,16 @@ export function ContaReceberFormPage() {
                     >
                       Adicionar parcela
                     </Button>
-                    <p className={somaConfere ? "text-sm text-muted-foreground" : "text-sm font-medium text-destructive"}>
+                    <p className={somaConfere ? "text-sm text-muted-foreground" : "text-sm font-medium text-erro"}>
                       Soma das parcelas: {formatarMoeda(somaParcelas)} / {formatarMoeda(valorTotal)}
                     </p>
                   </div>
-                  {erroParcelas && <p className="text-sm font-medium text-destructive">{erroParcelas}</p>}
-                </div>
-              )}
+                  {erroParcelas && <p className="text-sm font-medium text-erro">{erroParcelas}</p>}
+              </div>
+            </Card>
+          )}
 
+          <Card>
               <FormField
                 control={form.control}
                 name="observacoes"
@@ -358,19 +362,18 @@ export function ContaReceberFormPage() {
                   </FormItem>
                 )}
               />
+          </Card>
 
-              <div className="flex justify-end gap-2 pt-2">
-                <Button type="button" variant="outline" asChild>
+          <div className="acoes">
+                <Button type="button" variant="secondary" asChild>
                   <Link to={id ? `/contas-receber/${id}` : "/contas-receber"}>Cancelar</Link>
                 </Button>
                 <Button type="submit" disabled={form.formState.isSubmitting}>
                   {form.formState.isSubmitting ? "Salvando..." : "Salvar"}
                 </Button>
-              </div>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
-    </div>
+          </div>
+        </form>
+      </Form>
+    </>
   );
 }

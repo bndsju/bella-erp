@@ -113,7 +113,7 @@ export function RegistrarPagamentoDialog({
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grade grade--2">
               {camposNumericos.map(({ nome, rotulo }) => (
                 <FormField
                   key={nome}
@@ -163,7 +163,7 @@ export function RegistrarPagamentoDialog({
                 </FormItem>
               )}
             />
-            <div className="grid grid-cols-2 gap-3 rounded-lg border border-border bg-muted/40 p-3 text-sm">
+            <div className="grid grid-cols-2 gap-3 rounded-[12px] bg-selecionado p-3 text-sm">
               <div>
                 <p className="text-xs text-muted-foreground">Sai do caixa (valor + juros + multa)</p>
                 <p className="font-medium">{formatarMoeda(saidaDoCaixa)}</p>

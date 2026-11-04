@@ -50,12 +50,12 @@ export function EnderecoFields() {
   }
 
   return (
-    <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
       <FormField
         control={form.control}
         name="endereco.cep"
         render={({ field }) => (
-          <FormItem className="col-span-2 sm:col-span-1">
+          <FormItem className="md:col-span-1">
             <FormLabel>CEP</FormLabel>
             <FormControl>
               <Input
@@ -80,7 +80,7 @@ export function EnderecoFields() {
         control={form.control}
         name="endereco.logradouro"
         render={({ field }) => (
-          <FormItem className="col-span-2 sm:col-span-3">
+          <FormItem className="md:col-span-3">
             <FormLabel>Logradouro</FormLabel>
             <FormControl>
               <Input placeholder="Rua, avenida..." {...field} />
@@ -108,7 +108,7 @@ export function EnderecoFields() {
         control={form.control}
         name="endereco.complemento"
         render={({ field }) => (
-          <FormItem className="col-span-2 sm:col-span-1">
+          <FormItem className="md:col-span-1">
             <FormLabel>Complemento</FormLabel>
             <FormControl>
               <Input placeholder="Apto, sala..." {...field} />
@@ -122,7 +122,7 @@ export function EnderecoFields() {
         control={form.control}
         name="endereco.bairro"
         render={({ field }) => (
-          <FormItem className="col-span-2 sm:col-span-1">
+          <FormItem className="md:col-span-1">
             <FormLabel>Bairro</FormLabel>
             <FormControl>
               <Input {...field} />
@@ -136,7 +136,7 @@ export function EnderecoFields() {
         control={form.control}
         name="endereco.cidade"
         render={({ field }) => (
-          <FormItem className="col-span-2 sm:col-span-2">
+          <FormItem className="md:col-span-2">
             <FormLabel>Cidade</FormLabel>
             <FormControl>
               <Input {...field} />

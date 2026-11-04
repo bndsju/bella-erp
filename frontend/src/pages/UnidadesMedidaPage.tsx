@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
@@ -21,6 +22,9 @@ import { Badge } from "@/components/ui/badge";
 import { UnidadeMedidaFormDialog } from "@/components/unidadesmedida/UnidadeMedidaFormDialog";
 import { unidadeMedidaApi } from "@/lib/unidadeMedidaApi";
 import type { StatusUnidadeMedida, UnidadeMedidaResponse } from "@/types/unidadeMedida";
+import { CircleCheck, Pencil, Power } from "lucide-react";
+import { MenuAcoes } from "@/components/ui/menu-acoes";
+import { CabecalhoPagina } from "@/components/layout/CabecalhoPagina";
 
 export function UnidadesMedidaPage() {
   const [unidades, setUnidades] = useState<UnidadeMedidaResponse[]>([]);
@@ -40,6 +44,9 @@ export function UnidadesMedidaPage() {
 
   useEffect(carregar, [carregar]);
 
+  const temFiltro = status !== "TODOS";
+  const limpar = () => setStatus("TODOS");
+
   async function alternarStatus(unidade: UnidadeMedidaResponse) {
     const novoStatus = unidade.status === "ATIVO" ? "INATIVO" : "ATIVO";
     try {
@@ -52,31 +59,46 @@ export function UnidadesMedidaPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-medium">Unidades de medida</h1>
-        <Button
-          onClick={() => {
-            setUnidadeEmEdicao(null);
-            setDialogAberto(true);
-          }}
-        >
-          Nova unidade de medida
-        </Button>
-      </div>
+    <>
+      <CabecalhoPagina
+        titulo="Unidades de medida"
+        acao={
+          <>
+          <Button
+            onClick={() => {
+              setUnidadeEmEdicao(null);
+              setDialogAberto(true);
+            }}
+          >
+            Nova unidade de medida
+          </Button>
+          </>
+        }
+      />
 
-      <Select value={status} onValueChange={(v) => setStatus(v as StatusUnidadeMedida | "TODOS")}>
-        <SelectTrigger className="w-40">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="TODOS">Todos os status</SelectItem>
-          <SelectItem value="ATIVO">Ativo</SelectItem>
-          <SelectItem value="INATIVO">Inativo</SelectItem>
-        </SelectContent>
-      </Select>
+      <Card>
+        <div className="barra-filtros">
 
-      <div className="rounded-lg border border-border">
+          <div className="campo">
+            <label htmlFor="filtro-status">Status</label>
+            <Select value={status} onValueChange={(v) => setStatus(v as StatusUnidadeMedida | "TODOS")}>
+              <SelectTrigger id="filtro-status" className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="TODOS">Todos os status</SelectItem>
+                <SelectItem value="ATIVO">Ativo</SelectItem>
+                <SelectItem value="INATIVO">Inativo</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <Button variant="secondary" disabled={!temFiltro} onClick={limpar}>
+            Limpar filtros
+          </Button>
+        </div>
+      </Card>
+
+      <Card>
         <Table>
           <TableHeader>
             <TableRow>
@@ -95,14 +117,17 @@ export function UnidadesMedidaPage() {
               </TableRow>
             ) : unidades.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={4} className="py-8 text-center text-muted-foreground">
-                  Nenhuma unidade de medida encontrada.
+                <TableCell colSpan={4}>
+                  <div className="vazio">
+                    <h3>{temFiltro ? "Nenhuma unidade com esse filtro" : "Nenhuma unidade de medida ainda"}</h3>
+                    <p>{temFiltro ? "Ajuste ou limpe o filtro para ver mais." : "Sua primeira unidade aparece aqui."}</p>
+                  </div>
                 </TableCell>
               </TableRow>
             ) : (
               unidades.map((unidade) => (
                 <TableRow key={unidade.id}>
-                  <TableCell className="font-medium">{unidade.nome}</TableCell>
+                  <TableCell className="tabela__forte">{unidade.nome}</TableCell>
                   <TableCell>{unidade.sigla}</TableCell>
                   <TableCell>
                     <Badge variant={unidade.status === "ATIVO" ? "default" : "outline"}>
@@ -110,28 +135,31 @@ export function UnidadesMedidaPage() {
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setUnidadeEmEdicao(unidade);
-                          setDialogAberto(true);
-                        }}
-                      >
-                        Editar
-                      </Button>
-                      <Button variant="ghost" size="sm" onClick={() => alternarStatus(unidade)}>
-                        {unidade.status === "ATIVO" ? "Inativar" : "Ativar"}
-                      </Button>
-                    </div>
+                    <MenuAcoes
+                      itens={[
+                        {
+                          rotulo: "Editar",
+                          icone: Pencil,
+                          aoClicar: () => {
+                            setUnidadeEmEdicao(unidade);
+                            setDialogAberto(true);
+                          },
+                        },
+                        {
+                          rotulo: unidade.status === "ATIVO" ? "Inativar" : "Ativar",
+                          icone: unidade.status === "ATIVO" ? Power : CircleCheck,
+                          perigo: unidade.status === "ATIVO",
+                          aoClicar: () => alternarStatus(unidade),
+                        },
+                      ]}
+                    />
                   </TableCell>
                 </TableRow>
               ))
             )}
           </TableBody>
         </Table>
-      </div>
+      </Card>
 
       <UnidadeMedidaFormDialog
         open={dialogAberto}
@@ -139,6 +167,6 @@ export function UnidadesMedidaPage() {
         unidadeMedida={unidadeEmEdicao}
         onSalvo={carregar}
       />
-    </div>
+    </>
   );
 }

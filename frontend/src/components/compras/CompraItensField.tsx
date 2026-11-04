@@ -34,23 +34,26 @@ export function CompraItensField({ produtos }: CompraItensFieldProps) {
 
   return (
     <div className="space-y-3">
-      <div className="rounded-lg border border-border">
+      <div>
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Produto</TableHead>
-              <TableHead className="w-28">Quantidade</TableHead>
+              <TableHead className="w-32">Quantidade</TableHead>
               <TableHead className="w-32">Custo unitário</TableHead>
-              <TableHead className="w-28">Desconto</TableHead>
-              <TableHead className="w-28 text-right">Total</TableHead>
+              <TableHead className="w-32">Desconto</TableHead>
+              <TableHead className="w-32 text-right">Total</TableHead>
               <TableHead className="w-10" />
             </TableRow>
           </TableHeader>
           <TableBody>
             {fields.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="py-6 text-center text-muted-foreground">
-                  Nenhum item adicionado.
+                <TableCell colSpan={6}>
+                  <div className="vazio">
+                    <h3>Nenhum item adicionado</h3>
+                    <p>Use "Adicionar item" para incluir produtos.</p>
+                  </div>
                 </TableCell>
               </TableRow>
             ) : (
@@ -156,7 +159,7 @@ export function CompraItensField({ produtos }: CompraItensFieldProps) {
                         )}
                       />
                     </TableCell>
-                    <TableCell className="text-right text-sm">
+                    <TableCell className="text-right">
                       {formatoMoeda.format(Number.isFinite(totalItem) ? totalItem : 0)}
                     </TableCell>
                     <TableCell>
@@ -173,13 +176,13 @@ export function CompraItensField({ produtos }: CompraItensFieldProps) {
       </div>
       <Button
         type="button"
-        variant="outline"
+        variant="secondary"
         size="sm"
         onClick={() => append({ produtoId: "", quantidade: 1, custoUnitario: 0, desconto: 0 })}
       >
         Adicionar item
       </Button>
-      {erroItens && <p className="text-sm font-medium text-destructive">{erroItens}</p>}
+      {erroItens && <p className="text-sm font-bold text-erro">{erroItens}</p>}
     </div>
   );
 }

@@ -1,0 +1,93 @@
+/*
+ * Complementos ao arquivo-mestre. Só existem para encaixar os componentes do sistema (React) nos mesmos
+ * tokens e medidas; nada aqui redefine cor, raio ou tamanho oficiais.
+ */
+@layer components {
+  /* campo fora de ".campo": mesmo visual de ".campo input" */
+  .entrada {
+    width: 100%;
+    min-height: 44px;
+    padding: 9px 14px;
+    border: 1px solid var(--borda-campo);
+    border-radius: var(--raio-campo);
+    background: var(--fundo-campo);
+    color: var(--texto);
+    font: 500 15px var(--fonte);
+  }
+  .entrada::placeholder { color: var(--texto-auxiliar); }
+  .entrada[aria-invalid="true"] { border-color: var(--erro); }
+  .entrada:disabled, .entrada[data-disabled] { opacity: 0.5; cursor: not-allowed; }
+  textarea.entrada { min-height: 92px; resize: vertical; }
+
+  /* rótulo sempre visível: ".campo label" */
+  .rotulo { font-size: 13px; font-weight: 700; color: var(--texto); }
+
+  /* botões: variações que o arquivo-mestre não nomeia mas o sistema usa */
+  .botao--compacto { min-height: 36px; padding: 0 14px; font-size: 13px; }
+  .botao--fantasma { background: transparent; color: var(--texto); }
+  .botao--fantasma:hover { background: var(--fundo-selecionado); }
+  .botao--link { background: none; color: var(--link); padding: 0 4px; text-decoration: underline; min-height: 0; }
+
+  /* painel escuro de menus (mesmo visual do ".submenu" do menu principal) */
+  .painel {
+    z-index: 60;
+    min-width: 220px;
+    padding: 8px;
+    border-radius: 16px;
+    background: var(--fundo-barra);
+    border: 1px solid #3f3a3b;
+    color: #ffffff;
+  }
+  .painel__item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 44px;
+    padding: 0 12px;
+    border-radius: 10px;
+    color: #ffffff;
+    text-decoration: none;
+    font-weight: 600;
+    cursor: pointer;
+    outline: none;
+  }
+  .painel__item:hover, .painel__item[data-highlighted] { background: #3f3a3b; }
+  .painel__item[aria-current="page"] { background: var(--cor-marca); color: var(--cor-marca-texto); font-weight: 700; }
+  .painel__item--perigo { color: #e5736b; }
+  .painel__item[data-disabled] { opacity: 0.5; pointer-events: none; }
+  .painel__separador { height: 1px; margin: 6px -8px; background: #3f3a3b; }
+
+  /* tabelas: colunas numéricas e de ações à direita; linha clicável */
+  .tabela tr[data-clicavel] { cursor: pointer; }
+  .tabela td { vertical-align: middle; }
+
+  /* janela: fundo escurecido da página inteira */
+  .janela-sobreposicao { background: rgba(35, 31, 32, 0.6); }
+  .janela--rolavel { max-height: calc(100vh - 32px); overflow-y: auto; }
+}
+
+/* ação principal da tela, projetada na faixa verde: botão preto, como ".botao--faixa" do arquivo-mestre */
+@layer components {
+  .faixa__acao { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+  .faixa__acao .botao--principal { background: #231f20; color: #ffffff; }
+  .faixa__acao .botao--principal:hover { background: var(--cor-marca-hover); color: #ffffff; }
+  .faixa__acao .botao--secundario { color: #231f20; box-shadow: inset 0 0 0 1px #231f20; }
+  .faixa__acao .botao--secundario:hover { background: rgba(35, 31, 32, 0.12); }
+  .marca { color: inherit; }
+  .menu__item[aria-current="page"] { background: var(--cor-marca); color: var(--cor-marca-texto); font-weight: 700; }
+}
+
+/*
+ * Colunas das tabelas. Fica FORA das camadas de propósito: as páginas marcam colunas de valor com
+ * "text-right" (utilitário do Tailwind, camada mais forte), e aqui decidimos como isso se comporta.
+ */
+/*
+ * Colunas: 24 px de respiro entre elas; só a última (Ações ou o valor final) encosta na borda, à direita,
+ * como no arquivo-mestre. Colunas de valor no meio da tabela ficam em negrito e começam no mesmo ponto
+ * do cabeçalho, para a palavra e o valor ficarem na mesma linha vertical.
+ */
+.tabela th:not(:last-child), .tabela td:not(:last-child) { padding-right: 24px; }
+.tabela th.text-right, .tabela td.text-right { text-align: left; }
+.tabela td.text-right { font-weight: 800; white-space: nowrap; }
+.tabela th.text-right:last-child, .tabela td.text-right:last-child { text-align: right; padding-right: 0; }
+

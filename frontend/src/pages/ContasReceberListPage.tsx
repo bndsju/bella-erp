@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -26,6 +26,9 @@ import { contaReceberApi } from "@/lib/contaReceberApi";
 import { formatarData, formatarMoeda } from "@/lib/formatos";
 import type { ClienteResponse } from "@/types/cliente";
 import type { ContaReceberResponse, SituacaoContaReceber, StatusContaReceber } from "@/types/contaReceber";
+import { ExternalLink } from "lucide-react";
+import { MenuAcoes } from "@/components/ui/menu-acoes";
+import { CabecalhoPagina } from "@/components/layout/CabecalhoPagina";
 
 function nomeExibicaoCliente(cliente: ClienteResponse): string {
   return cliente.tipoPessoa === "PF" ? (cliente.nomeCompleto ?? "") : (cliente.razaoSocial ?? "");
@@ -40,6 +43,7 @@ function proximoVencimento(conta: ContaReceberResponse): string | null {
 }
 
 export function ContasReceberListPage() {
+  const navigate = useNavigate();
   const [contas, setContas] = useState<ContaReceberResponse[]>([]);
   const [clientes, setClientes] = useState<ClienteResponse[]>([]);
   const [carregando, setCarregando] = useState(true);
@@ -79,83 +83,92 @@ export function ContasReceberListPage() {
   const recebido = contas.reduce((total, conta) => total + conta.valorRecebido, 0);
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-medium">Contas a receber</h1>
-        <Button asChild>
-          <Link to="/contas-receber/novo">Nova conta</Link>
-        </Button>
+    <>
+      <CabecalhoPagina
+        titulo="Contas a receber"
+        acao={
+          <>
+          <Button asChild>
+            <Link to="/contas-receber/novo">Nova conta</Link>
+          </Button>
+          </>
+        }
+      />
+
+      <div className="grade grade--3">
+        <Card className="indicador">
+          <div className="indicador__rotulo">A receber (saldo pendente)</div>
+          <div className="indicador__valor">{formatarMoeda(aReceber)}</div>
+        </Card>
+        <Card className="indicador">
+          <div className="indicador__rotulo">Vencido</div>
+          <div className="indicador__valor">{formatarMoeda(vencido)}</div>
+        </Card>
+        <Card className="indicador">
+          <div className="indicador__rotulo">Já recebido</div>
+          <div className="indicador__valor">{formatarMoeda(recebido)}</div>
+        </Card>
       </div>
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <Card>
-          <CardContent className="pt-6">
-            <p className="text-xs text-muted-foreground">A receber (saldo pendente)</p>
-            <p className="text-lg font-medium">{formatarMoeda(aReceber)}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <p className="text-xs text-muted-foreground">Vencido</p>
-            <p className="text-lg font-medium text-destructive">{formatarMoeda(vencido)}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <p className="text-xs text-muted-foreground">Já recebido</p>
-            <p className="text-lg font-medium text-primary">{formatarMoeda(recebido)}</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="flex flex-wrap items-end gap-3">
-        <Select value={clienteId} onValueChange={setClienteId}>
-          <SelectTrigger className="w-56">
+      <Card>
+        <div className="barra-filtros">
+          <div className="campo">
+            <label htmlFor="filtro-cliente">Cliente</label>
+            <Select value={clienteId} onValueChange={setClienteId}>
+            <SelectTrigger id="filtro-cliente" className="w-full">
             <SelectValue placeholder="Cliente" />
-          </SelectTrigger>
-          <SelectContent>
+            </SelectTrigger>
+            <SelectContent>
             <SelectItem value="TODOS">Todos os clientes</SelectItem>
             {clientes.map((cliente) => (
-              <SelectItem key={cliente.id} value={cliente.id}>
-                {nomeExibicaoCliente(cliente)}
-              </SelectItem>
+            <SelectItem key={cliente.id} value={cliente.id}>
+            {nomeExibicaoCliente(cliente)}
+            </SelectItem>
             ))}
-          </SelectContent>
-        </Select>
-        <Select value={situacao} onValueChange={(v) => setSituacao(v as SituacaoContaReceber | "TODAS")}>
-          <SelectTrigger className="w-44">
+            </SelectContent>
+            </Select>
+          </div>
+          <div className="campo">
+            <label htmlFor="filtro-situacao">Situação</label>
+            <Select value={situacao} onValueChange={(v) => setSituacao(v as SituacaoContaReceber | "TODAS")}>
+            <SelectTrigger id="filtro-situacao" className="w-full">
             <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
+            </SelectTrigger>
+            <SelectContent>
             <SelectItem value="TODAS">Todas as situações</SelectItem>
             <SelectItem value="EM_ABERTO">Em aberto</SelectItem>
             <SelectItem value="VENCIDAS">Vencidas</SelectItem>
             <SelectItem value="RECEBIDAS">Recebidas</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select value={status} onValueChange={(v) => setStatus(v as StatusContaReceber | "TODOS")}>
-          <SelectTrigger className="w-56">
+            </SelectContent>
+            </Select>
+          </div>
+          <div className="campo">
+            <label htmlFor="filtro-status">Status</label>
+            <Select value={status} onValueChange={(v) => setStatus(v as StatusContaReceber | "TODOS")}>
+            <SelectTrigger id="filtro-status" className="w-full">
             <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
+            </SelectTrigger>
+            <SelectContent>
             <SelectItem value="TODOS">Todos os status</SelectItem>
             <SelectItem value="PENDENTE">Pendente</SelectItem>
             <SelectItem value="PARCIALMENTE_RECEBIDA">Parcialmente recebida</SelectItem>
             <SelectItem value="RECEBIDA">Recebida</SelectItem>
             <SelectItem value="CANCELADA">Cancelada</SelectItem>
-          </SelectContent>
-        </Select>
-        <div className="space-y-1">
-          <label className="text-xs text-muted-foreground">Vencimento de</label>
-          <Input type="date" className="w-40" value={vencimentoInicio} onChange={(e) => setVencimentoInicio(e.target.value)} />
+            </SelectContent>
+            </Select>
+          </div>
+        <div className="campo">
+          <label htmlFor="filtro-vencimento-de">Vencimento de</label>
+          <Input id="filtro-vencimento-de" type="date" value={vencimentoInicio} onChange={(e) => setVencimentoInicio(e.target.value)} />
         </div>
-        <div className="space-y-1">
-          <label className="text-xs text-muted-foreground">até</label>
-          <Input type="date" className="w-40" value={vencimentoFim} onChange={(e) => setVencimentoFim(e.target.value)} />
+        <div className="campo">
+          <label htmlFor="filtro-ate">Até</label>
+          <Input id="filtro-ate" type="date" value={vencimentoFim} onChange={(e) => setVencimentoFim(e.target.value)} />
         </div>
-      </div>
+        </div>
+      </Card>
 
-      <div className="rounded-lg border border-border">
+      <Card>
         <Table>
           <TableHeader>
             <TableRow>
@@ -179,14 +192,17 @@ export function ContasReceberListPage() {
               ))
             ) : contas.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="py-8 text-center text-muted-foreground">
-                  Nenhuma conta a receber encontrada.
+                <TableCell colSpan={7}>
+                  <div className="vazio">
+                    <h3>Nenhuma conta a receber encontrada</h3>
+                    <p>Ajuste os filtros ou cadastre um novo registro.</p>
+                  </div>
                 </TableCell>
               </TableRow>
             ) : (
               contas.map((conta) => (
-                <TableRow key={conta.id}>
-                  <TableCell className="font-medium">{conta.descricao}</TableCell>
+                <TableRow key={conta.id} className="cursor-pointer" onClick={() => navigate(`/contas-receber/${conta.id}`)}>
+                  <TableCell className="tabela__forte">{conta.descricao}</TableCell>
                   <TableCell>{conta.clienteNome ?? "—"}</TableCell>
                   <TableCell>{formatarData(proximoVencimento(conta))}</TableCell>
                   <TableCell className="text-right">{formatarMoeda(conta.valorTotal)}</TableCell>
@@ -195,16 +211,14 @@ export function ContasReceberListPage() {
                     <StatusContaReceberBadge status={conta.status} vencida={conta.vencida} />
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button variant="ghost" size="sm" asChild>
-                      <Link to={`/contas-receber/${conta.id}`}>Abrir</Link>
-                    </Button>
+                    <MenuAcoes itens={[{ rotulo: "Abrir", icone: ExternalLink, para: `/contas-receber/${conta.id}` }]} />
                   </TableCell>
                 </TableRow>
               ))
             )}
           </TableBody>
         </Table>
-      </div>
-    </div>
+      </Card>
+    </>
   );
 }

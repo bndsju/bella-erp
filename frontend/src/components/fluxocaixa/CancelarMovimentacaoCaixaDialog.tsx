@@ -38,8 +38,8 @@ export function CancelarMovimentacaoCaixaDialog({
             Só lançamentos manuais podem ser cancelados. Um lançamento cancelado deixa de contar no saldo, mas continua registrado.
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Motivo do cancelamento</label>
+        <div className="campo">
+          <label>Motivo do cancelamento</label>
           <Textarea rows={3} value={motivo} onChange={(e) => setMotivo(e.target.value)} />
         </div>
         <DialogFooter>

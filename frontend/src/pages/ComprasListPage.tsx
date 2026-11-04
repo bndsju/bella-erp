@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -24,6 +25,9 @@ import { compraApi } from "@/lib/compraApi";
 import { fornecedorApi } from "@/lib/fornecedorApi";
 import type { CompraResponse, StatusCompra } from "@/types/compra";
 import type { FornecedorResponse } from "@/types/fornecedor";
+import { ExternalLink } from "lucide-react";
+import { MenuAcoes } from "@/components/ui/menu-acoes";
+import { CabecalhoPagina } from "@/components/layout/CabecalhoPagina";
 
 const formatoMoeda = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 
@@ -32,6 +36,7 @@ function formatarData(data: string | null): string {
 }
 
 export function ComprasListPage() {
+  const navigate = useNavigate();
   const [compras, setCompras] = useState<CompraResponse[]>([]);
   const [fornecedores, setFornecedores] = useState<FornecedorResponse[]>([]);
   const [carregando, setCarregando] = useState(true);
@@ -61,51 +66,63 @@ export function ComprasListPage() {
   useEffect(carregar, [carregar]);
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-medium">Compras</h1>
-        <Button asChild>
-          <Link to="/compras/novo">Nova compra</Link>
-        </Button>
-      </div>
+    <>
+      <CabecalhoPagina
+        titulo="Compras"
+        acao={
+          <>
+          <Button asChild>
+            <Link to="/compras/novo">Nova compra</Link>
+          </Button>
+          </>
+        }
+      />
 
-      <div className="flex flex-wrap items-end gap-3">
-        <Select value={fornecedorId} onValueChange={setFornecedorId}>
-          <SelectTrigger className="w-56">
+      <Card>
+        <div className="barra-filtros">
+          <div className="campo">
+            <label htmlFor="filtro-fornecedor">Fornecedor</label>
+            <Select value={fornecedorId} onValueChange={setFornecedorId}>
+            <SelectTrigger id="filtro-fornecedor" className="w-full">
             <SelectValue placeholder="Fornecedor" />
-          </SelectTrigger>
-          <SelectContent>
+            </SelectTrigger>
+            <SelectContent>
             <SelectItem value="TODOS">Todos os fornecedores</SelectItem>
             {fornecedores.map((fornecedor) => (
-              <SelectItem key={fornecedor.id} value={fornecedor.id}>
-                {fornecedor.nome}
-              </SelectItem>
+            <SelectItem key={fornecedor.id} value={fornecedor.id}>
+            {fornecedor.nome}
+            </SelectItem>
             ))}
-          </SelectContent>
-        </Select>
-        <Select value={status} onValueChange={(v) => setStatus(v as StatusCompra | "TODOS")}>
-          <SelectTrigger className="w-64">
+            </SelectContent>
+            </Select>
+          </div>
+          <div className="campo">
+            <label htmlFor="filtro-status">Status</label>
+            <Select value={status} onValueChange={(v) => setStatus(v as StatusCompra | "TODOS")}>
+            <SelectTrigger id="filtro-status" className="w-full">
             <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
+            </SelectTrigger>
+            <SelectContent>
             <SelectItem value="TODOS">Todos os status</SelectItem>
             <SelectItem value="RASCUNHO">Rascunho</SelectItem>
             <SelectItem value="CONFIRMADA">Confirmada (recebimento pendente)</SelectItem>
             <SelectItem value="RECEBIDA">Recebida</SelectItem>
             <SelectItem value="CANCELADA">Cancelada</SelectItem>
-          </SelectContent>
-        </Select>
-        <div className="space-y-1">
-          <label className="text-xs text-muted-foreground">Compra de</label>
-          <Input type="date" className="w-40" value={dataInicio} onChange={(e) => setDataInicio(e.target.value)} />
+            </SelectContent>
+            </Select>
+          </div>
+        <div className="campo">
+          <label htmlFor="filtro-compra-de">Compra de</label>
+          <Input id="filtro-compra-de" type="date" value={dataInicio} onChange={(e) => setDataInicio(e.target.value)} />
         </div>
-        <div className="space-y-1">
-          <label className="text-xs text-muted-foreground">até</label>
-          <Input type="date" className="w-40" value={dataFim} onChange={(e) => setDataFim(e.target.value)} />
+        <div className="campo">
+          <label htmlFor="filtro-ate">Até</label>
+          <Input id="filtro-ate" type="date" value={dataFim} onChange={(e) => setDataFim(e.target.value)} />
         </div>
-      </div>
+        </div>
+      </Card>
 
-      <div className="rounded-lg border border-border">
+      <Card>
         <Table>
           <TableHeader>
             <TableRow>
@@ -128,14 +145,17 @@ export function ComprasListPage() {
               ))
             ) : compras.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="py-8 text-center text-muted-foreground">
-                  Nenhuma compra encontrada.
+                <TableCell colSpan={6}>
+                  <div className="vazio">
+                    <h3>Nenhuma compra encontrada</h3>
+                    <p>Ajuste os filtros ou cadastre um novo registro.</p>
+                  </div>
                 </TableCell>
               </TableRow>
             ) : (
               compras.map((compra) => (
-                <TableRow key={compra.id}>
-                  <TableCell className="font-medium">{compra.fornecedorNome}</TableCell>
+                <TableRow key={compra.id} className="cursor-pointer" onClick={() => navigate(`/compras/${compra.id}`)}>
+                  <TableCell className="tabela__forte">{compra.fornecedorNome}</TableCell>
                   <TableCell>{formatarData(compra.dataCompra)}</TableCell>
                   <TableCell>{formatarData(compra.previsaoRecebimento)}</TableCell>
                   <TableCell className="text-right">{formatoMoeda.format(compra.valorTotal)}</TableCell>
@@ -143,16 +163,14 @@ export function ComprasListPage() {
                     <CompraStatusBadge status={compra.status} />
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button variant="ghost" size="sm" asChild>
-                      <Link to={`/compras/${compra.id}`}>Abrir</Link>
-                    </Button>
+                    <MenuAcoes itens={[{ rotulo: "Abrir", icone: ExternalLink, para: `/compras/${compra.id}` }]} />
                   </TableCell>
                 </TableRow>
               ))
             )}
           </TableBody>
         </Table>
-      </div>
-    </div>
+      </Card>
+    </>
   );
 }

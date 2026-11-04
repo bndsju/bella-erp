@@ -21,6 +21,9 @@ import { contaReceberApi } from "@/lib/contaReceberApi";
 import { ApiError } from "@/lib/api";
 import { formatarData, formatarMoeda } from "@/lib/formatos";
 import type { ContaReceberResponse, ParcelaContaReceberResponse, StatusParcela } from "@/types/contaReceber";
+import { HandCoins } from "lucide-react";
+import { MenuAcoes } from "@/components/ui/menu-acoes";
+import { CabecalhoPagina } from "@/components/layout/CabecalhoPagina";
 
 const ROTULO_PARCELA: Record<StatusParcela, string> = {
   PENDENTE: "Pendente",
@@ -68,10 +71,10 @@ export function ContaReceberDetalhePage() {
   if (carregando || !conta) {
     return (
       <Card>
-        <CardContent className="space-y-4 pt-6">
-          <Skeleton className="h-9 w-full" />
-          <Skeleton className="h-9 w-full" />
-          <Skeleton className="h-9 w-full" />
+        <CardContent className="space-y-4">
+          <Skeleton className="h-11 w-full" />
+          <Skeleton className="h-11 w-full" />
+          <Skeleton className="h-11 w-full" />
         </CardContent>
       </Card>
     );
@@ -82,86 +85,81 @@ export function ContaReceberDetalhePage() {
   const podeRegistrarRecebimento = !cancelada;
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <h1 className="text-xl font-medium">{conta.descricao}</h1>
-          <StatusContaReceberBadge status={conta.status} vencida={conta.vencida} />
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Button variant="outline" asChild>
-            <Link to="/contas-receber">Voltar</Link>
-          </Button>
-          {!cancelada && (
-            <Button variant="outline" onClick={() => setDialogDadosAberto(true)}>
-              Editar dados
-            </Button>
-          )}
-          {!cancelada && !temRecebimentos && conta.origem === "MANUAL" && (
+    <>
+      <CabecalhoPagina
+        titulo={conta.descricao}
+        acao={
+          <>
+            <StatusContaReceberBadge status={conta.status} vencida={conta.vencida} />
             <Button variant="outline" asChild>
-              <Link to={`/contas-receber/${conta.id}/editar`}>Editar valor e parcelas</Link>
+              <Link to="/contas-receber">Voltar</Link>
             </Button>
-          )}
-          {!cancelada && !temRecebimentos && (
-            <Button variant="outline" onClick={() => setDialogCancelarAberto(true)}>
-              Cancelar conta
-            </Button>
-          )}
-        </div>
-      </div>
+            {!cancelada && (
+              <Button variant="outline" onClick={() => setDialogDadosAberto(true)}>
+                Editar dados
+              </Button>
+            )}
+            {!cancelada && !temRecebimentos && conta.origem === "MANUAL" && (
+              <Button variant="outline" asChild>
+                <Link to={`/contas-receber/${conta.id}/editar`}>Editar valor e parcelas</Link>
+              </Button>
+            )}
+            {!cancelada && !temRecebimentos && (
+              <Button variant="outline" onClick={() => setDialogCancelarAberto(true)}>
+                Cancelar conta
+              </Button>
+            )}
+          </>
+        }
+      />
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <Card>
-          <CardContent className="pt-6">
-            <p className="text-xs text-muted-foreground">Valor total</p>
-            <p className="text-lg font-medium">{formatarMoeda(conta.valorTotal)}</p>
-          </CardContent>
+      <div className="grade grade--3">
+        <Card className="indicador">
+          <div className="indicador__rotulo">Valor total</div>
+          <div className="indicador__valor">{formatarMoeda(conta.valorTotal)}</div>
         </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <p className="text-xs text-muted-foreground">Recebido</p>
-            <p className="text-lg font-medium text-primary">{formatarMoeda(conta.valorRecebido)}</p>
-          </CardContent>
+        <Card className="indicador">
+          <div className="indicador__rotulo">Recebido</div>
+          <div className="indicador__valor">{formatarMoeda(conta.valorRecebido)}</div>
         </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <p className="text-xs text-muted-foreground">Saldo pendente</p>
-            <p className="text-lg font-medium">{formatarMoeda(conta.saldoPendente)}</p>
-          </CardContent>
+        <Card className="indicador">
+          <div className="indicador__rotulo">Saldo pendente</div>
+          <div className="indicador__valor">{formatarMoeda(conta.saldoPendente)}</div>
         </Card>
       </div>
 
       <Card>
-        <CardContent className="grid grid-cols-2 gap-4 pt-6 text-sm sm:grid-cols-4">
-          <div>
-            <p className="text-muted-foreground">Cliente</p>
-            <p className="font-medium">{conta.clienteNome ?? "—"}</p>
+        <CardTitle>Dados</CardTitle>
+        <div>
+          <div className="linha">
+            <span>Cliente</span>
+            <span>{conta.clienteNome ?? "—"}</span>
           </div>
-          <div>
-            <p className="text-muted-foreground">Data de lançamento</p>
-            <p className="font-medium">{formatarData(conta.dataLancamento)}</p>
+          <div className="linha">
+            <span>Data de lançamento</span>
+            <span>{formatarData(conta.dataLancamento)}</span>
           </div>
-          <div>
-            <p className="text-muted-foreground">Origem</p>
-            <p className="font-medium">{conta.origem === "MANUAL" ? "Lançamento manual" : "Venda"}</p>
+          <div className="linha">
+            <span>Origem</span>
+            <span>{conta.origem === "MANUAL" ? "Lançamento manual" : "Venda"}</span>
           </div>
-          <div>
-            <p className="text-muted-foreground">Parcelas</p>
-            <p className="font-medium">{conta.parcelas.length}</p>
+          <div className="linha">
+            <span>Parcelas</span>
+            <span>{conta.parcelas.length}</span>
           </div>
           {conta.observacoes && (
-            <div className="col-span-2 sm:col-span-4">
-              <p className="text-muted-foreground">Observações</p>
-              <p className="font-medium">{conta.observacoes}</p>
-            </div>
+            <div className="linha">
+            <span>Observações</span>
+            <span>{conta.observacoes}</span>
+          </div>
           )}
           {cancelada && (
-            <div className="col-span-2 sm:col-span-4">
-              <p className="text-muted-foreground">Motivo do cancelamento</p>
-              <p className="font-medium">{conta.motivoCancelamento}</p>
-            </div>
+            <div className="linha">
+            <span>Motivo do cancelamento</span>
+            <span>{conta.motivoCancelamento}</span>
+          </div>
           )}
-        </CardContent>
+        </div>
       </Card>
 
       <Card>
@@ -169,7 +167,7 @@ export function ContaReceberDetalhePage() {
           <CardTitle>Parcelas e recebimentos</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="rounded-lg border border-border">
+          <div>
             <Table>
               <TableHeader>
                 <TableRow>
@@ -186,7 +184,7 @@ export function ContaReceberDetalhePage() {
                 {conta.parcelas.map((parcela) => (
                   <Fragment key={parcela.id}>
                     <TableRow>
-                      <TableCell className="font-medium">{parcela.numero}ª</TableCell>
+                      <TableCell className="tabela__forte">{parcela.numero}ª</TableCell>
                       <TableCell>{formatarData(parcela.vencimento)}</TableCell>
                       <TableCell className="text-right">{formatarMoeda(parcela.valor)}</TableCell>
                       <TableCell className="text-right">{formatarMoeda(parcela.valorRecebido)}</TableCell>
@@ -200,11 +198,16 @@ export function ContaReceberDetalhePage() {
                         </span>
                       </TableCell>
                       <TableCell className="text-right">
-                        {podeRegistrarRecebimento && parcela.saldoPendente > 0 && (
-                          <Button variant="ghost" size="sm" onClick={() => setParcelaEmRecebimento(parcela)}>
-                            Registrar recebimento
-                          </Button>
-                        )}
+                        <MenuAcoes
+                          itens={[
+                            {
+                              rotulo: "Registrar recebimento",
+                              icone: HandCoins,
+                              oculto: !(podeRegistrarRecebimento && parcela.saldoPendente > 0),
+                              aoClicar: () => setParcelaEmRecebimento(parcela),
+                            },
+                          ]}
+                        />
                       </TableCell>
                     </TableRow>
                     {parcela.recebimentos.map((recebimento) => (
@@ -249,6 +252,6 @@ export function ContaReceberDetalhePage() {
         processando={cancelando}
         onConfirmar={cancelar}
       />
-    </div>
+    </>
   );
 }

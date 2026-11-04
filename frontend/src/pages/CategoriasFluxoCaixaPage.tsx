@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
@@ -21,6 +22,9 @@ import { Badge } from "@/components/ui/badge";
 import { CategoriaFluxoCaixaFormDialog } from "@/components/categoriasfluxocaixa/CategoriaFluxoCaixaFormDialog";
 import { categoriaFluxoCaixaApi } from "@/lib/categoriaFluxoCaixaApi";
 import type { CategoriaFluxoCaixaResponse, StatusCategoriaFluxoCaixa } from "@/types/categoriaFluxoCaixa";
+import { CircleCheck, Pencil, Power } from "lucide-react";
+import { MenuAcoes } from "@/components/ui/menu-acoes";
+import { CabecalhoPagina } from "@/components/layout/CabecalhoPagina";
 
 export function CategoriasFluxoCaixaPage() {
   const [categorias, setCategorias] = useState<CategoriaFluxoCaixaResponse[]>([]);
@@ -52,31 +56,42 @@ export function CategoriasFluxoCaixaPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-medium">Categorias de fluxo de caixa</h1>
-        <Button
-          onClick={() => {
-            setCategoriaEmEdicao(null);
-            setDialogAberto(true);
-          }}
-        >
-          Nova categoria de fluxo de caixa
-        </Button>
-      </div>
+    <>
+      <CabecalhoPagina
+        titulo="Categorias de fluxo de caixa"
+        acao={
+          <>
+          <Button
+            onClick={() => {
+              setCategoriaEmEdicao(null);
+              setDialogAberto(true);
+            }}
+          >
+            Nova categoria de fluxo de caixa
+          </Button>
+          </>
+        }
+      />
 
-      <Select value={status} onValueChange={(v) => setStatus(v as StatusCategoriaFluxoCaixa | "TODOS")}>
-        <SelectTrigger className="w-40">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="TODOS">Todos os status</SelectItem>
-          <SelectItem value="ATIVO">Ativo</SelectItem>
-          <SelectItem value="INATIVO">Inativo</SelectItem>
-        </SelectContent>
-      </Select>
+      <Card>
+        <div className="barra-filtros">
+          <div className="campo">
+            <label htmlFor="filtro-status">Status</label>
+            <Select value={status} onValueChange={(v) => setStatus(v as StatusCategoriaFluxoCaixa | "TODOS")}>
+            <SelectTrigger id="filtro-status" className="w-full">
+            <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+            <SelectItem value="TODOS">Todos os status</SelectItem>
+            <SelectItem value="ATIVO">Ativo</SelectItem>
+            <SelectItem value="INATIVO">Inativo</SelectItem>
+            </SelectContent>
+            </Select>
+          </div>
+        </div>
+      </Card>
 
-      <div className="rounded-lg border border-border">
+      <Card>
         <Table>
           <TableHeader>
             <TableRow>
@@ -94,42 +109,48 @@ export function CategoriasFluxoCaixaPage() {
               </TableRow>
             ) : categorias.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={3} className="py-8 text-center text-muted-foreground">
-                  Nenhuma categoria de fluxo de caixa encontrada.
+                <TableCell colSpan={3}>
+                  <div className="vazio">
+                    <h3>Nenhuma categoria de fluxo de caixa encontrada</h3>
+                    <p>Ajuste os filtros ou cadastre um novo registro.</p>
+                  </div>
                 </TableCell>
               </TableRow>
             ) : (
               categorias.map((categoria) => (
                 <TableRow key={categoria.id}>
-                  <TableCell className="font-medium">{categoria.nome}</TableCell>
+                  <TableCell className="tabela__forte">{categoria.nome}</TableCell>
                   <TableCell>
                     <Badge variant={categoria.status === "ATIVO" ? "default" : "outline"}>
                       {categoria.status === "ATIVO" ? "Ativo" : "Inativo"}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setCategoriaEmEdicao(categoria);
-                          setDialogAberto(true);
-                        }}
-                      >
-                        Editar
-                      </Button>
-                      <Button variant="ghost" size="sm" onClick={() => alternarStatus(categoria)}>
-                        {categoria.status === "ATIVO" ? "Inativar" : "Ativar"}
-                      </Button>
-                    </div>
+                    <MenuAcoes
+                      itens={[
+                        {
+                          rotulo: "Editar",
+                          icone: Pencil,
+                          aoClicar: () => {
+                            setCategoriaEmEdicao(categoria);
+                            setDialogAberto(true);
+                          },
+                        },
+                        {
+                          rotulo: categoria.status === "ATIVO" ? "Inativar" : "Ativar",
+                          icone: categoria.status === "ATIVO" ? Power : CircleCheck,
+                          perigo: categoria.status === "ATIVO",
+                          aoClicar: () => alternarStatus(categoria),
+                        },
+                      ]}
+                    />
                   </TableCell>
                 </TableRow>
               ))
             )}
           </TableBody>
         </Table>
-      </div>
+      </Card>
 
       <CategoriaFluxoCaixaFormDialog
         open={dialogAberto}
@@ -137,6 +158,6 @@ export function CategoriasFluxoCaixaPage() {
         categoria={categoriaEmEdicao}
         onSalvo={carregar}
       />
-    </div>
+    </>
   );
 }

@@ -2,7 +2,15 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardTitle } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { VendaStatusBadge } from "@/components/vendas/VendaStatusBadge";
 import { vendaApi } from "@/lib/vendaApi";
@@ -10,6 +18,7 @@ import { ApiError } from "@/lib/api";
 import { labelFormaPagamento } from "@/lib/formaPagamento";
 import { VendaResumoValores } from "@/components/vendas/VendaResumoValores";
 import type { VendaResponse } from "@/types/venda";
+import { CabecalhoPagina } from "@/components/layout/CabecalhoPagina";
 
 const formatoMoeda = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 
@@ -48,82 +57,77 @@ export function VendaDetalhePage() {
 
   if (carregando) {
     return (
-      <Card>
-        <CardContent className="space-y-4 pt-6">
-          <Skeleton className="h-9 w-full" />
-          <Skeleton className="h-9 w-full" />
-          <Skeleton className="h-9 w-full" />
-        </CardContent>
-      </Card>
+      <>
+        <CabecalhoPagina titulo="Venda" />
+        <Card>
+          <div className="space-y-4">
+            <Skeleton className="h-11 w-full" />
+            <Skeleton className="h-11 w-full" />
+            <Skeleton className="h-11 w-full" />
+          </div>
+        </Card>
+      </>
     );
   }
 
   if (!venda) return null;
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-medium">Venda</h1>
-        <VendaStatusBadge status={venda.status} />
-      </div>
+    <>
+      <CabecalhoPagina titulo="Venda" acao={<VendaStatusBadge status={venda.status} />} />
 
       <Card>
-        <CardHeader>
-          <CardTitle>{venda.clienteNome}</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="rounded-lg border border-border">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border text-left text-muted-foreground">
-                  <th className="p-3 font-normal">Produto</th>
-                  <th className="p-3 font-normal">Quantidade</th>
-                  <th className="p-3 font-normal">Valor unitário</th>
-                  <th className="p-3 text-right font-normal">Subtotal</th>
-                </tr>
-              </thead>
-              <tbody>
-                {venda.itens.map((item) => (
-                  <tr key={item.id} className="border-b border-border last:border-0">
-                    <td className="p-3">
-                      {item.produtoCodigoInterno} — {item.produtoNome}
-                    </td>
-                    <td className="p-3">{item.quantidade}</td>
-                    <td className="p-3">{formatoMoeda.format(item.valorUnitario)}</td>
-                    <td className="p-3 text-right">{formatoMoeda.format(item.subtotal)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          <VendaResumoValores
-            subtotal={venda.subtotal}
-            valorDesconto={venda.valorDesconto}
-            valorFrete={venda.valorFrete}
-            valorTotal={venda.valorTotal}
-          />
-
-          <div className="grid grid-cols-2 gap-4 text-sm sm:grid-cols-3">
-            <div>
-              <p className="text-muted-foreground">Forma de pagamento</p>
-              <p className="font-medium">{labelFormaPagamento(venda.formaPagamento)}</p>
-            </div>
-            <div>
-              <p className="text-muted-foreground">Condição de pagamento</p>
-              <p className="font-medium">{venda.condicaoPagamento}</p>
-            </div>
-          </div>
-
-          {venda.status === "CONCLUIDA" && (
-            <div className="flex justify-end pt-2">
-              <Button type="button" variant="outline" disabled={processandoAcao} onClick={cancelar}>
-                Cancelar venda
-              </Button>
-            </div>
-          )}
-        </CardContent>
+        <CardTitle>{venda.clienteNome}</CardTitle>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Produto</TableHead>
+              <TableHead>Quantidade</TableHead>
+              <TableHead>Valor unitário</TableHead>
+              <TableHead className="text-right">Subtotal</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {venda.itens.map((item) => (
+              <TableRow key={item.id}>
+                <TableCell className="tabela__forte">
+                  {item.produtoCodigoInterno} — {item.produtoNome}
+                </TableCell>
+                <TableCell>{item.quantidade}</TableCell>
+                <TableCell>{formatoMoeda.format(item.valorUnitario)}</TableCell>
+                <TableCell className="text-right">{formatoMoeda.format(item.subtotal)}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       </Card>
-    </div>
+
+      <VendaResumoValores
+        subtotal={venda.subtotal}
+        valorDesconto={venda.valorDesconto}
+        valorFrete={venda.valorFrete}
+        valorTotal={venda.valorTotal}
+      />
+
+      <Card>
+        <CardTitle>Pagamento</CardTitle>
+        <div className="linha">
+          <span>Forma de pagamento</span>
+          <span>{labelFormaPagamento(venda.formaPagamento)}</span>
+        </div>
+        <div className="linha">
+          <span>Condição de pagamento</span>
+          <span>{venda.condicaoPagamento}</span>
+        </div>
+      </Card>
+
+      {venda.status === "CONCLUIDA" && (
+        <div className="acoes">
+          <Button type="button" variant="secondary" disabled={processandoAcao} onClick={cancelar}>
+            Cancelar venda
+          </Button>
+        </div>
+      )}
+    </>
   );
 }

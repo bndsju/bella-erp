@@ -2,101 +2,84 @@ import { formatarMoeda } from "@/lib/formatos";
 
 export interface SerieBarras {
   nome: string;
-  /** Classe de preenchimento do Tailwind (ex.: fill-primary). */
-  classe: string;
+  /** Token de cor do gráfico, ex.: "var(--grafico-2)". Sem cor, usa a barra do arquivo-mestre (Sálvia). */
+  cor?: string;
 }
 
 export interface PontoBarras {
   rotulo: string;
   valores: number[];
+  /** Destaca a barra (ex.: o dia de hoje) na cor da marca. */
+  atual?: boolean;
 }
 
 interface GraficoBarrasProps {
   series: SerieBarras[];
   pontos: PontoBarras[];
-  vazio: string;
+  /** Mensagem quando não há nada a mostrar. */
+  vazio: { titulo: string; texto: string };
+  altura?: number;
+  /** Gráfico sobre cartão de destaque (verde-escuro): legenda e vazio em branco. */
+  sobreDestaque?: boolean;
 }
 
-const LARGURA = 640;
-const ALTURA = 200;
-const MARGEM_BASE = 22;
-const MARGEM_TOPO = 8;
-
-/** Gráfico de barras simples em SVG: uma barra por série em cada ponto, escala pelo maior valor. */
-export function GraficoBarras({ series, pontos, vazio }: GraficoBarrasProps) {
+/**
+ * Barras do arquivo-mestre (".barras"/".barra"): grade de colunas, cantos de 12 px, rótulo de 13 px abaixo.
+ * Cada coluna pode ter mais de uma barra (uma por série); a altura é proporcional ao maior valor.
+ */
+export function GraficoBarras({ series, pontos, vazio, altura = 190, sobreDestaque = false }: GraficoBarrasProps) {
   const maximo = Math.max(0, ...pontos.flatMap((ponto) => ponto.valores));
 
   if (pontos.length === 0 || maximo === 0) {
     return (
-      <div className="flex h-[200px] items-center justify-center rounded-lg border border-dashed border-border text-sm text-muted-foreground">
-        {vazio}
+      <div className="vazio [&_h3]:text-inherit [&_p]:text-inherit">
+        <h3>{vazio.titulo}</h3>
+        <p>{vazio.texto}</p>
       </div>
     );
   }
 
-  const alturaUtil = ALTURA - MARGEM_BASE - MARGEM_TOPO;
-  const larguraGrupo = LARGURA / pontos.length;
-  const larguraBarra = Math.max(2, Math.min(28, (larguraGrupo * 0.7) / series.length));
+  const espaco = pontos.length > 12 ? 4 : 12;
   const passoRotulo = Math.ceil(pontos.length / 8);
+  const alturaUtil = altura - 28;
 
   return (
-    <div className="space-y-2">
-      <svg viewBox={`0 0 ${LARGURA} ${ALTURA}`} className="h-auto w-full" role="img">
-        <line
-          x1="0"
-          x2={LARGURA}
-          y1={ALTURA - MARGEM_BASE}
-          y2={ALTURA - MARGEM_BASE}
-          className="stroke-border"
-        />
-        {pontos.map((ponto, indice) => {
-          const centro = indice * larguraGrupo + larguraGrupo / 2;
-          const inicio = centro - (larguraBarra * series.length) / 2;
-          return (
-            <g key={ponto.rotulo}>
-              {ponto.valores.map((valor, posicao) => {
-                const altura = (valor / maximo) * alturaUtil;
-                return (
-                  <rect
-                    key={series[posicao].nome}
-                    x={inicio + posicao * larguraBarra}
-                    y={ALTURA - MARGEM_BASE - altura}
-                    width={larguraBarra - 1}
-                    height={altura}
-                    rx="2"
-                    className={series[posicao].classe}
-                  >
-                    <title>{`${ponto.rotulo} — ${series[posicao].nome}: ${formatarMoeda(valor)}`}</title>
-                  </rect>
-                );
-              })}
-              {indice % passoRotulo === 0 && (
-                <text
-                  x={centro}
-                  y={ALTURA - 6}
-                  textAnchor="middle"
-                  className="fill-muted-foreground text-[10px]"
-                >
-                  {ponto.rotulo}
-                </text>
-              )}
-            </g>
-          );
-        })}
-      </svg>
-      <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
-        <div className="flex gap-3">
+    <div>
+      <div
+        className="barras"
+        style={{ gridTemplateColumns: `repeat(${pontos.length}, minmax(0, 1fr))`, gap: espaco, height: altura }}
+        role="img"
+        aria-label={series.map((serie) => serie.nome).join(" e ")}
+      >
+        {pontos.map((ponto, indice) => (
+          <div key={`${ponto.rotulo}-${indice}`} className={ponto.atual ? "barra barra--atual" : "barra"}>
+            <div className="flex items-end justify-center gap-0.5" style={{ height: alturaUtil }}>
+              {ponto.valores.map((valor, posicao) => (
+                <i
+                  key={series[posicao].nome}
+                  title={`${ponto.rotulo} — ${series[posicao].nome}: ${formatarMoeda(valor)}`}
+                  style={{
+                    flex: 1,
+                    height: Math.max(valor > 0 ? 4 : 0, (valor / maximo) * alturaUtil),
+                    ...(series[posicao].cor && !ponto.atual ? { background: series[posicao].cor } : {}),
+                  }}
+                />
+              ))}
+            </div>
+            <span style={{ visibility: indice % passoRotulo === 0 ? "visible" : "hidden" }}>{ponto.rotulo}</span>
+          </div>
+        ))}
+      </div>
+      {series.some((serie) => serie.cor) && (
+        <div className="legenda mt-3 flex-row flex-wrap gap-x-4" style={sobreDestaque ? { color: "#FFFFFF" } : undefined}>
           {series.map((serie) => (
-            <span key={serie.nome} className="flex items-center gap-1">
-              <svg width="10" height="10" aria-hidden="true">
-                <rect width="10" height="10" rx="2" className={serie.classe} />
-              </svg>
+            <span key={serie.nome}>
+              <i style={{ background: serie.cor }} />
               {serie.nome}
             </span>
           ))}
         </div>
-        <span>Maior valor: {formatarMoeda(maximo)}</span>
-      </div>
+      )}
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
@@ -21,6 +22,9 @@ import { Badge } from "@/components/ui/badge";
 import { TransportadoraFormDialog } from "@/components/transportadoras/TransportadoraFormDialog";
 import { transportadoraApi } from "@/lib/transportadoraApi";
 import type { StatusTransportadora, TransportadoraResponse } from "@/types/transportadora";
+import { CircleCheck, Pencil, Power } from "lucide-react";
+import { MenuAcoes } from "@/components/ui/menu-acoes";
+import { CabecalhoPagina } from "@/components/layout/CabecalhoPagina";
 
 export function TransportadorasPage() {
   const [transportadoras, setTransportadoras] = useState<TransportadoraResponse[]>([]);
@@ -52,31 +56,42 @@ export function TransportadorasPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-medium">Transportadoras</h1>
-        <Button
-          onClick={() => {
-            setTransportadoraEmEdicao(null);
-            setDialogAberto(true);
-          }}
-        >
-          Nova transportadora
-        </Button>
-      </div>
+    <>
+      <CabecalhoPagina
+        titulo="Transportadoras"
+        acao={
+          <>
+          <Button
+            onClick={() => {
+              setTransportadoraEmEdicao(null);
+              setDialogAberto(true);
+            }}
+          >
+            Nova transportadora
+          </Button>
+          </>
+        }
+      />
 
-      <Select value={status} onValueChange={(v) => setStatus(v as StatusTransportadora | "TODOS")}>
-        <SelectTrigger className="w-40">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="TODOS">Todos os status</SelectItem>
-          <SelectItem value="ATIVO">Ativo</SelectItem>
-          <SelectItem value="INATIVO">Inativo</SelectItem>
-        </SelectContent>
-      </Select>
+      <Card>
+        <div className="barra-filtros">
+          <div className="campo">
+            <label htmlFor="filtro-status">Status</label>
+            <Select value={status} onValueChange={(v) => setStatus(v as StatusTransportadora | "TODOS")}>
+            <SelectTrigger id="filtro-status" className="w-full">
+            <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+            <SelectItem value="TODOS">Todos os status</SelectItem>
+            <SelectItem value="ATIVO">Ativo</SelectItem>
+            <SelectItem value="INATIVO">Inativo</SelectItem>
+            </SelectContent>
+            </Select>
+          </div>
+        </div>
+      </Card>
 
-      <div className="rounded-lg border border-border">
+      <Card>
         <Table>
           <TableHeader>
             <TableRow>
@@ -95,14 +110,17 @@ export function TransportadorasPage() {
               </TableRow>
             ) : transportadoras.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={4} className="py-8 text-center text-muted-foreground">
-                  Nenhuma transportadora encontrada.
+                <TableCell colSpan={4}>
+                  <div className="vazio">
+                    <h3>Nenhuma transportadora encontrada</h3>
+                    <p>Ajuste os filtros ou cadastre um novo registro.</p>
+                  </div>
                 </TableCell>
               </TableRow>
             ) : (
               transportadoras.map((transportadora) => (
                 <TableRow key={transportadora.id}>
-                  <TableCell className="font-medium">{transportadora.nome}</TableCell>
+                  <TableCell className="tabela__forte">{transportadora.nome}</TableCell>
                   <TableCell>{transportadora.telefone ?? "—"}</TableCell>
                   <TableCell>
                     <Badge variant={transportadora.status === "ATIVO" ? "default" : "outline"}>
@@ -110,28 +128,31 @@ export function TransportadorasPage() {
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setTransportadoraEmEdicao(transportadora);
-                          setDialogAberto(true);
-                        }}
-                      >
-                        Editar
-                      </Button>
-                      <Button variant="ghost" size="sm" onClick={() => alternarStatus(transportadora)}>
-                        {transportadora.status === "ATIVO" ? "Inativar" : "Ativar"}
-                      </Button>
-                    </div>
+                    <MenuAcoes
+                      itens={[
+                        {
+                          rotulo: "Editar",
+                          icone: Pencil,
+                          aoClicar: () => {
+                            setTransportadoraEmEdicao(transportadora);
+                            setDialogAberto(true);
+                          },
+                        },
+                        {
+                          rotulo: transportadora.status === "ATIVO" ? "Inativar" : "Ativar",
+                          icone: transportadora.status === "ATIVO" ? Power : CircleCheck,
+                          perigo: transportadora.status === "ATIVO",
+                          aoClicar: () => alternarStatus(transportadora),
+                        },
+                      ]}
+                    />
                   </TableCell>
                 </TableRow>
               ))
             )}
           </TableBody>
         </Table>
-      </div>
+      </Card>
 
       <TransportadoraFormDialog
         open={dialogAberto}
@@ -139,6 +160,6 @@ export function TransportadorasPage() {
         transportadora={transportadoraEmEdicao}
         onSalvo={carregar}
       />
-    </div>
+    </>
   );
 }

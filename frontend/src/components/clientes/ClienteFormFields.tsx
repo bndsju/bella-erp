@@ -11,7 +11,8 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Separator } from "@/components/ui/separator";
+import { Link } from "react-router-dom";
+import { Card, CardTitle } from "@/components/ui/card";
 import { EnderecoFields } from "./EnderecoFields";
 import { formatarCnpj, formatarCpf } from "@/lib/documento";
 import { formatarTelefone } from "@/lib/masks";
@@ -63,16 +64,33 @@ function CamposComunsInline({
 }) {
   return (
     <>
-      <div className="grid grid-cols-2 gap-4">
-        {celular}
-        {telefone}
-        {email}
-      </div>
-      <Separator />
-      <EnderecoFields />
-      <Separator />
-      {observacoes}
+      <Card>
+        <CardTitle>Contato</CardTitle>
+        <div className="grade grade--2">
+          {celular}
+          {telefone}
+          {email}
+        </div>
+      </Card>
+      <Card>
+        <CardTitle>Endereço</CardTitle>
+        <EnderecoFields />
+      </Card>
+      <Card>{observacoes}</Card>
     </>
+  );
+}
+
+function AcoesDoFormulario({ enviando }: { enviando: boolean }) {
+  return (
+    <div className="acoes">
+      <Button variant="secondary" asChild>
+        <Link to="/clientes">Cancelar</Link>
+      </Button>
+      <Button type="submit" disabled={enviando}>
+        {enviando ? "Salvando..." : "Salvar cliente"}
+      </Button>
+    </div>
   );
 }
 
@@ -101,14 +119,16 @@ function FormularioPessoaFisica({
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit((dados) => onSubmit(dados as ClienteRequest))}
-        className="space-y-6"
+        className="contents"
       >
-        <div className="grid grid-cols-2 gap-4">
+        <Card>
+          <CardTitle>Dados do cliente</CardTitle>
+          <div className="grade grade--2">
           <FormField
             control={form.control}
             name="nomeCompleto"
             render={({ field }) => (
-              <FormItem className="col-span-2">
+              <FormItem className="col-span-full">
                 <FormLabel>Nome completo</FormLabel>
                 <FormControl>
                   <Input placeholder="Maria da Silva" {...field} />
@@ -148,9 +168,8 @@ function FormularioPessoaFisica({
               </FormItem>
             )}
           />
-        </div>
-
-        <Separator />
+          </div>
+        </Card>
 
         <CamposComunsInline
           celular={
@@ -196,7 +215,7 @@ function FormularioPessoaFisica({
               control={form.control}
               name="email"
               render={({ field }) => (
-                <FormItem className="col-span-2">
+                <FormItem className="col-span-full">
                   <FormLabel>Email</FormLabel>
                   <FormControl>
                     <Input type="email" placeholder="contato@exemplo.com" {...field} />
@@ -223,11 +242,7 @@ function FormularioPessoaFisica({
           }
         />
 
-        <div className="flex justify-end gap-2 pt-2">
-          <Button type="submit" disabled={enviando}>
-            {enviando ? "Salvando..." : "Salvar cliente"}
-          </Button>
-        </div>
+        <AcoesDoFormulario enviando={enviando} />
       </form>
     </Form>
   );
@@ -260,14 +275,16 @@ function FormularioPessoaJuridica({
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit((dados) => onSubmit(dados as ClienteRequest))}
-        className="space-y-6"
+        className="contents"
       >
-        <div className="grid grid-cols-2 gap-4">
+        <Card>
+          <CardTitle>Dados do cliente</CardTitle>
+          <div className="grade grade--2">
           <FormField
             control={form.control}
             name="razaoSocial"
             render={({ field }) => (
-              <FormItem className="col-span-2">
+              <FormItem className="col-span-full">
                 <FormLabel>Razão social</FormLabel>
                 <FormControl>
                   <Input placeholder="Padaria Pão Quente Ltda" {...field} />
@@ -333,9 +350,8 @@ function FormularioPessoaJuridica({
               </FormItem>
             )}
           />
-        </div>
-
-        <Separator />
+          </div>
+        </Card>
 
         <CamposComunsInline
           celular={
@@ -381,7 +397,7 @@ function FormularioPessoaJuridica({
               control={form.control}
               name="email"
               render={({ field }) => (
-                <FormItem className="col-span-2">
+                <FormItem className="col-span-full">
                   <FormLabel>Email</FormLabel>
                   <FormControl>
                     <Input type="email" placeholder="contato@exemplo.com" {...field} />
@@ -408,11 +424,7 @@ function FormularioPessoaJuridica({
           }
         />
 
-        <div className="flex justify-end gap-2 pt-2">
-          <Button type="submit" disabled={enviando}>
-            {enviando ? "Salvando..." : "Salvar cliente"}
-          </Button>
-        </div>
+        <AcoesDoFormulario enviando={enviando} />
       </form>
     </Form>
   );

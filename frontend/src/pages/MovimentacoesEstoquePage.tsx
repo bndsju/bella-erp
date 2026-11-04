@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -26,6 +27,7 @@ import { fimDoDia, inicioDoDia, quantidadeComSinal, ROTULO_ORIGEM, ROTULO_TIPO }
 import { produtoApi } from "@/lib/produtoApi";
 import type { MovimentacaoEstoqueResponse, TipoMovimentacaoEstoque } from "@/types/estoque";
 import type { ProdutoResponse } from "@/types/produto";
+import { CabecalhoPagina } from "@/components/layout/CabecalhoPagina";
 
 const TIPOS = Object.keys(ROTULO_TIPO) as TipoMovimentacaoEstoque[];
 
@@ -61,55 +63,67 @@ export function MovimentacoesEstoquePage() {
   useEffect(carregar, [carregar]);
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-medium">Histórico de movimentações</h1>
-        <div className="flex gap-2">
-          <Button variant="outline" asChild>
-            <Link to="/estoque">Voltar ao estoque</Link>
-          </Button>
-          <Button onClick={() => setDialogAberto(true)}>Registrar movimentação</Button>
-        </div>
-      </div>
+    <>
+      <CabecalhoPagina
+        titulo="Histórico de movimentações"
+        acao={
+          <>
+          <div className="contents">
+            <Button variant="outline" asChild>
+              <Link to="/estoque">Voltar ao estoque</Link>
+            </Button>
+            <Button onClick={() => setDialogAberto(true)}>Registrar movimentação</Button>
+          </div>
+          </>
+        }
+      />
 
-      <div className="flex flex-wrap items-end gap-3">
-        <Select value={produtoId} onValueChange={setProdutoId}>
-          <SelectTrigger className="w-64">
+      <Card>
+        <div className="barra-filtros">
+          <div className="campo">
+            <label htmlFor="filtro-produto">Produto</label>
+            <Select value={produtoId} onValueChange={setProdutoId}>
+            <SelectTrigger id="filtro-produto" className="w-full">
             <SelectValue placeholder="Produto" />
-          </SelectTrigger>
-          <SelectContent>
+            </SelectTrigger>
+            <SelectContent>
             <SelectItem value="TODOS">Todos os produtos</SelectItem>
             {produtos.map((produto) => (
-              <SelectItem key={produto.id} value={produto.id}>
-                {produto.codigoInterno} — {produto.nome}
-              </SelectItem>
+            <SelectItem key={produto.id} value={produto.id}>
+            {produto.codigoInterno} — {produto.nome}
+            </SelectItem>
             ))}
-          </SelectContent>
-        </Select>
-        <Select value={tipo} onValueChange={(v) => setTipo(v as TipoMovimentacaoEstoque | "TODOS")}>
-          <SelectTrigger className="w-52">
+            </SelectContent>
+            </Select>
+          </div>
+          <div className="campo">
+            <label htmlFor="filtro-tipo">Tipo</label>
+            <Select value={tipo} onValueChange={(v) => setTipo(v as TipoMovimentacaoEstoque | "TODOS")}>
+            <SelectTrigger id="filtro-tipo" className="w-full">
             <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
+            </SelectTrigger>
+            <SelectContent>
             <SelectItem value="TODOS">Todos os tipos</SelectItem>
             {TIPOS.map((item) => (
-              <SelectItem key={item} value={item}>
-                {ROTULO_TIPO[item]}
-              </SelectItem>
+            <SelectItem key={item} value={item}>
+            {ROTULO_TIPO[item]}
+            </SelectItem>
             ))}
-          </SelectContent>
-        </Select>
-        <div className="space-y-1">
-          <label className="text-xs text-muted-foreground">De</label>
-          <Input type="date" className="w-40" value={dataInicio} onChange={(e) => setDataInicio(e.target.value)} />
+            </SelectContent>
+            </Select>
+          </div>
+        <div className="campo">
+          <label htmlFor="filtro-de">De</label>
+          <Input id="filtro-de" type="date" value={dataInicio} onChange={(e) => setDataInicio(e.target.value)} />
         </div>
-        <div className="space-y-1">
-          <label className="text-xs text-muted-foreground">Até</label>
-          <Input type="date" className="w-40" value={dataFim} onChange={(e) => setDataFim(e.target.value)} />
+        <div className="campo">
+          <label htmlFor="filtro-ate">Até</label>
+          <Input id="filtro-ate" type="date" value={dataFim} onChange={(e) => setDataFim(e.target.value)} />
         </div>
-      </div>
+        </div>
+      </Card>
 
-      <div className="rounded-lg border border-border">
+      <Card>
         <Table>
           <TableHeader>
             <TableRow>
@@ -132,15 +146,18 @@ export function MovimentacoesEstoquePage() {
               ))
             ) : movimentacoes.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="py-8 text-center text-muted-foreground">
-                  Nenhuma movimentação encontrada.
+                <TableCell colSpan={6}>
+                  <div className="vazio">
+                    <h3>Nenhuma movimentação encontrada</h3>
+                    <p>Ajuste os filtros ou cadastre um novo registro.</p>
+                  </div>
                 </TableCell>
               </TableRow>
             ) : (
               movimentacoes.map((movimentacao) => (
                 <TableRow key={movimentacao.id}>
                   <TableCell>{new Date(movimentacao.dataHora).toLocaleString("pt-BR")}</TableCell>
-                  <TableCell className="font-medium">
+                  <TableCell className="tabela__forte">
                     {movimentacao.produtoCodigoInterno} — {movimentacao.produtoNome}
                   </TableCell>
                   <TableCell>
@@ -161,7 +178,7 @@ export function MovimentacoesEstoquePage() {
             )}
           </TableBody>
         </Table>
-      </div>
+      </Card>
 
       <MovimentacaoEstoqueDialog
         open={dialogAberto}
@@ -169,6 +186,6 @@ export function MovimentacoesEstoquePage() {
         produtoIdInicial={produtoId === "TODOS" ? undefined : produtoId}
         onSalvo={carregar}
       />
-    </div>
+    </>
   );
 }

@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardTitle } from "@/components/ui/card";
+import { CabecalhoPagina } from "@/components/layout/CabecalhoPagina";
 import {
   Form,
   FormControl,
@@ -15,7 +16,6 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
@@ -106,21 +106,25 @@ export function ProdutoFormPage() {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{modo === "editar" ? "Editar produto" : "Novo produto"}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        {carregando ? (
+    <>
+      <CabecalhoPagina
+        titulo={modo === "editar" ? "Editar produto" : "Novo produto"}
+        frase={modo === "editar" ? "Atualize os dados do produto." : "Preencha os dados para cadastrar."}
+      />
+      {carregando ? (
+        <Card>
           <div className="space-y-4">
-            <Skeleton className="h-9 w-full" />
-            <Skeleton className="h-9 w-full" />
-            <Skeleton className="h-9 w-full" />
+            <Skeleton className="h-11 w-full" />
+            <Skeleton className="h-11 w-full" />
+            <Skeleton className="h-11 w-full" />
           </div>
-        ) : (
+        </Card>
+      ) : (
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <div className="grid grid-cols-2 gap-4">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="contents">
+              <Card>
+              <CardTitle>Identificação</CardTitle>
+              <div className="grade grade--2">
                 <FormField
                   control={form.control}
                   name="codigoInterno"
@@ -209,10 +213,11 @@ export function ProdutoFormPage() {
                   )}
                 />
               </div>
+              </Card>
 
-              <Separator />
-
-              <div className="grid grid-cols-3 gap-4">
+              <Card>
+              <CardTitle>Preços e estoque</CardTitle>
+              <div className="grade grade--3">
                 <FormField
                   control={form.control}
                   name="precoCusto"
@@ -271,9 +276,9 @@ export function ProdutoFormPage() {
                   )}
                 />
               </div>
+              </Card>
 
-              <Separator />
-
+              <Card>
               <FormField
                 control={form.control}
                 name="descricao"
@@ -287,16 +292,19 @@ export function ProdutoFormPage() {
                   </FormItem>
                 )}
               />
+              </Card>
 
-              <div className="flex justify-end gap-2 pt-2">
+              <div className="acoes">
+                <Button variant="secondary" asChild>
+                  <Link to="/produtos">Cancelar</Link>
+                </Button>
                 <Button type="submit" disabled={form.formState.isSubmitting}>
                   {form.formState.isSubmitting ? "Salvando..." : "Salvar produto"}
                 </Button>
               </div>
             </form>
           </Form>
-        )}
-      </CardContent>
-    </Card>
+      )}
+    </>
   );
 }

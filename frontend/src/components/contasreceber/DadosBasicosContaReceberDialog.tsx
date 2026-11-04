@@ -84,12 +84,12 @@ export function DadosBasicosContaReceberDialog({ open, onOpenChange, conta, onSa
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Descrição</label>
+          <div className="campo">
+            <label>Descrição</label>
             <Input value={descricao} onChange={(e) => setDescricao(e.target.value)} />
           </div>
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Cliente</label>
+          <div className="campo">
+            <label>Cliente</label>
             <Select value={clienteId} onValueChange={setClienteId}>
               <SelectTrigger className="w-full">
                 <SelectValue />
@@ -104,8 +104,8 @@ export function DadosBasicosContaReceberDialog({ open, onOpenChange, conta, onSa
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Observações</label>
+          <div className="campo">
+            <label>Observações</label>
             <Textarea rows={3} value={observacoes} onChange={(e) => setObservacoes(e.target.value)} />
           </div>
         </div>

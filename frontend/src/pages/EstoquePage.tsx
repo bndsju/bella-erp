@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -24,6 +25,9 @@ import { MovimentacaoEstoqueDialog } from "@/components/estoque/MovimentacaoEsto
 import { estoqueApi } from "@/lib/estoqueApi";
 import { formatarQuantidade } from "@/lib/estoqueFormatos";
 import type { SaldoEstoqueResponse } from "@/types/estoque";
+import { ArrowLeftRight, History } from "lucide-react";
+import { MenuAcoes } from "@/components/ui/menu-acoes";
+import { CabecalhoPagina } from "@/components/layout/CabecalhoPagina";
 
 type VisaoEstoque = "TODOS" | "ABAIXO_DO_MINIMO";
 
@@ -62,36 +66,47 @@ export function EstoquePage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-medium">Estoque</h1>
-        <div className="flex gap-2">
-          <Button variant="outline" asChild>
-            <Link to="/estoque/movimentacoes">Histórico de movimentações</Link>
-          </Button>
-          <Button onClick={() => abrirMovimentacao()}>Registrar movimentação</Button>
-        </div>
-      </div>
+    <>
+      <CabecalhoPagina
+        titulo="Estoque"
+        acao={
+          <>
+          <div className="contents">
+            <Button variant="outline" asChild>
+              <Link to="/estoque/movimentacoes">Histórico de movimentações</Link>
+            </Button>
+            <Button onClick={() => abrirMovimentacao()}>Registrar movimentação</Button>
+          </div>
+          </>
+        }
+      />
 
-      <div className="flex gap-3">
-        <Input
-          className="w-72"
-          placeholder="Buscar por nome ou código"
-          value={busca}
-          onChange={(e) => setBusca(e.target.value)}
-        />
-        <Select value={visao} onValueChange={(v) => setVisao(v as VisaoEstoque)}>
-          <SelectTrigger className="w-56">
+      <Card>
+        <div className="barra-filtros">
+          <div className="campo">
+            <label htmlFor="filtro-buscar">Buscar</label>
+            <Input id="filtro-buscar"
+            placeholder="Buscar por nome ou código"
+            value={busca}
+            onChange={(e) => setBusca(e.target.value)}
+            />
+          </div>
+          <div className="campo">
+            <label htmlFor="filtro-visao">Visão</label>
+            <Select value={visao} onValueChange={(v) => setVisao(v as VisaoEstoque)}>
+            <SelectTrigger id="filtro-visao" className="w-full">
             <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
+            </SelectTrigger>
+            <SelectContent>
             <SelectItem value="TODOS">Todos os produtos</SelectItem>
             <SelectItem value="ABAIXO_DO_MINIMO">Abaixo do estoque mínimo</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+            </SelectContent>
+            </Select>
+          </div>
+        </div>
+      </Card>
 
-      <div className="rounded-lg border border-border">
+      <Card>
         <Table>
           <TableHeader>
             <TableRow>
@@ -115,8 +130,11 @@ export function EstoquePage() {
               ))
             ) : saldosFiltrados.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="py-8 text-center text-muted-foreground">
-                  Nenhum produto encontrado.
+                <TableCell colSpan={7}>
+                  <div className="vazio">
+                    <h3>Nenhum produto encontrado</h3>
+                    <p>Ajuste os filtros ou cadastre um novo registro.</p>
+                  </div>
                 </TableCell>
               </TableRow>
             ) : (
@@ -124,7 +142,7 @@ export function EstoquePage() {
                 const abaixoDoMinimo = saldo.quantidadeDisponivel <= saldo.estoqueMinimo;
                 return (
                   <TableRow key={saldo.produtoId}>
-                    <TableCell className="font-medium">
+                    <TableCell className="tabela__forte">
                       {saldo.produtoCodigoInterno} — {saldo.produtoNome}
                     </TableCell>
                     <TableCell className="text-right">{formatarQuantidade(saldo.estoqueFisico)}</TableCell>
@@ -141,14 +159,12 @@ export function EstoquePage() {
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button variant="ghost" size="sm" onClick={() => abrirMovimentacao(saldo.produtoId)}>
-                          Movimentar
-                        </Button>
-                        <Button variant="ghost" size="sm" asChild>
-                          <Link to={`/estoque/movimentacoes?produtoId=${saldo.produtoId}`}>Histórico</Link>
-                        </Button>
-                      </div>
+                      <MenuAcoes
+                        itens={[
+                          { rotulo: "Movimentar", icone: ArrowLeftRight, aoClicar: () => abrirMovimentacao(saldo.produtoId) },
+                          { rotulo: "Histórico", icone: History, para: `/estoque/movimentacoes?produtoId=${saldo.produtoId}` },
+                        ]}
+                      />
                     </TableCell>
                   </TableRow>
                 );
@@ -156,7 +172,7 @@ export function EstoquePage() {
             )}
           </TableBody>
         </Table>
-      </div>
+      </Card>
 
       <MovimentacaoEstoqueDialog
         open={dialogAberto}
@@ -164,6 +180,6 @@ export function EstoquePage() {
         produtoIdInicial={produtoSelecionado}
         onSalvo={carregar}
       />
-    </div>
+    </>
   );
 }

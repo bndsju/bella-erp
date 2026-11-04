@@ -1,3 +1,5 @@
+import { Card, CardTitle } from "@/components/ui/card";
+
 const formatoMoeda = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 
 interface VendaResumoValoresProps {
@@ -7,30 +9,26 @@ interface VendaResumoValoresProps {
   valorTotal: number;
 }
 
-export function VendaResumoValores({
-  subtotal,
-  valorDesconto,
-  valorFrete,
-  valorTotal,
-}: VendaResumoValoresProps) {
+export function VendaResumoValores({ subtotal, valorDesconto, valorFrete, valorTotal }: VendaResumoValoresProps) {
   return (
-    <div className="grid grid-cols-2 gap-3 rounded-lg border border-border bg-muted/40 p-4 sm:grid-cols-4">
-      <div>
-        <p className="text-xs text-muted-foreground">Subtotal</p>
-        <p className="font-medium">{formatoMoeda.format(subtotal)}</p>
+    <Card>
+      <CardTitle>Resumo</CardTitle>
+      <div className="linha">
+        <span>Subtotal</span>
+        <span>{formatoMoeda.format(subtotal)}</span>
       </div>
-      <div>
-        <p className="text-xs text-muted-foreground">Desconto</p>
-        <p className="font-medium">- {formatoMoeda.format(valorDesconto)}</p>
+      <div className="linha">
+        <span>Desconto</span>
+        <span>- {formatoMoeda.format(valorDesconto)}</span>
       </div>
-      <div>
-        <p className="text-xs text-muted-foreground">Frete</p>
-        <p className="font-medium">{formatoMoeda.format(valorFrete)}</p>
+      <div className="linha">
+        <span>Frete</span>
+        <span>{formatoMoeda.format(valorFrete)}</span>
       </div>
-      <div>
-        <p className="text-xs text-muted-foreground">Total</p>
-        <p className="text-lg font-medium text-primary">{formatoMoeda.format(valorTotal)}</p>
+      <div className="linha">
+        <strong>Total</strong>
+        <strong>{formatoMoeda.format(valorTotal)}</strong>
       </div>
-    </div>
+    </Card>
   );
 }

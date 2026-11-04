@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Card } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ClienteFormFields } from "./ClienteFormFields";
 import type { ClienteFormValoresIniciais } from "@/lib/clienteSchema";
@@ -23,20 +24,22 @@ export function ClienteForm({
   const bloquearTipo = modo === "editar";
 
   return (
-    <div className="space-y-6">
-      <Tabs
-        value={tipoPessoa}
-        onValueChange={(valor) => setTipoPessoa(valor as TipoPessoa)}
-      >
-        <TabsList>
-          <TabsTrigger value="PF" disabled={bloquearTipo}>
-            Pessoa física
-          </TabsTrigger>
-          <TabsTrigger value="PJ" disabled={bloquearTipo}>
-            Pessoa jurídica
-          </TabsTrigger>
-        </TabsList>
-      </Tabs>
+    <>
+      <Card className="!p-3">
+        <Tabs
+          value={tipoPessoa}
+          onValueChange={(valor) => setTipoPessoa(valor as TipoPessoa)}
+        >
+          <TabsList>
+            <TabsTrigger value="PF" disabled={bloquearTipo}>
+              Pessoa física
+            </TabsTrigger>
+            <TabsTrigger value="PJ" disabled={bloquearTipo}>
+              Pessoa jurídica
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+      </Card>
 
       <ClienteFormFields
         key={tipoPessoa}
@@ -46,6 +49,6 @@ export function ClienteForm({
         enviando={enviando}
         onSubmit={onSubmit}
       />
-    </div>
+    </>
   );
 }

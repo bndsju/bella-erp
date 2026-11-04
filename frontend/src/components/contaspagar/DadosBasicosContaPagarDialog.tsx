@@ -95,12 +95,12 @@ export function DadosBasicosContaPagarDialog({ open, onOpenChange, conta, onSalv
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Descrição</label>
+          <div className="campo">
+            <label>Descrição</label>
             <Input value={descricao} onChange={(e) => setDescricao(e.target.value)} />
           </div>
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Categoria de despesa</label>
+          <div className="campo">
+            <label>Categoria de despesa</label>
             <Select value={categoriaDespesaId} onValueChange={setCategoriaDespesaId}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Selecione" />
@@ -117,8 +117,8 @@ export function DadosBasicosContaPagarDialog({ open, onOpenChange, conta, onSalv
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Fornecedor</label>
+          <div className="campo">
+            <label>Fornecedor</label>
             <Select value={fornecedorId} onValueChange={setFornecedorId}>
               <SelectTrigger className="w-full">
                 <SelectValue />
@@ -133,8 +133,8 @@ export function DadosBasicosContaPagarDialog({ open, onOpenChange, conta, onSalv
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Observações</label>
+          <div className="campo">
+            <label>Observações</label>
             <Textarea rows={3} value={observacoes} onChange={(e) => setObservacoes(e.target.value)} />
           </div>
         </div>

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
@@ -21,6 +22,9 @@ import { Badge } from "@/components/ui/badge";
 import { FornecedorFormDialog } from "@/components/fornecedores/FornecedorFormDialog";
 import { fornecedorApi } from "@/lib/fornecedorApi";
 import type { StatusFornecedor, FornecedorResponse } from "@/types/fornecedor";
+import { CircleCheck, Pencil, Power } from "lucide-react";
+import { MenuAcoes } from "@/components/ui/menu-acoes";
+import { CabecalhoPagina } from "@/components/layout/CabecalhoPagina";
 
 export function FornecedoresPage() {
   const [fornecedores, setFornecedores] = useState<FornecedorResponse[]>([]);
@@ -52,31 +56,42 @@ export function FornecedoresPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-medium">Fornecedores</h1>
-        <Button
-          onClick={() => {
-            setFornecedorEmEdicao(null);
-            setDialogAberto(true);
-          }}
-        >
-          Novo fornecedor
-        </Button>
-      </div>
+    <>
+      <CabecalhoPagina
+        titulo="Fornecedores"
+        acao={
+          <>
+          <Button
+            onClick={() => {
+              setFornecedorEmEdicao(null);
+              setDialogAberto(true);
+            }}
+          >
+            Novo fornecedor
+          </Button>
+          </>
+        }
+      />
 
-      <Select value={status} onValueChange={(v) => setStatus(v as StatusFornecedor | "TODOS")}>
-        <SelectTrigger className="w-40">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="TODOS">Todos os status</SelectItem>
-          <SelectItem value="ATIVO">Ativo</SelectItem>
-          <SelectItem value="INATIVO">Inativo</SelectItem>
-        </SelectContent>
-      </Select>
+      <Card>
+        <div className="barra-filtros">
+          <div className="campo">
+            <label htmlFor="filtro-status">Status</label>
+            <Select value={status} onValueChange={(v) => setStatus(v as StatusFornecedor | "TODOS")}>
+            <SelectTrigger id="filtro-status" className="w-full">
+            <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+            <SelectItem value="TODOS">Todos os status</SelectItem>
+            <SelectItem value="ATIVO">Ativo</SelectItem>
+            <SelectItem value="INATIVO">Inativo</SelectItem>
+            </SelectContent>
+            </Select>
+          </div>
+        </div>
+      </Card>
 
-      <div className="rounded-lg border border-border">
+      <Card>
         <Table>
           <TableHeader>
             <TableRow>
@@ -95,14 +110,17 @@ export function FornecedoresPage() {
               </TableRow>
             ) : fornecedores.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={4} className="py-8 text-center text-muted-foreground">
-                  Nenhum fornecedor encontrado.
+                <TableCell colSpan={4}>
+                  <div className="vazio">
+                    <h3>Nenhum fornecedor encontrado</h3>
+                    <p>Ajuste os filtros ou cadastre um novo registro.</p>
+                  </div>
                 </TableCell>
               </TableRow>
             ) : (
               fornecedores.map((fornecedor) => (
                 <TableRow key={fornecedor.id}>
-                  <TableCell className="font-medium">{fornecedor.nome}</TableCell>
+                  <TableCell className="tabela__forte">{fornecedor.nome}</TableCell>
                   <TableCell>{fornecedor.telefone ?? "—"}</TableCell>
                   <TableCell>
                     <Badge variant={fornecedor.status === "ATIVO" ? "default" : "outline"}>
@@ -110,28 +128,31 @@ export function FornecedoresPage() {
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setFornecedorEmEdicao(fornecedor);
-                          setDialogAberto(true);
-                        }}
-                      >
-                        Editar
-                      </Button>
-                      <Button variant="ghost" size="sm" onClick={() => alternarStatus(fornecedor)}>
-                        {fornecedor.status === "ATIVO" ? "Inativar" : "Ativar"}
-                      </Button>
-                    </div>
+                    <MenuAcoes
+                      itens={[
+                        {
+                          rotulo: "Editar",
+                          icone: Pencil,
+                          aoClicar: () => {
+                            setFornecedorEmEdicao(fornecedor);
+                            setDialogAberto(true);
+                          },
+                        },
+                        {
+                          rotulo: fornecedor.status === "ATIVO" ? "Inativar" : "Ativar",
+                          icone: fornecedor.status === "ATIVO" ? Power : CircleCheck,
+                          perigo: fornecedor.status === "ATIVO",
+                          aoClicar: () => alternarStatus(fornecedor),
+                        },
+                      ]}
+                    />
                   </TableCell>
                 </TableRow>
               ))
             )}
           </TableBody>
         </Table>
-      </div>
+      </Card>
 
       <FornecedorFormDialog
         open={dialogAberto}
@@ -139,6 +160,6 @@ export function FornecedoresPage() {
         fornecedor={fornecedorEmEdicao}
         onSalvo={carregar}
       />
-    </div>
+    </>
   );
 }

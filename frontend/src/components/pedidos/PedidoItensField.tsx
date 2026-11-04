@@ -39,22 +39,25 @@ export function PedidoItensField({ produtos }: PedidoItensFieldProps) {
 
   return (
     <div className="space-y-3">
-      <div className="rounded-lg border border-border">
+      <div>
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Produto</TableHead>
-              <TableHead className="w-28">Quantidade</TableHead>
+              <TableHead className="w-32">Quantidade</TableHead>
               <TableHead className="w-32">Valor unitário</TableHead>
-              <TableHead className="w-28 text-right">Subtotal</TableHead>
+              <TableHead className="w-32 text-right">Subtotal</TableHead>
               <TableHead className="w-10" />
             </TableRow>
           </TableHeader>
           <TableBody>
             {fields.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="py-6 text-center text-muted-foreground">
-                  Nenhum item adicionado.
+                <TableCell colSpan={5}>
+                  <div className="vazio">
+                    <h3>Nenhum item adicionado</h3>
+                    <p>Use "Adicionar item" para incluir produtos.</p>
+                  </div>
                 </TableCell>
               </TableRow>
             ) : (
@@ -139,7 +142,7 @@ export function PedidoItensField({ produtos }: PedidoItensFieldProps) {
                         )}
                       />
                     </TableCell>
-                    <TableCell className="text-right text-sm">
+                    <TableCell className="text-right">
                       {formatoMoeda.format(Number.isFinite(subtotalItem) ? subtotalItem : 0)}
                     </TableCell>
                     <TableCell>
@@ -156,13 +159,13 @@ export function PedidoItensField({ produtos }: PedidoItensFieldProps) {
       </div>
       <Button
         type="button"
-        variant="outline"
+        variant="secondary"
         size="sm"
         onClick={() => append({ produtoId: "", quantidade: 1, valorUnitario: 0 })}
       >
         Adicionar item
       </Button>
-      {erroItens && <p className="text-sm font-medium text-destructive">{erroItens}</p>}
+      {erroItens && <p className="text-sm font-bold text-erro">{erroItens}</p>}
     </div>
   );
 }
