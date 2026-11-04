@@ -58,8 +58,11 @@
   .painel__separador { height: 1px; margin: 6px -8px; background: #3f3a3b; }
 
   /* tabelas: colunas numéricas e de ações à direita; linha clicável */
-  .tabela th.text-right { text-align: right; padding-right: 0; }
-  .tabela td.text-right { text-align: right; font-weight: 800; padding-right: 0; white-space: nowrap; }
+  /* À direita: valores e ações. Só a última coluna encosta na borda (como no arquivo-mestre);
+     no meio da tabela mantém o respiro de 16 px até a próxima coluna. */
+  .tabela th.text-right { text-align: right; padding-right: 16px; }
+  .tabela td.text-right { text-align: right; font-weight: 800; padding-right: 16px; white-space: nowrap; }
+  .tabela th.text-right:last-child, .tabela td.text-right:last-child { padding-right: 0; }
   .tabela tr[data-clicavel] { cursor: pointer; }
   .tabela td { vertical-align: middle; }
 
