@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardTitle } from "@/components/ui/card";
 import {
   Form,
   FormControl,
@@ -15,7 +15,6 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
@@ -24,6 +23,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { OrcamentoItensField } from "@/components/orcamentos/OrcamentoItensField";
 import { OrcamentoResumoValores } from "@/components/orcamentos/OrcamentoResumoValores";
 import { OrcamentoStatusBadge } from "@/components/orcamentos/OrcamentoStatusBadge";
@@ -145,271 +152,268 @@ export function OrcamentoFormPage() {
 
   if (carregando) {
     return (
-      <Card>
-        <CardContent className="space-y-4 pt-6">
-          <Skeleton className="h-9 w-full" />
-          <Skeleton className="h-9 w-full" />
-          <Skeleton className="h-9 w-full" />
-        </CardContent>
-      </Card>
+      <>
+        <CabecalhoPagina titulo="Orçamento" />
+        <Card>
+          <div className="space-y-4">
+            <Skeleton className="h-11 w-full" />
+            <Skeleton className="h-11 w-full" />
+            <Skeleton className="h-11 w-full" />
+          </div>
+        </Card>
+      </>
     );
   }
 
   const editavel = modo === "novo" || orcamento?.status === "RASCUNHO";
 
   return (
-    <div className="space-y-4">
+    <>
       <CabecalhoPagina
         titulo={modo === "editar" ? "Orçamento" : "Novo orçamento"}
-        acao={
-          <>
-          {orcamento && <OrcamentoStatusBadge status={orcamento.status} />}
-          </>
-        }
+        acao={orcamento && <OrcamentoStatusBadge status={orcamento.status} />}
       />
 
       {editavel ? (
-        <Card>
-          <CardContent className="pt-6">
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="clienteId"
-                    render={({ field }) => (
-                      <FormItem className="col-span-2">
-                        <FormLabel>Cliente</FormLabel>
-                        <Select value={field.value} onValueChange={field.onChange}>
-                          <FormControl>
-                            <SelectTrigger className="w-full">
-                              <SelectValue placeholder="Selecione o cliente" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {clientes.map((cliente) => (
-                              <SelectItem key={cliente.id} value={cliente.id}>
-                                {nomeExibicaoCliente(cliente)}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="contents">
+            <Card>
+              <CardTitle>Cliente</CardTitle>
+              <FormField
+                control={form.control}
+                name="clienteId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Cliente</FormLabel>
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <FormControl>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Selecione o cliente" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {clientes.map((cliente) => (
+                          <SelectItem key={cliente.id} value={cliente.id}>
+                            {nomeExibicaoCliente(cliente)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </Card>
 
-                <Separator />
+            <Card>
+              <CardTitle>Itens</CardTitle>
+              <OrcamentoItensField produtos={produtos} />
+            </Card>
 
-                <OrcamentoItensField produtos={produtos} />
-
-                <Separator />
-
-                <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-                  <FormField
-                    control={form.control}
-                    name="percentualDesconto"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Desconto (%)</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            max="100"
-                            {...field}
-                            onChange={(e) => field.onChange(e.target.valueAsNumber)}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="valorFrete"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Frete</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            {...field}
-                            onChange={(e) => field.onChange(e.target.valueAsNumber)}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="prazoValidade"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Válido até</FormLabel>
-                        <FormControl>
-                          <Input type="date" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="condicaoPagamento"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Condição de pagamento</FormLabel>
-                        <FormControl>
-                          <Input placeholder="À vista, 30/60/90 dias..." {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
+            <Card>
+              <CardTitle>Condições</CardTitle>
+              <div className="grade grade--4">
                 <FormField
                   control={form.control}
-                  name="observacoes"
+                  name="percentualDesconto"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Observações</FormLabel>
+                      <FormLabel>Desconto (%)</FormLabel>
                       <FormControl>
-                        <Textarea rows={3} {...field} />
+                        <Input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          max="100"
+                          {...field}
+                          onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-
-                <OrcamentoResumoValores
-                  subtotal={subtotal}
-                  valorDesconto={valorDesconto}
-                  valorFrete={valorFreteForm || 0}
-                  valorTotal={valorTotal}
+                <FormField
+                  control={form.control}
+                  name="valorFrete"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Frete</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          {...field}
+                          onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
+                <FormField
+                  control={form.control}
+                  name="prazoValidade"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Válido até</FormLabel>
+                      <FormControl>
+                        <Input type="date" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="condicaoPagamento"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Condição de pagamento</FormLabel>
+                      <FormControl>
+                        <Input placeholder="À vista, 30/60/90 dias..." {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </Card>
 
-                <div className="flex justify-end gap-2 pt-2">
-                  {modo === "editar" && orcamento && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      disabled={processandoAcao}
-                      onClick={() => executarAcao(() => orcamentoApi.cancelar(id!), "Orçamento cancelado")}
-                    >
-                      Cancelar orçamento
-                    </Button>
-                  )}
-                  <Button type="submit" disabled={form.formState.isSubmitting}>
-                    {form.formState.isSubmitting ? "Salvando..." : "Salvar"}
-                  </Button>
-                  {modo === "editar" && orcamento && (
-                    <Button
-                      type="button"
-                      disabled={processandoAcao}
-                      onClick={() => executarAcao(() => orcamentoApi.enviar(id!), "Orçamento enviado")}
-                    >
-                      Enviar orçamento
-                    </Button>
-                  )}
-                </div>
-              </form>
-            </Form>
-          </CardContent>
-        </Card>
+            <Card>
+              <FormField
+                control={form.control}
+                name="observacoes"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Observações</FormLabel>
+                    <FormControl>
+                      <Textarea rows={3} {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </Card>
+
+            <OrcamentoResumoValores
+              subtotal={subtotal}
+              valorDesconto={valorDesconto}
+              valorFrete={valorFreteForm || 0}
+              valorTotal={valorTotal}
+            />
+
+            <div className="acoes">
+              {modo === "editar" && orcamento && (
+                <Button
+                  type="button"
+                  variant="secondary"
+                  disabled={processandoAcao}
+                  onClick={() => executarAcao(() => orcamentoApi.cancelar(id!), "Orçamento cancelado")}
+                >
+                  Cancelar orçamento
+                </Button>
+              )}
+              <Button type="submit" variant={modo === "editar" ? "secondary" : "default"} disabled={form.formState.isSubmitting}>
+                {form.formState.isSubmitting ? "Salvando..." : "Salvar"}
+              </Button>
+              {modo === "editar" && orcamento && (
+                <Button
+                  type="button"
+                  disabled={processandoAcao}
+                  onClick={() => executarAcao(() => orcamentoApi.enviar(id!), "Orçamento enviado")}
+                >
+                  Enviar orçamento
+                </Button>
+              )}
+            </div>
+          </form>
+        </Form>
       ) : (
         orcamento && (
-          <Card>
-            <CardHeader>
+          <>
+            <Card>
               <CardTitle>{orcamento.clienteNome}</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="rounded-xl border border-border">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-border text-left text-muted-foreground">
-                      <th className="p-3 font-normal">Produto</th>
-                      <th className="p-3 font-normal">Quantidade</th>
-                      <th className="p-3 font-normal">Valor unitário</th>
-                      <th className="p-3 text-right font-normal">Subtotal</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {orcamento.itens.map((item) => (
-                      <tr key={item.id} className="border-b border-border last:border-0">
-                        <td className="p-3">
-                          {item.produtoCodigoInterno} — {item.produtoNome}
-                        </td>
-                        <td className="p-3">{item.quantidade}</td>
-                        <td className="p-3">{formatoMoeda.format(item.valorUnitario)}</td>
-                        <td className="p-3 text-right">{formatoMoeda.format(item.subtotal)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Produto</TableHead>
+                    <TableHead>Quantidade</TableHead>
+                    <TableHead>Valor unitário</TableHead>
+                    <TableHead className="text-right">Subtotal</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {orcamento.itens.map((item) => (
+                    <TableRow key={item.id}>
+                      <TableCell className="tabela__forte">
+                        {item.produtoCodigoInterno} — {item.produtoNome}
+                      </TableCell>
+                      <TableCell>{item.quantidade}</TableCell>
+                      <TableCell>{formatoMoeda.format(item.valorUnitario)}</TableCell>
+                      <TableCell className="text-right">{formatoMoeda.format(item.subtotal)}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </Card>
+
+            <OrcamentoResumoValores
+              subtotal={orcamento.subtotal}
+              valorDesconto={orcamento.valorDesconto}
+              valorFrete={orcamento.valorFrete}
+              valorTotal={orcamento.valorTotal}
+            />
+
+            <Card>
+              <CardTitle>Condições</CardTitle>
+              <div className="linha">
+                <span>Válido até</span>
+                <span>{new Date(orcamento.prazoValidade).toLocaleDateString("pt-BR")}</span>
               </div>
-
-              <OrcamentoResumoValores
-                subtotal={orcamento.subtotal}
-                valorDesconto={orcamento.valorDesconto}
-                valorFrete={orcamento.valorFrete}
-                valorTotal={orcamento.valorTotal}
-              />
-
-              <div className="grid grid-cols-2 gap-4 text-sm sm:grid-cols-3">
-                <div>
-                  <p className="text-muted-foreground">Válido até</p>
-                  <p className="font-medium">{new Date(orcamento.prazoValidade).toLocaleDateString("pt-BR")}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Condição de pagamento</p>
-                  <p className="font-medium">{orcamento.condicaoPagamento}</p>
-                </div>
-                {orcamento.observacoes && (
-                  <div className="col-span-2 sm:col-span-3">
-                    <p className="text-muted-foreground">Observações</p>
-                    <p className="font-medium">{orcamento.observacoes}</p>
-                  </div>
-                )}
+              <div className="linha">
+                <span>Condição de pagamento</span>
+                <span>{orcamento.condicaoPagamento}</span>
               </div>
-
-              {orcamento.status === "ENVIADO" && (
-                <div className="flex justify-end gap-2 pt-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    disabled={processandoAcao}
-                    onClick={() => executarAcao(() => orcamentoApi.cancelar(id!), "Orçamento cancelado")}
-                  >
-                    Cancelar
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    disabled={processandoAcao}
-                    onClick={() => executarAcao(() => orcamentoApi.recusar(id!), "Orçamento recusado")}
-                  >
-                    Recusar
-                  </Button>
-                  <Button
-                    type="button"
-                    disabled={processandoAcao}
-                    onClick={() => executarAcao(() => orcamentoApi.aprovar(id!), "Orçamento aprovado")}
-                  >
-                    Aprovar
-                  </Button>
+              {orcamento.observacoes && (
+                <div className="linha">
+                  <span>Observações</span>
+                  <span>{orcamento.observacoes}</span>
                 </div>
               )}
-            </CardContent>
-          </Card>
+            </Card>
+
+            {orcamento.status === "ENVIADO" && (
+              <div className="acoes">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  disabled={processandoAcao}
+                  onClick={() => executarAcao(() => orcamentoApi.cancelar(id!), "Orçamento cancelado")}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  disabled={processandoAcao}
+                  onClick={() => executarAcao(() => orcamentoApi.recusar(id!), "Orçamento recusado")}
+                >
+                  Recusar
+                </Button>
+                <Button
+                  type="button"
+                  disabled={processandoAcao}
+                  onClick={() => executarAcao(() => orcamentoApi.aprovar(id!), "Orçamento aprovado")}
+                >
+                  Aprovar
+                </Button>
+              </div>
+            )}
+          </>
         )
       )}
-    </div>
+    </>
   );
 }
