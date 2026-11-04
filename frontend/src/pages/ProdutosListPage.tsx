@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { SelecaoPesquisavel } from "@/components/ui/selecao-pesquisavel";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -47,6 +48,11 @@ export function ProdutosListPage() {
   const [categoriaId, setCategoriaId] = useState<string>("TODAS");
   const [produtoParaAlterarStatus, setProdutoParaAlterarStatus] = useState<ProdutoResponse | null>(null);
   const [alterandoStatus, setAlterandoStatus] = useState(false);
+
+  const opcoesCategorias = useMemo(
+    () => categorias.map((categoria) => ({ valor: categoria.id, rotulo: categoria.nome })),
+    [categorias],
+  );
 
   useEffect(() => {
     categoriaApi.listar().then(setCategorias).catch(() => {});
@@ -108,19 +114,16 @@ export function ProdutosListPage() {
           onChange={(e) => setBusca(e.target.value)}
           className="max-w-sm"
         />
-        <Select value={categoriaId} onValueChange={setCategoriaId}>
-          <SelectTrigger className="w-52">
-            <SelectValue placeholder="Categoria" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="TODAS">Todas as categorias</SelectItem>
-            {categorias.map((categoria) => (
-              <SelectItem key={categoria.id} value={categoria.id}>
-                {categoria.nome}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <SelecaoPesquisavel
+          className="w-52"
+          value={categoriaId}
+          onChange={setCategoriaId}
+          opcoes={opcoesCategorias}
+          valorTodos="TODAS"
+          rotuloTodos="Todas as categorias"
+          placeholderBusca="Buscar categoria"
+          textoVazio="Nenhuma categoria encontrada"
+        />
         <Select value={status} onValueChange={(v) => setStatus(v as StatusProduto | "TODOS")}>
           <SelectTrigger className="w-52">
             <SelectValue />
