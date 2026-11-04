@@ -79,6 +79,10 @@ public class ContaPagar {
     public void editar(String descricao, UUID fornecedorId, UUID categoriaDespesaId, BigDecimal valorTotal,
                         LocalDate vencimento, List<DadosParcela> dadosParcelas, String observacoes) {
         garantirNaoCancelada();
+        if (origem != OrigemContaPagar.MANUAL) {
+            throw new RegraDeNegocioException(
+                    "Conta gerada automaticamente por uma compra não pode ter valor ou parcelas alterados");
+        }
         if (temPagamentos()) {
             throw new RegraDeNegocioException(
                     "Conta com pagamentos registrados não pode ter valor ou parcelas alterados");

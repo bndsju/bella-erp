@@ -31,7 +31,13 @@ public class CategoriaDespesa {
         return new CategoriaDespesa(id, nome, status, criadoEm, atualizadoEm);
     }
 
+    /** Categorias criadas pelo sistema são usadas por contas automáticas e não podem ser alteradas. */
+    public boolean ehDoSistema() {
+        return CategoriasDespesaDoSistema.COMPRA_DE_MERCADORIAS.equals(id);
+    }
+
     public void editar(String nome) {
+        exigirNaoSerDoSistema("renomeada");
         this.nome = validarNome(nome);
         this.atualizadoEm = Instant.now();
     }
@@ -42,8 +48,16 @@ public class CategoriaDespesa {
     }
 
     public void inativar() {
+        exigirNaoSerDoSistema("inativada");
         this.status = StatusCategoriaDespesa.INATIVO;
         this.atualizadoEm = Instant.now();
+    }
+
+    private void exigirNaoSerDoSistema(String acao) {
+        if (ehDoSistema()) {
+            throw new RegraDeNegocioException("Categoria do sistema não pode ser " + acao
+                    + ": ela é usada pelas contas a pagar geradas automaticamente pelas compras");
+        }
     }
 
     private static String validarNome(String nome) {
