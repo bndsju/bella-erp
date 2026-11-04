@@ -10,6 +10,7 @@ import { ApiError } from "@/lib/api";
 import { labelFormaPagamento } from "@/lib/formaPagamento";
 import { VendaResumoValores } from "@/components/vendas/VendaResumoValores";
 import type { VendaResponse } from "@/types/venda";
+import { CabecalhoPagina } from "@/components/layout/CabecalhoPagina";
 
 const formatoMoeda = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 
@@ -61,18 +62,22 @@ export function VendaDetalhePage() {
   if (!venda) return null;
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-medium">Venda</h1>
-        <VendaStatusBadge status={venda.status} />
-      </div>
+    <div className="space-y-4">
+      <CabecalhoPagina
+        titulo="Venda"
+        acao={
+          <>
+          <VendaStatusBadge status={venda.status} />
+          </>
+        }
+      />
 
       <Card>
         <CardHeader>
           <CardTitle>{venda.clienteNome}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="rounded-lg border border-border">
+          <div className="rounded-xl border border-border">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border text-left text-muted-foreground">

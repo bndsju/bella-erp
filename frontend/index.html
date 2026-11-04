@@ -1,10 +1,22 @@
 <!doctype html>
-<html lang="en">
+<html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>frontend</title>
+    <title>Bella</title>
+    <script>
+      // Aplica o tema salvo antes de a tela aparecer, para não piscar o claro no Dark.
+      (function () {
+        try {
+          var salvo = localStorage.getItem("bella-tema");
+          var escuro =
+            salvo === "dark" ||
+            (salvo !== "claro" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+          if (escuro) document.documentElement.setAttribute("data-tema", "dark");
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

@@ -32,6 +32,7 @@ import { ApiError } from "@/lib/api";
 import { adicionarMeses, dataDeHoje, dividirEmParcelas, formatarMoeda } from "@/lib/formatos";
 import type { FornecedorResponse } from "@/types/fornecedor";
 import type { ContaPagarResponse } from "@/types/contaPagar";
+import { CabecalhoPagina } from "@/components/layout/CabecalhoPagina";
 
 const SEM_FORNECEDOR = "SEM_FORNECEDOR";
 
@@ -162,8 +163,8 @@ export function ContaPagarFormPage() {
   const erroParcelas = form.formState.errors.parcelas?.message ?? form.formState.errors.parcelas?.root?.message;
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-xl font-medium">{modoTela === "editar" ? "Editar conta a pagar" : "Nova conta a pagar"}</h1>
+    <div className="space-y-4">
+      <CabecalhoPagina titulo={modoTela === "editar" ? "Editar conta a pagar" : "Nova conta a pagar"} />
 
       <Card>
         <CardContent className="pt-6">
@@ -290,10 +291,10 @@ export function ContaPagarFormPage() {
               </div>
 
               {modo === "PARCELADO" && (
-                <div className="space-y-4 rounded-lg border border-border p-4">
+                <div className="space-y-4 rounded-xl border border-border p-4">
                   <div className="flex flex-wrap items-end gap-3">
                     <div className="space-y-1">
-                      <label className="text-xs text-muted-foreground">Quantidade de parcelas</label>
+                      <label className="block text-xs text-muted-foreground">Quantidade de parcelas</label>
                       <Input
                         type="number"
                         min="1"
@@ -303,7 +304,7 @@ export function ContaPagarFormPage() {
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-xs text-muted-foreground">Primeiro vencimento</label>
+                      <label className="block text-xs text-muted-foreground">Primeiro vencimento</label>
                       <Input
                         type="date"
                         className="w-44"

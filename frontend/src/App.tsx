@@ -24,6 +24,7 @@ import { ContaPagarFormPage } from "@/pages/ContaPagarFormPage";
 import { ContaPagarDetalhePage } from "@/pages/ContaPagarDetalhePage";
 import { CategoriasDespesaPage } from "@/pages/CategoriasDespesaPage";
 import { DashboardPage } from "@/pages/DashboardPage";
+import { AjustesPage } from "@/pages/AjustesPage";
 import { FluxoCaixaPage } from "@/pages/FluxoCaixaPage";
 import { CategoriasFluxoCaixaPage } from "@/pages/CategoriasFluxoCaixaPage";
 import { EstoquePage } from "@/pages/EstoquePage";
@@ -34,6 +35,7 @@ function App() {
     <Routes>
       <Route element={<AppLayout />}>
         <Route path="/" element={<DashboardPage />} />
+        <Route path="/ajustes" element={<AjustesPage />} />
         <Route path="/clientes" element={<ClientesListPage />} />
         <Route path="/clientes/novo" element={<ClienteFormPage />} />
         <Route path="/clientes/:id/editar" element={<ClienteFormPage />} />

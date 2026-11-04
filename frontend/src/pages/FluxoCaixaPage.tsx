@@ -29,6 +29,9 @@ import { fluxoCaixaApi } from "@/lib/fluxoCaixaApi";
 import { ROTULO_ORIGEM } from "@/lib/fluxoCaixaRotulos";
 import { formatarData, formatarMoeda } from "@/lib/formatos";
 import type { CategoriaFluxoCaixaResponse } from "@/types/categoriaFluxoCaixa";
+import { Ban, CircleCheck, Pencil } from "lucide-react";
+import { MenuAcoes } from "@/components/ui/menu-acoes";
+import { CabecalhoPagina } from "@/components/layout/CabecalhoPagina";
 import type {
   MovimentacaoCaixaResponse,
   OrigemMovimentacaoCaixa,
@@ -149,18 +152,22 @@ export function FluxoCaixaPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-medium">Fluxo de caixa</h1>
-        <Button
-          onClick={() => {
-            setEmEdicao(null);
-            setDialogLancamentoAberto(true);
-          }}
-        >
-          Novo lançamento
-        </Button>
-      </div>
+    <div className="space-y-4">
+      <CabecalhoPagina
+        titulo="Fluxo de caixa"
+        acao={
+          <>
+          <Button
+            onClick={() => {
+              setEmEdicao(null);
+              setDialogLancamentoAberto(true);
+            }}
+          >
+            Novo lançamento
+          </Button>
+          </>
+        }
+      />
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Card>
@@ -198,13 +205,13 @@ export function FluxoCaixaPage() {
         </Card>
       </div>
 
-      <div className="flex flex-wrap items-end gap-3">
+      <div className="cartao flex flex-wrap items-end gap-3">
         <div className="space-y-1">
-          <label className="text-xs text-muted-foreground">De</label>
+          <label className="block text-xs text-muted-foreground">De</label>
           <Input type="date" className="w-40" value={dataInicio} onChange={(e) => setDataInicio(e.target.value)} />
         </div>
         <div className="space-y-1">
-          <label className="text-xs text-muted-foreground">Até</label>
+          <label className="block text-xs text-muted-foreground">Até</label>
           <Input type="date" className="w-40" value={dataFim} onChange={(e) => setDataFim(e.target.value)} />
         </div>
         <Select value={tipo} onValueChange={(v) => setTipo(v as TipoMovimentacaoCaixa | "TODOS")}>
@@ -263,7 +270,7 @@ export function FluxoCaixaPage() {
         </label>
       </div>
 
-      <div className="rounded-lg border border-border">
+      <div className="rounded-cartao bg-card p-2">
         <Table>
           <TableHeader>
             <TableRow>
@@ -323,28 +330,32 @@ export function FluxoCaixaPage() {
                       )}
                     </TableCell>
                     <TableCell className="text-right">
-                      {editavel && movimentacao.situacao === "PREVISTO" && (
-                        <>
-                          <Button variant="ghost" size="sm" onClick={() => setEmRealizacao(movimentacao)}>
-                            Realizar
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
+                      <MenuAcoes
+                        itens={[
+                          {
+                            rotulo: "Realizar",
+                            icone: CircleCheck,
+                            oculto: !(editavel && movimentacao.situacao === "PREVISTO"),
+                            aoClicar: () => setEmRealizacao(movimentacao),
+                          },
+                          {
+                            rotulo: "Editar",
+                            icone: Pencil,
+                            oculto: !(editavel && movimentacao.situacao === "PREVISTO"),
+                            aoClicar: () => {
                               setEmEdicao(movimentacao);
                               setDialogLancamentoAberto(true);
-                            }}
-                          >
-                            Editar
-                          </Button>
-                        </>
-                      )}
-                      {editavel && (
-                        <Button variant="ghost" size="sm" onClick={() => setEmCancelamento(movimentacao)}>
-                          Cancelar
-                        </Button>
-                      )}
+                            },
+                          },
+                          {
+                            rotulo: "Cancelar lançamento",
+                            icone: Ban,
+                            perigo: true,
+                            oculto: !editavel,
+                            aoClicar: () => setEmCancelamento(movimentacao),
+                          },
+                        ]}
+                      />
                     </TableCell>
                   </TableRow>
                 );
@@ -360,7 +371,7 @@ export function FluxoCaixaPage() {
             <CardTitle>Resumo por categoria</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="rounded-lg border border-border">
+            <div className="rounded-xl border border-border">
               <Table>
                 <TableHeader>
                   <TableRow>

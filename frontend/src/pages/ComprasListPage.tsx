@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,6 +24,9 @@ import { compraApi } from "@/lib/compraApi";
 import { fornecedorApi } from "@/lib/fornecedorApi";
 import type { CompraResponse, StatusCompra } from "@/types/compra";
 import type { FornecedorResponse } from "@/types/fornecedor";
+import { ExternalLink } from "lucide-react";
+import { MenuAcoes } from "@/components/ui/menu-acoes";
+import { CabecalhoPagina } from "@/components/layout/CabecalhoPagina";
 
 const formatoMoeda = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 
@@ -32,6 +35,7 @@ function formatarData(data: string | null): string {
 }
 
 export function ComprasListPage() {
+  const navigate = useNavigate();
   const [compras, setCompras] = useState<CompraResponse[]>([]);
   const [fornecedores, setFornecedores] = useState<FornecedorResponse[]>([]);
   const [carregando, setCarregando] = useState(true);
@@ -61,15 +65,19 @@ export function ComprasListPage() {
   useEffect(carregar, [carregar]);
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-medium">Compras</h1>
-        <Button asChild>
-          <Link to="/compras/novo">Nova compra</Link>
-        </Button>
-      </div>
+    <div className="space-y-4">
+      <CabecalhoPagina
+        titulo="Compras"
+        acao={
+          <>
+          <Button asChild>
+            <Link to="/compras/novo">Nova compra</Link>
+          </Button>
+          </>
+        }
+      />
 
-      <div className="flex flex-wrap items-end gap-3">
+      <div className="cartao flex flex-wrap items-end gap-3">
         <Select value={fornecedorId} onValueChange={setFornecedorId}>
           <SelectTrigger className="w-56">
             <SelectValue placeholder="Fornecedor" />
@@ -96,16 +104,16 @@ export function ComprasListPage() {
           </SelectContent>
         </Select>
         <div className="space-y-1">
-          <label className="text-xs text-muted-foreground">Compra de</label>
+          <label className="block text-xs text-muted-foreground">Compra de</label>
           <Input type="date" className="w-40" value={dataInicio} onChange={(e) => setDataInicio(e.target.value)} />
         </div>
         <div className="space-y-1">
-          <label className="text-xs text-muted-foreground">até</label>
+          <label className="block text-xs text-muted-foreground">até</label>
           <Input type="date" className="w-40" value={dataFim} onChange={(e) => setDataFim(e.target.value)} />
         </div>
       </div>
 
-      <div className="rounded-lg border border-border">
+      <div className="rounded-cartao bg-card p-2">
         <Table>
           <TableHeader>
             <TableRow>
@@ -134,7 +142,7 @@ export function ComprasListPage() {
               </TableRow>
             ) : (
               compras.map((compra) => (
-                <TableRow key={compra.id}>
+                <TableRow key={compra.id} className="cursor-pointer" onClick={() => navigate(`/compras/${compra.id}`)}>
                   <TableCell className="font-medium">{compra.fornecedorNome}</TableCell>
                   <TableCell>{formatarData(compra.dataCompra)}</TableCell>
                   <TableCell>{formatarData(compra.previsaoRecebimento)}</TableCell>
@@ -143,9 +151,7 @@ export function ComprasListPage() {
                     <CompraStatusBadge status={compra.status} />
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button variant="ghost" size="sm" asChild>
-                      <Link to={`/compras/${compra.id}`}>Abrir</Link>
-                    </Button>
+                    <MenuAcoes itens={[{ rotulo: "Abrir", icone: ExternalLink, para: `/compras/${compra.id}` }]} />
                   </TableCell>
                 </TableRow>
               ))

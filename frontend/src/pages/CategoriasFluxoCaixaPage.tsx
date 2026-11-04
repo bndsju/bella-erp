@@ -21,6 +21,9 @@ import { Badge } from "@/components/ui/badge";
 import { CategoriaFluxoCaixaFormDialog } from "@/components/categoriasfluxocaixa/CategoriaFluxoCaixaFormDialog";
 import { categoriaFluxoCaixaApi } from "@/lib/categoriaFluxoCaixaApi";
 import type { CategoriaFluxoCaixaResponse, StatusCategoriaFluxoCaixa } from "@/types/categoriaFluxoCaixa";
+import { CircleCheck, Pencil, Power } from "lucide-react";
+import { MenuAcoes } from "@/components/ui/menu-acoes";
+import { CabecalhoPagina } from "@/components/layout/CabecalhoPagina";
 
 export function CategoriasFluxoCaixaPage() {
   const [categorias, setCategorias] = useState<CategoriaFluxoCaixaResponse[]>([]);
@@ -52,31 +55,37 @@ export function CategoriasFluxoCaixaPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-medium">Categorias de fluxo de caixa</h1>
-        <Button
-          onClick={() => {
-            setCategoriaEmEdicao(null);
-            setDialogAberto(true);
-          }}
-        >
-          Nova categoria de fluxo de caixa
-        </Button>
+    <div className="space-y-4">
+      <CabecalhoPagina
+        titulo="Categorias de fluxo de caixa"
+        acao={
+          <>
+          <Button
+            onClick={() => {
+              setCategoriaEmEdicao(null);
+              setDialogAberto(true);
+            }}
+          >
+            Nova categoria de fluxo de caixa
+          </Button>
+          </>
+        }
+      />
+
+      <div className="cartao">
+  <Select value={status} onValueChange={(v) => setStatus(v as StatusCategoriaFluxoCaixa | "TODOS")}>
+          <SelectTrigger className="w-40">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="TODOS">Todos os status</SelectItem>
+            <SelectItem value="ATIVO">Ativo</SelectItem>
+            <SelectItem value="INATIVO">Inativo</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
-      <Select value={status} onValueChange={(v) => setStatus(v as StatusCategoriaFluxoCaixa | "TODOS")}>
-        <SelectTrigger className="w-40">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="TODOS">Todos os status</SelectItem>
-          <SelectItem value="ATIVO">Ativo</SelectItem>
-          <SelectItem value="INATIVO">Inativo</SelectItem>
-        </SelectContent>
-      </Select>
-
-      <div className="rounded-lg border border-border">
+      <div className="rounded-cartao bg-card p-2">
         <Table>
           <TableHeader>
             <TableRow>
@@ -108,21 +117,24 @@ export function CategoriasFluxoCaixaPage() {
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setCategoriaEmEdicao(categoria);
-                          setDialogAberto(true);
-                        }}
-                      >
-                        Editar
-                      </Button>
-                      <Button variant="ghost" size="sm" onClick={() => alternarStatus(categoria)}>
-                        {categoria.status === "ATIVO" ? "Inativar" : "Ativar"}
-                      </Button>
-                    </div>
+                    <MenuAcoes
+                      itens={[
+                        {
+                          rotulo: "Editar",
+                          icone: Pencil,
+                          aoClicar: () => {
+                            setCategoriaEmEdicao(categoria);
+                            setDialogAberto(true);
+                          },
+                        },
+                        {
+                          rotulo: categoria.status === "ATIVO" ? "Inativar" : "Ativar",
+                          icone: categoria.status === "ATIVO" ? Power : CircleCheck,
+                          perigo: categoria.status === "ATIVO",
+                          aoClicar: () => alternarStatus(categoria),
+                        },
+                      ]}
+                    />
                   </TableCell>
                 </TableRow>
               ))

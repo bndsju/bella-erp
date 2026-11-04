@@ -21,6 +21,9 @@ import { Badge } from "@/components/ui/badge";
 import { FornecedorFormDialog } from "@/components/fornecedores/FornecedorFormDialog";
 import { fornecedorApi } from "@/lib/fornecedorApi";
 import type { StatusFornecedor, FornecedorResponse } from "@/types/fornecedor";
+import { CircleCheck, Pencil, Power } from "lucide-react";
+import { MenuAcoes } from "@/components/ui/menu-acoes";
+import { CabecalhoPagina } from "@/components/layout/CabecalhoPagina";
 
 export function FornecedoresPage() {
   const [fornecedores, setFornecedores] = useState<FornecedorResponse[]>([]);
@@ -52,31 +55,37 @@ export function FornecedoresPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-medium">Fornecedores</h1>
-        <Button
-          onClick={() => {
-            setFornecedorEmEdicao(null);
-            setDialogAberto(true);
-          }}
-        >
-          Novo fornecedor
-        </Button>
+    <div className="space-y-4">
+      <CabecalhoPagina
+        titulo="Fornecedores"
+        acao={
+          <>
+          <Button
+            onClick={() => {
+              setFornecedorEmEdicao(null);
+              setDialogAberto(true);
+            }}
+          >
+            Novo fornecedor
+          </Button>
+          </>
+        }
+      />
+
+      <div className="cartao">
+  <Select value={status} onValueChange={(v) => setStatus(v as StatusFornecedor | "TODOS")}>
+          <SelectTrigger className="w-40">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="TODOS">Todos os status</SelectItem>
+            <SelectItem value="ATIVO">Ativo</SelectItem>
+            <SelectItem value="INATIVO">Inativo</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
-      <Select value={status} onValueChange={(v) => setStatus(v as StatusFornecedor | "TODOS")}>
-        <SelectTrigger className="w-40">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="TODOS">Todos os status</SelectItem>
-          <SelectItem value="ATIVO">Ativo</SelectItem>
-          <SelectItem value="INATIVO">Inativo</SelectItem>
-        </SelectContent>
-      </Select>
-
-      <div className="rounded-lg border border-border">
+      <div className="rounded-cartao bg-card p-2">
         <Table>
           <TableHeader>
             <TableRow>
@@ -110,21 +119,24 @@ export function FornecedoresPage() {
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setFornecedorEmEdicao(fornecedor);
-                          setDialogAberto(true);
-                        }}
-                      >
-                        Editar
-                      </Button>
-                      <Button variant="ghost" size="sm" onClick={() => alternarStatus(fornecedor)}>
-                        {fornecedor.status === "ATIVO" ? "Inativar" : "Ativar"}
-                      </Button>
-                    </div>
+                    <MenuAcoes
+                      itens={[
+                        {
+                          rotulo: "Editar",
+                          icone: Pencil,
+                          aoClicar: () => {
+                            setFornecedorEmEdicao(fornecedor);
+                            setDialogAberto(true);
+                          },
+                        },
+                        {
+                          rotulo: fornecedor.status === "ATIVO" ? "Inativar" : "Ativar",
+                          icone: fornecedor.status === "ATIVO" ? Power : CircleCheck,
+                          perigo: fornecedor.status === "ATIVO",
+                          aoClicar: () => alternarStatus(fornecedor),
+                        },
+                      ]}
+                    />
                   </TableCell>
                 </TableRow>
               ))

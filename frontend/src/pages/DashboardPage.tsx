@@ -157,7 +157,7 @@ export function DashboardPage() {
   const granularidade = dados?.periodo.granularidade ?? "DIA";
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <h1 className="text-xl font-medium">Início</h1>
         <div className="flex flex-wrap items-end gap-2">
@@ -176,11 +176,11 @@ export function DashboardPage() {
             </Button>
           ))}
           <div className="space-y-1">
-            <label className="text-xs text-muted-foreground">De</label>
+            <label className="block text-xs text-muted-foreground">De</label>
             <Input type="date" className="w-40" value={inicio} onChange={(e) => setInicio(e.target.value)} />
           </div>
           <div className="space-y-1">
-            <label className="text-xs text-muted-foreground">Até</label>
+            <label className="block text-xs text-muted-foreground">Até</label>
             <Input type="date" className="w-40" value={fim} onChange={(e) => setFim(e.target.value)} />
           </div>
         </div>

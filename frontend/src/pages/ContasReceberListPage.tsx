@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -26,6 +26,9 @@ import { contaReceberApi } from "@/lib/contaReceberApi";
 import { formatarData, formatarMoeda } from "@/lib/formatos";
 import type { ClienteResponse } from "@/types/cliente";
 import type { ContaReceberResponse, SituacaoContaReceber, StatusContaReceber } from "@/types/contaReceber";
+import { ExternalLink } from "lucide-react";
+import { MenuAcoes } from "@/components/ui/menu-acoes";
+import { CabecalhoPagina } from "@/components/layout/CabecalhoPagina";
 
 function nomeExibicaoCliente(cliente: ClienteResponse): string {
   return cliente.tipoPessoa === "PF" ? (cliente.nomeCompleto ?? "") : (cliente.razaoSocial ?? "");
@@ -40,6 +43,7 @@ function proximoVencimento(conta: ContaReceberResponse): string | null {
 }
 
 export function ContasReceberListPage() {
+  const navigate = useNavigate();
   const [contas, setContas] = useState<ContaReceberResponse[]>([]);
   const [clientes, setClientes] = useState<ClienteResponse[]>([]);
   const [carregando, setCarregando] = useState(true);
@@ -79,13 +83,17 @@ export function ContasReceberListPage() {
   const recebido = contas.reduce((total, conta) => total + conta.valorRecebido, 0);
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-medium">Contas a receber</h1>
-        <Button asChild>
-          <Link to="/contas-receber/novo">Nova conta</Link>
-        </Button>
-      </div>
+    <div className="space-y-4">
+      <CabecalhoPagina
+        titulo="Contas a receber"
+        acao={
+          <>
+          <Button asChild>
+            <Link to="/contas-receber/novo">Nova conta</Link>
+          </Button>
+          </>
+        }
+      />
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <Card>
@@ -108,7 +116,7 @@ export function ContasReceberListPage() {
         </Card>
       </div>
 
-      <div className="flex flex-wrap items-end gap-3">
+      <div className="cartao flex flex-wrap items-end gap-3">
         <Select value={clienteId} onValueChange={setClienteId}>
           <SelectTrigger className="w-56">
             <SelectValue placeholder="Cliente" />
@@ -146,16 +154,16 @@ export function ContasReceberListPage() {
           </SelectContent>
         </Select>
         <div className="space-y-1">
-          <label className="text-xs text-muted-foreground">Vencimento de</label>
+          <label className="block text-xs text-muted-foreground">Vencimento de</label>
           <Input type="date" className="w-40" value={vencimentoInicio} onChange={(e) => setVencimentoInicio(e.target.value)} />
         </div>
         <div className="space-y-1">
-          <label className="text-xs text-muted-foreground">até</label>
+          <label className="block text-xs text-muted-foreground">até</label>
           <Input type="date" className="w-40" value={vencimentoFim} onChange={(e) => setVencimentoFim(e.target.value)} />
         </div>
       </div>
 
-      <div className="rounded-lg border border-border">
+      <div className="rounded-cartao bg-card p-2">
         <Table>
           <TableHeader>
             <TableRow>
@@ -185,7 +193,7 @@ export function ContasReceberListPage() {
               </TableRow>
             ) : (
               contas.map((conta) => (
-                <TableRow key={conta.id}>
+                <TableRow key={conta.id} className="cursor-pointer" onClick={() => navigate(`/contas-receber/${conta.id}`)}>
                   <TableCell className="font-medium">{conta.descricao}</TableCell>
                   <TableCell>{conta.clienteNome ?? "—"}</TableCell>
                   <TableCell>{formatarData(proximoVencimento(conta))}</TableCell>
@@ -195,9 +203,7 @@ export function ContasReceberListPage() {
                     <StatusContaReceberBadge status={conta.status} vencida={conta.vencida} />
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button variant="ghost" size="sm" asChild>
-                      <Link to={`/contas-receber/${conta.id}`}>Abrir</Link>
-                    </Button>
+                    <MenuAcoes itens={[{ rotulo: "Abrir", icone: ExternalLink, para: `/contas-receber/${conta.id}` }]} />
                   </TableCell>
                 </TableRow>
               ))

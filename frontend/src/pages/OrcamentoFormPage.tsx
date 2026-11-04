@@ -35,6 +35,7 @@ import { orcamentoSchema, type OrcamentoFormValues } from "@/lib/orcamentoSchema
 import type { ClienteResponse } from "@/types/cliente";
 import type { ProdutoResponse } from "@/types/produto";
 import type { OrcamentoResponse } from "@/types/orcamento";
+import { CabecalhoPagina } from "@/components/layout/CabecalhoPagina";
 
 const formatoMoeda = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 
@@ -157,11 +158,15 @@ export function OrcamentoFormPage() {
   const editavel = modo === "novo" || orcamento?.status === "RASCUNHO";
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-medium">{modo === "editar" ? "Orçamento" : "Novo orçamento"}</h1>
-        {orcamento && <OrcamentoStatusBadge status={orcamento.status} />}
-      </div>
+    <div className="space-y-4">
+      <CabecalhoPagina
+        titulo={modo === "editar" ? "Orçamento" : "Novo orçamento"}
+        acao={
+          <>
+          {orcamento && <OrcamentoStatusBadge status={orcamento.status} />}
+          </>
+        }
+      />
 
       {editavel ? (
         <Card>
@@ -325,7 +330,7 @@ export function OrcamentoFormPage() {
               <CardTitle>{orcamento.clienteNome}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="rounded-lg border border-border">
+              <div className="rounded-xl border border-border">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-border text-left text-muted-foreground">

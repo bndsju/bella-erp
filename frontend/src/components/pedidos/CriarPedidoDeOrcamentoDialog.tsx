@@ -77,7 +77,7 @@ export function CriarPedidoDeOrcamentoDialog({ open, onOpenChange }: CriarPedido
         </DialogHeader>
         <div className="space-y-4">
           <div className="space-y-2">
-            <label className="text-sm font-medium">Orçamento aprovado</label>
+            <label className="block text-sm font-medium">Orçamento aprovado</label>
             <Select value={orcamentoId} onValueChange={setOrcamentoId}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Selecione o orçamento" />
@@ -98,7 +98,7 @@ export function CriarPedidoDeOrcamentoDialog({ open, onOpenChange }: CriarPedido
             </Select>
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium">Transportadora</label>
+            <label className="block text-sm font-medium">Transportadora</label>
             <Select value={transportadoraId} onValueChange={setTransportadoraId}>
               <SelectTrigger className="w-full">
                 <SelectValue />

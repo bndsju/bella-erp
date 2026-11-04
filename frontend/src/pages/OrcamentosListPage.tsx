@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -23,6 +23,9 @@ import { orcamentoApi } from "@/lib/orcamentoApi";
 import { clienteApi } from "@/lib/clienteApi";
 import type { OrcamentoResponse, StatusOrcamento } from "@/types/orcamento";
 import type { ClienteResponse } from "@/types/cliente";
+import { ExternalLink } from "lucide-react";
+import { MenuAcoes } from "@/components/ui/menu-acoes";
+import { CabecalhoPagina } from "@/components/layout/CabecalhoPagina";
 
 const formatoMoeda = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 
@@ -31,6 +34,7 @@ function nomeExibicaoCliente(cliente: ClienteResponse): string {
 }
 
 export function OrcamentosListPage() {
+  const navigate = useNavigate();
   const [orcamentos, setOrcamentos] = useState<OrcamentoResponse[]>([]);
   const [clientes, setClientes] = useState<ClienteResponse[]>([]);
   const [carregando, setCarregando] = useState(true);
@@ -56,15 +60,19 @@ export function OrcamentosListPage() {
   useEffect(carregar, [carregar]);
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-medium">Orçamentos</h1>
-        <Button asChild>
-          <Link to="/orcamentos/novo">Novo orçamento</Link>
-        </Button>
-      </div>
+    <div className="space-y-4">
+      <CabecalhoPagina
+        titulo="Orçamentos"
+        acao={
+          <>
+          <Button asChild>
+            <Link to="/orcamentos/novo">Novo orçamento</Link>
+          </Button>
+          </>
+        }
+      />
 
-      <div className="flex gap-3">
+      <div className="cartao flex flex-wrap items-end gap-3">
         <Select value={clienteId} onValueChange={setClienteId}>
           <SelectTrigger className="w-56">
             <SelectValue placeholder="Cliente" />
@@ -94,7 +102,7 @@ export function OrcamentosListPage() {
         </Select>
       </div>
 
-      <div className="rounded-lg border border-border">
+      <div className="rounded-cartao bg-card p-2">
         <Table>
           <TableHeader>
             <TableRow>
@@ -122,7 +130,7 @@ export function OrcamentosListPage() {
               </TableRow>
             ) : (
               orcamentos.map((orcamento) => (
-                <TableRow key={orcamento.id}>
+                <TableRow key={orcamento.id} className="cursor-pointer" onClick={() => navigate(`/orcamentos/${orcamento.id}/editar`)}>
                   <TableCell className="font-medium">{orcamento.clienteNome}</TableCell>
                   <TableCell>{new Date(orcamento.prazoValidade).toLocaleDateString("pt-BR")}</TableCell>
                   <TableCell>{formatoMoeda.format(orcamento.valorTotal)}</TableCell>
@@ -130,9 +138,7 @@ export function OrcamentosListPage() {
                     <OrcamentoStatusBadge status={orcamento.status} />
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button variant="ghost" size="sm" asChild>
-                      <Link to={`/orcamentos/${orcamento.id}/editar`}>Abrir</Link>
-                    </Button>
+                    <MenuAcoes itens={[{ rotulo: "Abrir", icone: ExternalLink, para: `/orcamentos/${orcamento.id}/editar` }]} />
                   </TableCell>
                 </TableRow>
               ))

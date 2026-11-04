@@ -21,6 +21,9 @@ import { contaReceberApi } from "@/lib/contaReceberApi";
 import { ApiError } from "@/lib/api";
 import { formatarData, formatarMoeda } from "@/lib/formatos";
 import type { ContaReceberResponse, ParcelaContaReceberResponse, StatusParcela } from "@/types/contaReceber";
+import { HandCoins } from "lucide-react";
+import { MenuAcoes } from "@/components/ui/menu-acoes";
+import { CabecalhoPagina } from "@/components/layout/CabecalhoPagina";
 
 const ROTULO_PARCELA: Record<StatusParcela, string> = {
   PENDENTE: "Pendente",
@@ -82,10 +85,10 @@ export function ContaReceberDetalhePage() {
   const podeRegistrarRecebimento = !cancelada;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <h1 className="text-xl font-medium">{conta.descricao}</h1>
+          <CabecalhoPagina titulo={conta.descricao} />
           <StatusContaReceberBadge status={conta.status} vencida={conta.vencida} />
         </div>
         <div className="flex flex-wrap gap-2">
@@ -169,7 +172,7 @@ export function ContaReceberDetalhePage() {
           <CardTitle>Parcelas e recebimentos</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="rounded-lg border border-border">
+          <div className="rounded-xl border border-border">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -200,11 +203,16 @@ export function ContaReceberDetalhePage() {
                         </span>
                       </TableCell>
                       <TableCell className="text-right">
-                        {podeRegistrarRecebimento && parcela.saldoPendente > 0 && (
-                          <Button variant="ghost" size="sm" onClick={() => setParcelaEmRecebimento(parcela)}>
-                            Registrar recebimento
-                          </Button>
-                        )}
+                        <MenuAcoes
+                          itens={[
+                            {
+                              rotulo: "Registrar recebimento",
+                              icone: HandCoins,
+                              oculto: !(podeRegistrarRecebimento && parcela.saldoPendente > 0),
+                              aoClicar: () => setParcelaEmRecebimento(parcela),
+                            },
+                          ]}
+                        />
                       </TableCell>
                     </TableRow>
                     {parcela.recebimentos.map((recebimento) => (

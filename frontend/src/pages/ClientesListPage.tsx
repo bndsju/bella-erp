@@ -31,6 +31,9 @@ import { StatusBadge } from "@/components/clientes/StatusBadge";
 import { clienteApi } from "@/lib/clienteApi";
 import { formatarCnpj, formatarCpf } from "@/lib/documento";
 import type { ClienteResponse, StatusCliente } from "@/types/cliente";
+import { CircleCheck, Pencil, Power } from "lucide-react";
+import { MenuAcoes } from "@/components/ui/menu-acoes";
+import { CabecalhoPagina } from "@/components/layout/CabecalhoPagina";
 
 function nomeExibicao(cliente: ClienteResponse): string {
   return cliente.tipoPessoa === "PF" ? (cliente.nomeCompleto ?? "") : (cliente.razaoSocial ?? "");
@@ -84,15 +87,19 @@ export function ClientesListPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-medium">Clientes</h1>
-        <Button asChild>
-          <Link to="/clientes/novo">Novo cliente</Link>
-        </Button>
-      </div>
+    <div className="space-y-4">
+      <CabecalhoPagina
+        titulo="Clientes"
+        acao={
+          <>
+          <Button asChild>
+            <Link to="/clientes/novo">Novo cliente</Link>
+          </Button>
+          </>
+        }
+      />
 
-      <div className="flex gap-3">
+      <div className="cartao flex flex-wrap items-end gap-3">
         <Input
           placeholder="Buscar por nome ou razão social"
           value={busca}
@@ -111,7 +118,7 @@ export function ClientesListPage() {
         </Select>
       </div>
 
-      <div className="rounded-lg border border-border">
+      <div className="rounded-cartao bg-card p-2">
         <Table>
           <TableHeader>
             <TableRow>
@@ -151,18 +158,17 @@ export function ClientesListPage() {
                     <StatusBadge status={cliente.status} />
                   </TableCell>
                   <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button variant="ghost" size="sm" asChild>
-                        <Link to={`/clientes/${cliente.id}/editar`}>Editar</Link>
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setClienteParaAlterarStatus(cliente)}
-                      >
-                        {cliente.status === "ATIVO" ? "Inativar" : "Ativar"}
-                      </Button>
-                    </div>
+                    <MenuAcoes
+                      itens={[
+                        { rotulo: "Editar", icone: Pencil, para: `/clientes/${cliente.id}/editar` },
+                        {
+                          rotulo: cliente.status === "ATIVO" ? "Inativar" : "Ativar",
+                          icone: cliente.status === "ATIVO" ? Power : CircleCheck,
+                          perigo: cliente.status === "ATIVO",
+                          aoClicar: () => setClienteParaAlterarStatus(cliente),
+                        },
+                      ]}
+                    />
                   </TableCell>
                 </TableRow>
               ))

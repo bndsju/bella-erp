@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
@@ -24,6 +23,9 @@ import { clienteApi } from "@/lib/clienteApi";
 import { labelFormaPagamento } from "@/lib/formaPagamento";
 import type { StatusVenda, VendaResponse } from "@/types/venda";
 import type { ClienteResponse } from "@/types/cliente";
+import { ExternalLink } from "lucide-react";
+import { MenuAcoes } from "@/components/ui/menu-acoes";
+import { CabecalhoPagina } from "@/components/layout/CabecalhoPagina";
 
 const formatoMoeda = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 
@@ -32,6 +34,7 @@ function nomeExibicaoCliente(cliente: ClienteResponse): string {
 }
 
 export function VendasListPage() {
+  const navigate = useNavigate();
   const [vendas, setVendas] = useState<VendaResponse[]>([]);
   const [clientes, setClientes] = useState<ClienteResponse[]>([]);
   const [carregando, setCarregando] = useState(true);
@@ -57,38 +60,36 @@ export function VendasListPage() {
   useEffect(carregar, [carregar]);
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-medium">Vendas</h1>
+    <div className="space-y-4">
+      <CabecalhoPagina titulo="Vendas" />
+
+      <div className="cartao flex flex-wrap items-end gap-3">
+          <Select value={clienteId} onValueChange={setClienteId}>
+            <SelectTrigger className="w-56">
+              <SelectValue placeholder="Cliente" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="TODOS">Todos os clientes</SelectItem>
+              {clientes.map((cliente) => (
+                <SelectItem key={cliente.id} value={cliente.id}>
+                  {nomeExibicaoCliente(cliente)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={status} onValueChange={(v) => setStatus(v as StatusVenda | "TODOS")}>
+            <SelectTrigger className="w-44">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="TODOS">Todos os status</SelectItem>
+              <SelectItem value="CONCLUIDA">Concluída</SelectItem>
+              <SelectItem value="CANCELADA">Cancelada</SelectItem>
+            </SelectContent>
+          </Select>
       </div>
 
-      <div className="flex gap-3">
-        <Select value={clienteId} onValueChange={setClienteId}>
-          <SelectTrigger className="w-56">
-            <SelectValue placeholder="Cliente" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="TODOS">Todos os clientes</SelectItem>
-            {clientes.map((cliente) => (
-              <SelectItem key={cliente.id} value={cliente.id}>
-                {nomeExibicaoCliente(cliente)}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select value={status} onValueChange={(v) => setStatus(v as StatusVenda | "TODOS")}>
-          <SelectTrigger className="w-44">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="TODOS">Todos os status</SelectItem>
-            <SelectItem value="CONCLUIDA">Concluída</SelectItem>
-            <SelectItem value="CANCELADA">Cancelada</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div className="rounded-lg border border-border">
+      <div className="rounded-cartao bg-card p-2">
         <Table>
           <TableHeader>
             <TableRow>
@@ -116,7 +117,7 @@ export function VendasListPage() {
               </TableRow>
             ) : (
               vendas.map((venda) => (
-                <TableRow key={venda.id}>
+                <TableRow key={venda.id} className="cursor-pointer" onClick={() => navigate(`/vendas/${venda.id}`)}>
                   <TableCell className="font-medium">{venda.clienteNome}</TableCell>
                   <TableCell>{labelFormaPagamento(venda.formaPagamento)}</TableCell>
                   <TableCell>{formatoMoeda.format(venda.valorTotal)}</TableCell>
@@ -124,9 +125,7 @@ export function VendasListPage() {
                     <VendaStatusBadge status={venda.status} />
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button variant="ghost" size="sm" asChild>
-                      <Link to={`/vendas/${venda.id}`}>Abrir</Link>
-                    </Button>
+                    <MenuAcoes itens={[{ rotulo: "Abrir", icone: ExternalLink, para: `/vendas/${venda.id}` }]} />
                   </TableCell>
                 </TableRow>
               ))

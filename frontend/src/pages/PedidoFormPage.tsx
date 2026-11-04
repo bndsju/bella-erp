@@ -37,6 +37,7 @@ import type { ClienteResponse } from "@/types/cliente";
 import type { ProdutoResponse } from "@/types/produto";
 import type { PedidoResponse, StatusPedido } from "@/types/pedido";
 import type { TransportadoraResponse } from "@/types/transportadora";
+import { CabecalhoPagina } from "@/components/layout/CabecalhoPagina";
 
 const formatoMoeda = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 const SEM_TRANSPORTADORA = "SEM_TRANSPORTADORA";
@@ -175,11 +176,15 @@ export function PedidoFormPage() {
   const podeCancelar = modo === "editar" && pedido && pedido.status !== "ENTREGUE" && pedido.status !== "CANCELADO";
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-medium">{modo === "editar" ? "Pedido" : "Novo pedido"}</h1>
-        {pedido && <PedidoStatusBadge status={pedido.status} />}
-      </div>
+    <div className="space-y-4">
+      <CabecalhoPagina
+        titulo={modo === "editar" ? "Pedido" : "Novo pedido"}
+        acao={
+          <>
+          {pedido && <PedidoStatusBadge status={pedido.status} />}
+          </>
+        }
+      />
 
       {editavel ? (
         <Card>
@@ -341,7 +346,7 @@ export function PedidoFormPage() {
               <CardTitle>{pedido.clienteNome}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="rounded-lg border border-border">
+              <div className="rounded-xl border border-border">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-border text-left text-muted-foreground">

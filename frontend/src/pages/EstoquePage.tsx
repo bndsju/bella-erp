@@ -24,6 +24,9 @@ import { MovimentacaoEstoqueDialog } from "@/components/estoque/MovimentacaoEsto
 import { estoqueApi } from "@/lib/estoqueApi";
 import { formatarQuantidade } from "@/lib/estoqueFormatos";
 import type { SaldoEstoqueResponse } from "@/types/estoque";
+import { ArrowLeftRight, History } from "lucide-react";
+import { MenuAcoes } from "@/components/ui/menu-acoes";
+import { CabecalhoPagina } from "@/components/layout/CabecalhoPagina";
 
 type VisaoEstoque = "TODOS" | "ABAIXO_DO_MINIMO";
 
@@ -62,18 +65,22 @@ export function EstoquePage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-medium">Estoque</h1>
-        <div className="flex gap-2">
-          <Button variant="outline" asChild>
-            <Link to="/estoque/movimentacoes">Histórico de movimentações</Link>
-          </Button>
-          <Button onClick={() => abrirMovimentacao()}>Registrar movimentação</Button>
-        </div>
-      </div>
+    <div className="space-y-4">
+      <CabecalhoPagina
+        titulo="Estoque"
+        acao={
+          <>
+          <div className="flex gap-2">
+            <Button variant="outline" asChild>
+              <Link to="/estoque/movimentacoes">Histórico de movimentações</Link>
+            </Button>
+            <Button onClick={() => abrirMovimentacao()}>Registrar movimentação</Button>
+          </div>
+          </>
+        }
+      />
 
-      <div className="flex gap-3">
+      <div className="cartao flex flex-wrap items-end gap-3">
         <Input
           className="w-72"
           placeholder="Buscar por nome ou código"
@@ -91,7 +98,7 @@ export function EstoquePage() {
         </Select>
       </div>
 
-      <div className="rounded-lg border border-border">
+      <div className="rounded-cartao bg-card p-2">
         <Table>
           <TableHeader>
             <TableRow>
@@ -141,14 +148,12 @@ export function EstoquePage() {
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button variant="ghost" size="sm" onClick={() => abrirMovimentacao(saldo.produtoId)}>
-                          Movimentar
-                        </Button>
-                        <Button variant="ghost" size="sm" asChild>
-                          <Link to={`/estoque/movimentacoes?produtoId=${saldo.produtoId}`}>Histórico</Link>
-                        </Button>
-                      </div>
+                      <MenuAcoes
+                        itens={[
+                          { rotulo: "Movimentar", icone: ArrowLeftRight, aoClicar: () => abrirMovimentacao(saldo.produtoId) },
+                          { rotulo: "Histórico", icone: History, para: `/estoque/movimentacoes?produtoId=${saldo.produtoId}` },
+                        ]}
+                      />
                     </TableCell>
                   </TableRow>
                 );

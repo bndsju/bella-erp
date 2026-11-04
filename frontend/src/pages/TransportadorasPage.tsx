@@ -21,6 +21,9 @@ import { Badge } from "@/components/ui/badge";
 import { TransportadoraFormDialog } from "@/components/transportadoras/TransportadoraFormDialog";
 import { transportadoraApi } from "@/lib/transportadoraApi";
 import type { StatusTransportadora, TransportadoraResponse } from "@/types/transportadora";
+import { CircleCheck, Pencil, Power } from "lucide-react";
+import { MenuAcoes } from "@/components/ui/menu-acoes";
+import { CabecalhoPagina } from "@/components/layout/CabecalhoPagina";
 
 export function TransportadorasPage() {
   const [transportadoras, setTransportadoras] = useState<TransportadoraResponse[]>([]);
@@ -52,31 +55,37 @@ export function TransportadorasPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-medium">Transportadoras</h1>
-        <Button
-          onClick={() => {
-            setTransportadoraEmEdicao(null);
-            setDialogAberto(true);
-          }}
-        >
-          Nova transportadora
-        </Button>
+    <div className="space-y-4">
+      <CabecalhoPagina
+        titulo="Transportadoras"
+        acao={
+          <>
+          <Button
+            onClick={() => {
+              setTransportadoraEmEdicao(null);
+              setDialogAberto(true);
+            }}
+          >
+            Nova transportadora
+          </Button>
+          </>
+        }
+      />
+
+      <div className="cartao">
+  <Select value={status} onValueChange={(v) => setStatus(v as StatusTransportadora | "TODOS")}>
+          <SelectTrigger className="w-40">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="TODOS">Todos os status</SelectItem>
+            <SelectItem value="ATIVO">Ativo</SelectItem>
+            <SelectItem value="INATIVO">Inativo</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
-      <Select value={status} onValueChange={(v) => setStatus(v as StatusTransportadora | "TODOS")}>
-        <SelectTrigger className="w-40">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="TODOS">Todos os status</SelectItem>
-          <SelectItem value="ATIVO">Ativo</SelectItem>
-          <SelectItem value="INATIVO">Inativo</SelectItem>
-        </SelectContent>
-      </Select>
-
-      <div className="rounded-lg border border-border">
+      <div className="rounded-cartao bg-card p-2">
         <Table>
           <TableHeader>
             <TableRow>
@@ -110,21 +119,24 @@ export function TransportadorasPage() {
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setTransportadoraEmEdicao(transportadora);
-                          setDialogAberto(true);
-                        }}
-                      >
-                        Editar
-                      </Button>
-                      <Button variant="ghost" size="sm" onClick={() => alternarStatus(transportadora)}>
-                        {transportadora.status === "ATIVO" ? "Inativar" : "Ativar"}
-                      </Button>
-                    </div>
+                    <MenuAcoes
+                      itens={[
+                        {
+                          rotulo: "Editar",
+                          icone: Pencil,
+                          aoClicar: () => {
+                            setTransportadoraEmEdicao(transportadora);
+                            setDialogAberto(true);
+                          },
+                        },
+                        {
+                          rotulo: transportadora.status === "ATIVO" ? "Inativar" : "Ativar",
+                          icone: transportadora.status === "ATIVO" ? Power : CircleCheck,
+                          perigo: transportadora.status === "ATIVO",
+                          aoClicar: () => alternarStatus(transportadora),
+                        },
+                      ]}
+                    />
                   </TableCell>
                 </TableRow>
               ))

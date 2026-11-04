@@ -21,6 +21,9 @@ import { Badge } from "@/components/ui/badge";
 import { UnidadeMedidaFormDialog } from "@/components/unidadesmedida/UnidadeMedidaFormDialog";
 import { unidadeMedidaApi } from "@/lib/unidadeMedidaApi";
 import type { StatusUnidadeMedida, UnidadeMedidaResponse } from "@/types/unidadeMedida";
+import { CircleCheck, Pencil, Power } from "lucide-react";
+import { MenuAcoes } from "@/components/ui/menu-acoes";
+import { CabecalhoPagina } from "@/components/layout/CabecalhoPagina";
 
 export function UnidadesMedidaPage() {
   const [unidades, setUnidades] = useState<UnidadeMedidaResponse[]>([]);
@@ -52,31 +55,37 @@ export function UnidadesMedidaPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-medium">Unidades de medida</h1>
-        <Button
-          onClick={() => {
-            setUnidadeEmEdicao(null);
-            setDialogAberto(true);
-          }}
-        >
-          Nova unidade de medida
-        </Button>
+    <div className="space-y-4">
+      <CabecalhoPagina
+        titulo="Unidades de medida"
+        acao={
+          <>
+          <Button
+            onClick={() => {
+              setUnidadeEmEdicao(null);
+              setDialogAberto(true);
+            }}
+          >
+            Nova unidade de medida
+          </Button>
+          </>
+        }
+      />
+
+      <div className="cartao">
+  <Select value={status} onValueChange={(v) => setStatus(v as StatusUnidadeMedida | "TODOS")}>
+          <SelectTrigger className="w-40">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="TODOS">Todos os status</SelectItem>
+            <SelectItem value="ATIVO">Ativo</SelectItem>
+            <SelectItem value="INATIVO">Inativo</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
-      <Select value={status} onValueChange={(v) => setStatus(v as StatusUnidadeMedida | "TODOS")}>
-        <SelectTrigger className="w-40">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="TODOS">Todos os status</SelectItem>
-          <SelectItem value="ATIVO">Ativo</SelectItem>
-          <SelectItem value="INATIVO">Inativo</SelectItem>
-        </SelectContent>
-      </Select>
-
-      <div className="rounded-lg border border-border">
+      <div className="rounded-cartao bg-card p-2">
         <Table>
           <TableHeader>
             <TableRow>
@@ -110,21 +119,24 @@ export function UnidadesMedidaPage() {
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setUnidadeEmEdicao(unidade);
-                          setDialogAberto(true);
-                        }}
-                      >
-                        Editar
-                      </Button>
-                      <Button variant="ghost" size="sm" onClick={() => alternarStatus(unidade)}>
-                        {unidade.status === "ATIVO" ? "Inativar" : "Ativar"}
-                      </Button>
-                    </div>
+                    <MenuAcoes
+                      itens={[
+                        {
+                          rotulo: "Editar",
+                          icone: Pencil,
+                          aoClicar: () => {
+                            setUnidadeEmEdicao(unidade);
+                            setDialogAberto(true);
+                          },
+                        },
+                        {
+                          rotulo: unidade.status === "ATIVO" ? "Inativar" : "Ativar",
+                          icone: unidade.status === "ATIVO" ? Power : CircleCheck,
+                          perigo: unidade.status === "ATIVO",
+                          aoClicar: () => alternarStatus(unidade),
+                        },
+                      ]}
+                    />
                   </TableCell>
                 </TableRow>
               ))

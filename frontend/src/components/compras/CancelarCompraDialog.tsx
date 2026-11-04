@@ -36,7 +36,7 @@ export function CancelarCompraDialog({ open, onOpenChange, processando, onConfir
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-2">
-          <label className="text-sm font-medium">Motivo do cancelamento</label>
+          <label className="block text-sm font-medium">Motivo do cancelamento</label>
           <Textarea rows={3} value={motivo} onChange={(e) => setMotivo(e.target.value)} />
         </div>
         <DialogFooter>

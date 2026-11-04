@@ -26,6 +26,7 @@ import { fimDoDia, inicioDoDia, quantidadeComSinal, ROTULO_ORIGEM, ROTULO_TIPO }
 import { produtoApi } from "@/lib/produtoApi";
 import type { MovimentacaoEstoqueResponse, TipoMovimentacaoEstoque } from "@/types/estoque";
 import type { ProdutoResponse } from "@/types/produto";
+import { CabecalhoPagina } from "@/components/layout/CabecalhoPagina";
 
 const TIPOS = Object.keys(ROTULO_TIPO) as TipoMovimentacaoEstoque[];
 
@@ -61,18 +62,22 @@ export function MovimentacoesEstoquePage() {
   useEffect(carregar, [carregar]);
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-medium">Histórico de movimentações</h1>
-        <div className="flex gap-2">
-          <Button variant="outline" asChild>
-            <Link to="/estoque">Voltar ao estoque</Link>
-          </Button>
-          <Button onClick={() => setDialogAberto(true)}>Registrar movimentação</Button>
-        </div>
-      </div>
+    <div className="space-y-4">
+      <CabecalhoPagina
+        titulo="Histórico de movimentações"
+        acao={
+          <>
+          <div className="flex gap-2">
+            <Button variant="outline" asChild>
+              <Link to="/estoque">Voltar ao estoque</Link>
+            </Button>
+            <Button onClick={() => setDialogAberto(true)}>Registrar movimentação</Button>
+          </div>
+          </>
+        }
+      />
 
-      <div className="flex flex-wrap items-end gap-3">
+      <div className="cartao flex flex-wrap items-end gap-3">
         <Select value={produtoId} onValueChange={setProdutoId}>
           <SelectTrigger className="w-64">
             <SelectValue placeholder="Produto" />
@@ -100,16 +105,16 @@ export function MovimentacoesEstoquePage() {
           </SelectContent>
         </Select>
         <div className="space-y-1">
-          <label className="text-xs text-muted-foreground">De</label>
+          <label className="block text-xs text-muted-foreground">De</label>
           <Input type="date" className="w-40" value={dataInicio} onChange={(e) => setDataInicio(e.target.value)} />
         </div>
         <div className="space-y-1">
-          <label className="text-xs text-muted-foreground">Até</label>
+          <label className="block text-xs text-muted-foreground">Até</label>
           <Input type="date" className="w-40" value={dataFim} onChange={(e) => setDataFim(e.target.value)} />
         </div>
       </div>
 
-      <div className="rounded-lg border border-border">
+      <div className="rounded-cartao bg-card p-2">
         <Table>
           <TableHeader>
             <TableRow>

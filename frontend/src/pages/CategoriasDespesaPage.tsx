@@ -21,6 +21,9 @@ import { Badge } from "@/components/ui/badge";
 import { CategoriaDespesaFormDialog } from "@/components/categoriasdespesa/CategoriaDespesaFormDialog";
 import { categoriaDespesaApi } from "@/lib/categoriaDespesaApi";
 import type { CategoriaDespesaResponse, StatusCategoriaDespesa } from "@/types/categoriaDespesa";
+import { CircleCheck, Pencil, Power } from "lucide-react";
+import { MenuAcoes } from "@/components/ui/menu-acoes";
+import { CabecalhoPagina } from "@/components/layout/CabecalhoPagina";
 
 /** Categoria criada pelo sistema (usada nas contas geradas por compras): não pode ser editada nem inativada. */
 const CATEGORIA_DO_SISTEMA = "00000000-0000-0000-0000-0000000c0001";
@@ -55,31 +58,37 @@ export function CategoriasDespesaPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-medium">Categorias de despesa</h1>
-        <Button
-          onClick={() => {
-            setCategoriaEmEdicao(null);
-            setDialogAberto(true);
-          }}
-        >
-          Nova categoria de despesa
-        </Button>
+    <div className="space-y-4">
+      <CabecalhoPagina
+        titulo="Categorias de despesa"
+        acao={
+          <>
+          <Button
+            onClick={() => {
+              setCategoriaEmEdicao(null);
+              setDialogAberto(true);
+            }}
+          >
+            Nova categoria de despesa
+          </Button>
+          </>
+        }
+      />
+
+      <div className="cartao">
+  <Select value={status} onValueChange={(v) => setStatus(v as StatusCategoriaDespesa | "TODOS")}>
+          <SelectTrigger className="w-40">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="TODOS">Todos os status</SelectItem>
+            <SelectItem value="ATIVO">Ativo</SelectItem>
+            <SelectItem value="INATIVO">Inativo</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
-      <Select value={status} onValueChange={(v) => setStatus(v as StatusCategoriaDespesa | "TODOS")}>
-        <SelectTrigger className="w-40">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="TODOS">Todos os status</SelectItem>
-          <SelectItem value="ATIVO">Ativo</SelectItem>
-          <SelectItem value="INATIVO">Inativo</SelectItem>
-        </SelectContent>
-      </Select>
-
-      <div className="rounded-lg border border-border">
+      <div className="rounded-cartao bg-card p-2">
         <Table>
           <TableHeader>
             <TableRow>
@@ -116,27 +125,26 @@ export function CategoriasDespesaPage() {
                     )}
                   </TableCell>
                   <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        disabled={categoria.id === CATEGORIA_DO_SISTEMA}
-                        onClick={() => {
-                          setCategoriaEmEdicao(categoria);
-                          setDialogAberto(true);
-                        }}
-                      >
-                        Editar
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        disabled={categoria.id === CATEGORIA_DO_SISTEMA}
-                        onClick={() => alternarStatus(categoria)}
-                      >
-                        {categoria.status === "ATIVO" ? "Inativar" : "Ativar"}
-                      </Button>
-                    </div>
+                    <MenuAcoes
+                      itens={[
+                        {
+                          rotulo: "Editar",
+                          icone: Pencil,
+          desabilitado: categoria.id === CATEGORIA_DO_SISTEMA,
+                          aoClicar: () => {
+                            setCategoriaEmEdicao(categoria);
+                            setDialogAberto(true);
+                          },
+                        },
+                        {
+                          rotulo: categoria.status === "ATIVO" ? "Inativar" : "Ativar",
+                          icone: categoria.status === "ATIVO" ? Power : CircleCheck,
+                          perigo: categoria.status === "ATIVO",
+          desabilitado: categoria.id === CATEGORIA_DO_SISTEMA,
+                          aoClicar: () => alternarStatus(categoria),
+                        },
+                      ]}
+                    />
                   </TableCell>
                 </TableRow>
               ))

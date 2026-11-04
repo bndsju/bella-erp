@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -24,6 +24,9 @@ import { pedidoApi } from "@/lib/pedidoApi";
 import { clienteApi } from "@/lib/clienteApi";
 import type { PedidoResponse, StatusPedido } from "@/types/pedido";
 import type { ClienteResponse } from "@/types/cliente";
+import { ExternalLink } from "lucide-react";
+import { MenuAcoes } from "@/components/ui/menu-acoes";
+import { CabecalhoPagina } from "@/components/layout/CabecalhoPagina";
 
 const formatoMoeda = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 
@@ -32,6 +35,7 @@ function nomeExibicaoCliente(cliente: ClienteResponse): string {
 }
 
 export function PedidosListPage() {
+  const navigate = useNavigate();
   const [pedidos, setPedidos] = useState<PedidoResponse[]>([]);
   const [clientes, setClientes] = useState<ClienteResponse[]>([]);
   const [carregando, setCarregando] = useState(true);
@@ -58,20 +62,24 @@ export function PedidosListPage() {
   useEffect(carregar, [carregar]);
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-medium">Pedidos</h1>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={() => setDialogOrcamentoAberto(true)}>
-            Criar a partir de orçamento
-          </Button>
-          <Button asChild>
-            <Link to="/pedidos/novo">Novo pedido</Link>
-          </Button>
-        </div>
-      </div>
+    <div className="space-y-4">
+      <CabecalhoPagina
+        titulo="Pedidos"
+        acao={
+          <>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setDialogOrcamentoAberto(true)}>
+              Criar a partir de orçamento
+            </Button>
+            <Button asChild>
+              <Link to="/pedidos/novo">Novo pedido</Link>
+            </Button>
+          </div>
+          </>
+        }
+      />
 
-      <div className="flex gap-3">
+      <div className="cartao flex flex-wrap items-end gap-3">
         <Select value={clienteId} onValueChange={setClienteId}>
           <SelectTrigger className="w-56">
             <SelectValue placeholder="Cliente" />
@@ -101,7 +109,7 @@ export function PedidosListPage() {
         </Select>
       </div>
 
-      <div className="rounded-lg border border-border">
+      <div className="rounded-cartao bg-card p-2">
         <Table>
           <TableHeader>
             <TableRow>
@@ -129,7 +137,7 @@ export function PedidosListPage() {
               </TableRow>
             ) : (
               pedidos.map((pedido) => (
-                <TableRow key={pedido.id}>
+                <TableRow key={pedido.id} className="cursor-pointer" onClick={() => navigate(`/pedidos/${pedido.id}/editar`)}>
                   <TableCell className="font-medium">{pedido.clienteNome}</TableCell>
                   <TableCell>{pedido.transportadoraNome ?? "—"}</TableCell>
                   <TableCell>{formatoMoeda.format(pedido.valorTotal)}</TableCell>
@@ -137,9 +145,7 @@ export function PedidosListPage() {
                     <PedidoStatusBadge status={pedido.status} />
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button variant="ghost" size="sm" asChild>
-                      <Link to={`/pedidos/${pedido.id}/editar`}>Abrir</Link>
-                    </Button>
+                    <MenuAcoes itens={[{ rotulo: "Abrir", icone: ExternalLink, para: `/pedidos/${pedido.id}/editar` }]} />
                   </TableCell>
                 </TableRow>
               ))

@@ -37,6 +37,7 @@ import { compraSchema, type CompraFormValues } from "@/lib/compraSchema";
 import type { CompraResponse } from "@/types/compra";
 import type { FornecedorResponse } from "@/types/fornecedor";
 import type { ProdutoResponse } from "@/types/produto";
+import { CabecalhoPagina } from "@/components/layout/CabecalhoPagina";
 
 const formatoMoeda = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 
@@ -185,11 +186,15 @@ export function CompraFormPage() {
   const editavel = modo === "novo" || compra?.status === "RASCUNHO";
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-medium">{modo === "editar" ? "Compra" : "Nova compra"}</h1>
-        {compra && <CompraStatusBadge status={compra.status} />}
-      </div>
+    <div className="space-y-4">
+      <CabecalhoPagina
+        titulo={modo === "editar" ? "Compra" : "Nova compra"}
+        acao={
+          <>
+          {compra && <CompraStatusBadge status={compra.status} />}
+          </>
+        }
+      />
 
       {editavel ? (
         <Card>
@@ -368,7 +373,7 @@ export function CompraFormPage() {
               <CardTitle>{compra.fornecedorNome}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="rounded-lg border border-border">
+              <div className="rounded-xl border border-border">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-border text-left text-muted-foreground">

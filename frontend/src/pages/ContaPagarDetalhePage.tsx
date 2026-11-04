@@ -21,6 +21,9 @@ import { contaPagarApi } from "@/lib/contaPagarApi";
 import { ApiError } from "@/lib/api";
 import { formatarData, formatarMoeda } from "@/lib/formatos";
 import type { ContaPagarResponse, ParcelaContaPagarResponse, StatusParcela } from "@/types/contaPagar";
+import { HandCoins } from "lucide-react";
+import { MenuAcoes } from "@/components/ui/menu-acoes";
+import { CabecalhoPagina } from "@/components/layout/CabecalhoPagina";
 
 const ROTULO_PARCELA: Record<StatusParcela, string> = {
   PENDENTE: "Pendente",
@@ -82,10 +85,10 @@ export function ContaPagarDetalhePage() {
   const podeRegistrarPagamento = !cancelada;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <h1 className="text-xl font-medium">{conta.descricao}</h1>
+          <CabecalhoPagina titulo={conta.descricao} />
           <StatusContaPagarBadge status={conta.status} vencida={conta.vencida} />
         </div>
         <div className="flex flex-wrap gap-2">
@@ -173,7 +176,7 @@ export function ContaPagarDetalhePage() {
           <CardTitle>Parcelas e pagamentos</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="rounded-lg border border-border">
+          <div className="rounded-xl border border-border">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -204,11 +207,16 @@ export function ContaPagarDetalhePage() {
                         </span>
                       </TableCell>
                       <TableCell className="text-right">
-                        {podeRegistrarPagamento && parcela.saldoPendente > 0 && (
-                          <Button variant="ghost" size="sm" onClick={() => setParcelaEmPagamento(parcela)}>
-                            Registrar pagamento
-                          </Button>
-                        )}
+                        <MenuAcoes
+                          itens={[
+                            {
+                              rotulo: "Registrar pagamento",
+                              icone: HandCoins,
+                              oculto: !(podeRegistrarPagamento && parcela.saldoPendente > 0),
+                              aoClicar: () => setParcelaEmPagamento(parcela),
+                            },
+                          ]}
+                        />
                       </TableCell>
                     </TableRow>
                     {parcela.pagamentos.map((pagamento) => (

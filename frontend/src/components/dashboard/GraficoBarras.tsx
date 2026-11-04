@@ -72,9 +72,9 @@ export function GraficoBarras({ series, pontos, vazio }: GraficoBarrasProps) {
               })}
               {indice % passoRotulo === 0 && (
                 <text
-                  x={centro}
+                  x={indice === 0 ? 0 : centro}
                   y={ALTURA - 6}
-                  textAnchor="middle"
+                  textAnchor={indice === 0 ? "start" : "middle"}
                   className="fill-muted-foreground text-[10px]"
                 >
                   {ponto.rotulo}

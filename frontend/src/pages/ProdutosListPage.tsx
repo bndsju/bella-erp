@@ -32,6 +32,9 @@ import { produtoApi } from "@/lib/produtoApi";
 import { categoriaApi } from "@/lib/categoriaApi";
 import type { ProdutoResponse, StatusProduto } from "@/types/produto";
 import type { CategoriaResponse } from "@/types/categoria";
+import { CircleCheck, Pencil, Power } from "lucide-react";
+import { MenuAcoes } from "@/components/ui/menu-acoes";
+import { CabecalhoPagina } from "@/components/layout/CabecalhoPagina";
 
 const formatoMoeda = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 
@@ -86,15 +89,19 @@ export function ProdutosListPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-medium">Produtos</h1>
-        <Button asChild>
-          <Link to="/produtos/novo">Novo produto</Link>
-        </Button>
-      </div>
+    <div className="space-y-4">
+      <CabecalhoPagina
+        titulo="Produtos"
+        acao={
+          <>
+          <Button asChild>
+            <Link to="/produtos/novo">Novo produto</Link>
+          </Button>
+          </>
+        }
+      />
 
-      <div className="flex gap-3">
+      <div className="cartao flex flex-wrap items-end gap-3">
         <Input
           placeholder="Buscar por nome ou código interno"
           value={busca}
@@ -126,7 +133,7 @@ export function ProdutosListPage() {
         </Select>
       </div>
 
-      <div className="rounded-lg border border-border">
+      <div className="rounded-cartao bg-card p-2">
         <Table>
           <TableHeader>
             <TableRow>
@@ -168,18 +175,17 @@ export function ProdutosListPage() {
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button variant="ghost" size="sm" asChild>
-                        <Link to={`/produtos/${produto.id}/editar`}>Editar</Link>
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setProdutoParaAlterarStatus(produto)}
-                      >
-                        {produto.status === "ATIVO" ? "Inativar" : "Ativar"}
-                      </Button>
-                    </div>
+                    <MenuAcoes
+                      itens={[
+                        { rotulo: "Editar", icone: Pencil, para: `/produtos/${produto.id}/editar` },
+                        {
+                          rotulo: produto.status === "ATIVO" ? "Inativar" : "Ativar",
+                          icone: produto.status === "ATIVO" ? Power : CircleCheck,
+                          perigo: produto.status === "ATIVO",
+                          aoClicar: () => setProdutoParaAlterarStatus(produto),
+                        },
+                      ]}
+                    />
                   </TableCell>
                 </TableRow>
               ))

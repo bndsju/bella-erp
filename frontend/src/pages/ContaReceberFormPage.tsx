@@ -30,6 +30,7 @@ import { ApiError } from "@/lib/api";
 import { adicionarMeses, dataDeHoje, dividirEmParcelas, formatarMoeda } from "@/lib/formatos";
 import type { ClienteResponse } from "@/types/cliente";
 import type { ContaReceberResponse } from "@/types/contaReceber";
+import { CabecalhoPagina } from "@/components/layout/CabecalhoPagina";
 
 const SEM_CLIENTE = "SEM_CLIENTE";
 
@@ -155,8 +156,8 @@ export function ContaReceberFormPage() {
   const erroParcelas = form.formState.errors.parcelas?.message ?? form.formState.errors.parcelas?.root?.message;
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-xl font-medium">{modoTela === "editar" ? "Editar conta a receber" : "Nova conta a receber"}</h1>
+    <div className="space-y-4">
+      <CabecalhoPagina titulo={modoTela === "editar" ? "Editar conta a receber" : "Nova conta a receber"} />
 
       <Card>
         <CardContent className="pt-6">
@@ -259,10 +260,10 @@ export function ContaReceberFormPage() {
               </div>
 
               {modo === "PARCELADO" && (
-                <div className="space-y-4 rounded-lg border border-border p-4">
+                <div className="space-y-4 rounded-xl border border-border p-4">
                   <div className="flex flex-wrap items-end gap-3">
                     <div className="space-y-1">
-                      <label className="text-xs text-muted-foreground">Quantidade de parcelas</label>
+                      <label className="block text-xs text-muted-foreground">Quantidade de parcelas</label>
                       <Input
                         type="number"
                         min="1"
@@ -272,7 +273,7 @@ export function ContaReceberFormPage() {
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-xs text-muted-foreground">Primeiro vencimento</label>
+                      <label className="block text-xs text-muted-foreground">Primeiro vencimento</label>
                       <Input
                         type="date"
                         className="w-44"
