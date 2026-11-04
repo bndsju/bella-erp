@@ -11,28 +11,44 @@ interface SecaoRelatorioProps<T> {
   /** Muda quando os filtros mudam; cada mudança refaz a consulta. */
   chave: string;
   buscar: () => Promise<T>;
-  /** Filtros próprios da seção, mostrados sob o título. */
+  /** Filtros próprios do relatório, mostrados sob o título. */
   filtros?: ReactNode;
+  /** Motivo pelo qual os filtros atuais não podem ser consultados (ex.: datas invertidas); não consulta enquanto houver. */
+  bloqueio?: string | null;
   /** Monta o PDF deste relatório (com todas as páginas); sem isto, a seção não tem o botão de exportar. */
   exportar?: () => Promise<DocumentoPdf>;
   children: (dados: T) => ReactNode;
 }
 
 /** Cartão de um relatório: busca sozinho, mostra carregando/erro e entrega os dados a quem desenha. */
-export function SecaoRelatorio<T>({ titulo, chave, buscar, filtros, exportar, children }: SecaoRelatorioProps<T>) {
+export function SecaoRelatorio<T>({
+  titulo,
+  chave,
+  buscar,
+  filtros,
+  bloqueio,
+  exportar,
+  children,
+}: SecaoRelatorioProps<T>) {
   const [exportando, setExportando] = useState(false);
   const [dados, setDados] = useState<T | null>(null);
   const [carregando, setCarregando] = useState(true);
   const [falhou, setFalhou] = useState(false);
   const buscarRef = useRef(buscar);
+  const bloqueioRef = useRef(bloqueio);
   const contador = useRef(0);
 
   useEffect(() => {
     buscarRef.current = buscar;
+    bloqueioRef.current = bloqueio;
   });
 
   const carregar = useCallback(() => {
     const atual = ++contador.current;
+    if (bloqueioRef.current) {
+      setCarregando(false);
+      return;
+    }
     setCarregando(true);
     setFalhou(false);
     buscarRef
@@ -59,7 +75,7 @@ export function SecaoRelatorio<T>({ titulo, chave, buscar, filtros, exportar, ch
           <Button
             variant="secondary"
             size="sm"
-            disabled={exportando || !dados}
+            disabled={exportando || !dados || Boolean(bloqueio) || falhou}
             onClick={() => {
               setExportando(true);
               exportar()
@@ -74,10 +90,12 @@ export function SecaoRelatorio<T>({ titulo, chave, buscar, filtros, exportar, ch
         )}
       </CardHeader>
       {filtros && <div className="barra-filtros mb-4">{filtros}</div>}
-      {falhou && !dados ? (
+      {bloqueio ? (
+        <p className="text-sm font-semibold text-erro">{bloqueio}</p>
+      ) : falhou ? (
         <div className="vazio">
           <h3>Não consegui carregar este relatório</h3>
-          <p>Confira se o sistema está no ar e tente de novo.</p>
+          <p>Confira os filtros e se o sistema está no ar; depois tente de novo.</p>
           <Button onClick={carregar}>Tentar de novo</Button>
         </div>
       ) : !dados ? (

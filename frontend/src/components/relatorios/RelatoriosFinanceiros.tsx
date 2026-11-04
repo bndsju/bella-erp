@@ -1,41 +1,119 @@
-import { useState } from "react";
+import { useMemo } from "react";
 import { GraficoBarras } from "@/components/dashboard/GraficoBarras";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import type { OpcaoSelecao } from "@/components/ui/selecao-pesquisavel";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { BotaoLimpar, CampoMarcar, CampoPeriodo, CampoPesquisa, CampoSelecao, CampoTamanho } from "@/components/relatorios/filtros";
+import { TODOS, descrever, periodoInvalido, periodoObrigatorio, rotuloDe, sem, useFiltros, useLista, type Opcao } from "@/components/relatorios/filtrosBase";
 import { Indicador, SemRegistros } from "@/components/relatorios/Indicador";
 import { Paginacao } from "@/components/relatorios/Paginacao";
 import { SecaoRelatorio } from "@/components/relatorios/SecaoRelatorio";
+import { categoriaDespesaApi } from "@/lib/categoriaDespesaApi";
+import { categoriaFluxoCaixaApi } from "@/lib/categoriaFluxoCaixaApi";
+import { clienteApi } from "@/lib/clienteApi";
+import { opcoesDeClientes } from "@/lib/clienteOpcoes";
+import { fornecedorApi } from "@/lib/fornecedorApi";
 import { ROTULO_ORIGEM } from "@/lib/fluxoCaixaRotulos";
 import { formatarData, formatarMoeda } from "@/lib/formatos";
-import { todasAsPaginas, textoDoPeriodo } from "@/lib/pdf";
+import { textoDoPeriodo, textoDoPeriodoAberto, todasAsPaginas } from "@/lib/pdf";
 import { relatorioApi } from "@/lib/relatorioApi";
 import { ROTULO_STATUS_CONTA, rotuloDoPonto } from "@/lib/relatorioRotulos";
-
-const TODOS = "TODOS";
 
 interface Props {
   inicio: string;
   fim: string;
 }
 
-function SecaoContas({ tipo, inicio, fim }: Props & { tipo: "RECEBER" | "PAGAR" }) {
-  const [pagina, setPagina] = useState(0);
+const STATUS_RECEBER: Opcao[] = ["PENDENTE", "PARCIALMENTE_RECEBIDA", "RECEBIDA", "CANCELADA"].map((valor) => ({
+  valor,
+  rotulo: ROTULO_STATUS_CONTA[valor],
+}));
+const STATUS_PAGAR: Opcao[] = ["PENDENTE", "PARCIALMENTE_PAGA", "PAGA", "CANCELADA"].map((valor) => ({
+  valor,
+  rotulo: ROTULO_STATUS_CONTA[valor],
+}));
+const SITUACAO_RECEBER: Opcao[] = [
+  { valor: "EM_ABERTO", rotulo: "Em aberto" },
+  { valor: "VENCIDAS", rotulo: "Vencidas" },
+  { valor: "RECEBIDAS", rotulo: "Recebidas" },
+];
+const SITUACAO_PAGAR: Opcao[] = [
+  { valor: "EM_ABERTO", rotulo: "Em aberto" },
+  { valor: "VENCIDAS", rotulo: "Vencidas" },
+  { valor: "PAGAS", rotulo: "Pagas" },
+];
+const TIPO_CAIXA: Opcao[] = [
+  { valor: "ENTRADA", rotulo: "Entradas" },
+  { valor: "SAIDA", rotulo: "Saídas" },
+];
+const ORIGEM_CAIXA: Opcao[] = [
+  { valor: "CONTA_RECEBER", rotulo: ROTULO_ORIGEM.CONTA_RECEBER },
+  { valor: "CONTA_PAGAR", rotulo: ROTULO_ORIGEM.CONTA_PAGAR },
+  { valor: "LANCAMENTO_MANUAL", rotulo: ROTULO_ORIGEM.LANCAMENTO_MANUAL },
+];
+const SITUACAO_CAIXA: Opcao[] = [
+  { valor: "REALIZADO", rotulo: "Realizado" },
+  { valor: "PREVISTO", rotulo: "Previsto" },
+];
+const TIPO_TITULO: Opcao[] = [
+  { valor: "RECEBER", rotulo: "A receber" },
+  { valor: "PAGAR", rotulo: "A pagar" },
+];
+
+function SecaoContas({
+  tipo,
+  inicio,
+  fim,
+  parceiros,
+  categorias,
+}: Props & { tipo: "RECEBER" | "PAGAR"; parceiros: OpcaoSelecao[]; categorias: Opcao[] }) {
   const receber = tipo === "RECEBER";
+  const { filtros: f, alterado, mudar, irParaPagina, limpar } = useFiltros({
+    inicio,
+    fim,
+    parceiroId: TODOS,
+    categoriaId: TODOS,
+    status: TODOS,
+    situacao: TODOS,
+    pagina: 0,
+    tamanho: 10,
+  });
+  const params = receber
+    ? { inicio: f.inicio, fim: f.fim, clienteId: sem(f.parceiroId), status: sem(f.status), situacao: sem(f.situacao) }
+    : {
+        inicio: f.inicio,
+        fim: f.fim,
+        fornecedorId: sem(f.parceiroId),
+        categoriaDespesaId: sem(f.categoriaId),
+        status: sem(f.status),
+        situacao: sem(f.situacao),
+      };
+  const consultar = receber ? relatorioApi.contasReceber : relatorioApi.contasPagar;
+  const statusOpcoes = receber ? STATUS_RECEBER : STATUS_PAGAR;
+  const situacaoOpcoes = receber ? SITUACAO_RECEBER : SITUACAO_PAGAR;
+  const prefixo = receber ? "receber" : "pagar";
+
   return (
     <SecaoRelatorio
       titulo={receber ? "Contas a receber" : "Contas a pagar"}
-      chave={`${tipo}|${inicio}|${fim}|${pagina}`}
+      chave={JSON.stringify(f)}
+      bloqueio={periodoInvalido(f.inicio, f.fim)}
+      buscar={() => consultar({ ...params, pagina: f.pagina, tamanho: f.tamanho })}
       exportar={async () => {
-        const consultar = receber ? relatorioApi.contasReceber : relatorioApi.contasPagar;
         const { primeira, itens } = await todasAsPaginas(
-          (p, t) => consultar({ inicio, fim, pagina: p, tamanho: t }),
+          (p, t) => consultar({ ...params, pagina: p, tamanho: t }),
           (resposta) => resposta.contas,
         );
         return {
           titulo: receber ? "Contas a receber" : "Contas a pagar",
-          nomeArquivo: `contas-${receber ? "receber" : "pagar"}-${inicio}-a-${fim}`,
-          periodo: `Vencimento de ${textoDoPeriodo(inicio, fim)}`,
+          nomeArquivo: `contas-${prefixo}${f.inicio ? `-${f.inicio}` : ""}${f.fim ? `-a-${f.fim}` : ""}`,
+          periodo: textoDoPeriodoAberto(f.inicio, f.fim),
+          filtros: descrever([
+            [receber ? "Cliente" : "Fornecedor", rotuloDe(parceiros, f.parceiroId)],
+            ["Categoria", receber ? undefined : rotuloDe(categorias, f.categoriaId)],
+            ["Status", rotuloDe(statusOpcoes, f.status)],
+            ["Situação", rotuloDe(situacaoOpcoes, f.situacao)],
+          ]),
           resumo: [
             [receber ? "A receber" : "A pagar", formatarMoeda(primeira.totais.saldoPendente)],
             ["Vencido", formatarMoeda(primeira.totais.saldoVencido)],
@@ -59,8 +137,53 @@ function SecaoContas({ tipo, inicio, fim }: Props & { tipo: "RECEBER" | "PAGAR" 
           ],
         };
       }}
-      buscar={() =>
-        (receber ? relatorioApi.contasReceber : relatorioApi.contasPagar)({ inicio, fim, pagina, tamanho: 10 })
+      filtros={
+        <>
+          <CampoPeriodo
+            prefixo={`contas-${prefixo}`}
+            rotuloDe="Vencimento de"
+            inicio={f.inicio}
+            fim={f.fim}
+            aoMudar={mudar}
+          />
+          <CampoPesquisa
+            id={`contas-${prefixo}-parceiro`}
+            rotulo={receber ? "Cliente" : "Fornecedor"}
+            valor={f.parceiroId}
+            aoMudar={(parceiroId) => mudar({ parceiroId })}
+            opcoes={parceiros}
+            rotuloTodos={receber ? "Todos os clientes" : "Todos os fornecedores"}
+            placeholder={receber ? "Buscar cliente" : "Buscar fornecedor"}
+          />
+          {!receber && (
+            <CampoSelecao
+              id="contas-pagar-categoria"
+              rotulo="Categoria de despesa"
+              valor={f.categoriaId}
+              aoMudar={(categoriaId) => mudar({ categoriaId })}
+              opcoes={categorias}
+              rotuloTodos="Todas"
+            />
+          )}
+          <CampoSelecao
+            id={`contas-${prefixo}-status`}
+            rotulo="Status"
+            valor={f.status}
+            aoMudar={(status) => mudar({ status })}
+            opcoes={statusOpcoes}
+            rotuloTodos="Todos"
+          />
+          <CampoSelecao
+            id={`contas-${prefixo}-situacao`}
+            rotulo="Situação"
+            valor={f.situacao}
+            aoMudar={(situacao) => mudar({ situacao })}
+            opcoes={situacaoOpcoes}
+            rotuloTodos="Todas"
+          />
+          <CampoTamanho id={`contas-${prefixo}-tamanho`} valor={f.tamanho} aoMudar={(tamanho) => mudar({ tamanho })} />
+          <BotaoLimpar visivel={alterado} aoClicar={limpar} />
+        </>
       }
     >
       {(dados) => (
@@ -75,7 +198,7 @@ function SecaoContas({ tipo, inicio, fim }: Props & { tipo: "RECEBER" | "PAGAR" 
             <Indicador rotulo="A vencer" valor={formatarMoeda(dados.totais.saldoAVencer)} />
           </div>
           {dados.contas.itens.length === 0 ? (
-            <SemRegistros texto="Nenhuma conta com vencimento neste período." />
+            <SemRegistros texto="Nenhuma conta com esses filtros." />
           ) : (
             <Table>
               <TableHeader>
@@ -108,7 +231,7 @@ function SecaoContas({ tipo, inicio, fim }: Props & { tipo: "RECEBER" | "PAGAR" 
               </TableBody>
             </Table>
           )}
-          <Paginacao pagina={dados.contas} onMudar={setPagina} />
+          <Paginacao pagina={dados.contas} onMudar={irParaPagina} />
         </>
       )}
     </SecaoRelatorio>
@@ -116,34 +239,35 @@ function SecaoContas({ tipo, inicio, fim }: Props & { tipo: "RECEBER" | "PAGAR" 
 }
 
 function SecaoVencimentos({ inicio, fim }: Props) {
-  const [tipo, setTipo] = useState(TODOS);
-  const [apenasVencidos, setApenasVencidos] = useState(false);
-  const [pagina, setPagina] = useState(0);
+  const { filtros: f, alterado, mudar, irParaPagina, limpar } = useFiltros({
+    inicio,
+    fim,
+    tipo: TODOS,
+    apenasVencidos: false,
+    pagina: 0,
+    tamanho: 10,
+  });
+  const params = { inicio: f.inicio, fim: f.fim, tipo: sem(f.tipo), apenasVencidos: f.apenasVencidos };
+
   return (
     <SecaoRelatorio
       titulo="Vencimentos"
-      chave={`${inicio}|${fim}|${tipo}|${apenasVencidos}|${pagina}`}
+      chave={JSON.stringify(f)}
+      bloqueio={periodoInvalido(f.inicio, f.fim)}
+      buscar={() => relatorioApi.vencimentos({ ...params, pagina: f.pagina, tamanho: f.tamanho })}
       exportar={async () => {
         const { primeira, itens } = await todasAsPaginas(
-          (p, t) =>
-            relatorioApi.vencimentos({
-              inicio,
-              fim,
-              tipo: tipo === TODOS ? undefined : tipo,
-              apenasVencidos,
-              pagina: p,
-              tamanho: t,
-            }),
+          (p, t) => relatorioApi.vencimentos({ ...params, pagina: p, tamanho: t }),
           (resposta) => resposta.titulos,
         );
         return {
           titulo: "Vencimentos",
-          nomeArquivo: `vencimentos-${inicio}-a-${fim}`,
-          periodo: `Vencimento de ${textoDoPeriodo(inicio, fim)}`,
-          filtros: [
-            ...(tipo === TODOS ? [] : [tipo === "RECEBER" ? "Só a receber" : "Só a pagar"]),
-            ...(apenasVencidos ? ["Só vencidos"] : []),
-          ],
+          nomeArquivo: `vencimentos${f.inicio ? `-${f.inicio}` : ""}${f.fim ? `-a-${f.fim}` : ""}`,
+          periodo: textoDoPeriodoAberto(f.inicio, f.fim),
+          filtros: descrever([
+            ["Tipo", rotuloDe(TIPO_TITULO, f.tipo)],
+            ["Somente", f.apenasVencidos ? "vencidos" : undefined],
+          ]),
           resumo: [
             ["Receber vencido", formatarMoeda(primeira.totais.vencidoReceber)],
             ["Receber a vencer", formatarMoeda(primeira.totais.aVencerReceber)],
@@ -178,48 +302,24 @@ function SecaoVencimentos({ inicio, fim }: Props) {
           ],
         };
       }}
-      buscar={() =>
-        relatorioApi.vencimentos({
-          inicio,
-          fim,
-          tipo: tipo === TODOS ? undefined : tipo,
-          apenasVencidos,
-          pagina,
-          tamanho: 10,
-        })
-      }
       filtros={
         <>
-          <div className="campo">
-            <label htmlFor="rel-venc-tipo">Tipo</label>
-            <Select
-              value={tipo}
-              onValueChange={(valor) => {
-                setTipo(valor);
-                setPagina(0);
-              }}
-            >
-              <SelectTrigger id="rel-venc-tipo" className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={TODOS}>Receber e pagar</SelectItem>
-                <SelectItem value="RECEBER">A receber</SelectItem>
-                <SelectItem value="PAGAR">A pagar</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <label className="flex min-h-11 items-center gap-2 text-sm font-semibold">
-            <input
-              type="checkbox"
-              checked={apenasVencidos}
-              onChange={(e) => {
-                setApenasVencidos(e.target.checked);
-                setPagina(0);
-              }}
-            />
-            Só vencidos
-          </label>
+          <CampoPeriodo prefixo="venc" rotuloDe="Vencimento de" inicio={f.inicio} fim={f.fim} aoMudar={mudar} />
+          <CampoSelecao
+            id="venc-tipo"
+            rotulo="Tipo"
+            valor={f.tipo}
+            aoMudar={(tipo) => mudar({ tipo })}
+            opcoes={TIPO_TITULO}
+            rotuloTodos="Receber e pagar"
+          />
+          <CampoMarcar
+            rotulo="Só vencidos"
+            marcado={f.apenasVencidos}
+            aoMudar={(apenasVencidos) => mudar({ apenasVencidos })}
+          />
+          <CampoTamanho id="venc-tamanho" valor={f.tamanho} aoMudar={(tamanho) => mudar({ tamanho })} />
+          <BotaoLimpar visivel={alterado} aoClicar={limpar} />
         </>
       }
     >
@@ -252,7 +352,7 @@ function SecaoVencimentos({ inicio, fim }: Props) {
             </Table>
           )}
           {dados.titulos.itens.length === 0 ? (
-            <SemRegistros texto="Nenhum título com saldo neste período." />
+            <SemRegistros texto="Nenhum título com saldo com esses filtros." />
           ) : (
             <Table>
               <TableHeader>
@@ -283,37 +383,54 @@ function SecaoVencimentos({ inicio, fim }: Props) {
               </TableBody>
             </Table>
           )}
-          <Paginacao pagina={dados.titulos} onMudar={setPagina} />
+          <Paginacao pagina={dados.titulos} onMudar={irParaPagina} />
         </>
       )}
     </SecaoRelatorio>
   );
 }
 
-function SecaoFluxo({ inicio, fim }: Props) {
-  const [situacao, setSituacao] = useState(TODOS);
-  const [pagina, setPagina] = useState(0);
+function SecaoFluxo({ inicio, fim, categorias }: Props & { categorias: Opcao[] }) {
+  const { filtros: f, alterado, mudar, irParaPagina, limpar } = useFiltros({
+    inicio,
+    fim,
+    tipo: TODOS,
+    categoriaId: TODOS,
+    origem: TODOS,
+    situacao: TODOS,
+    pagina: 0,
+    tamanho: 10,
+  });
+  const params = {
+    inicio: f.inicio,
+    fim: f.fim,
+    tipo: sem(f.tipo),
+    categoriaId: sem(f.categoriaId),
+    origem: sem(f.origem),
+    situacao: sem(f.situacao),
+  };
+
   return (
     <SecaoRelatorio
       titulo="Fluxo de caixa"
-      chave={`${inicio}|${fim}|${situacao}|${pagina}`}
+      chave={JSON.stringify(f)}
+      bloqueio={periodoObrigatorio(f.inicio, f.fim)}
+      buscar={() => relatorioApi.fluxoCaixa({ ...params, pagina: f.pagina, tamanho: f.tamanho })}
       exportar={async () => {
         const { primeira, itens } = await todasAsPaginas(
-          (p, t) =>
-            relatorioApi.fluxoCaixa({
-              inicio,
-              fim,
-              situacao: situacao === TODOS ? undefined : situacao,
-              pagina: p,
-              tamanho: t,
-            }),
+          (p, t) => relatorioApi.fluxoCaixa({ ...params, pagina: p, tamanho: t }),
           (resposta) => resposta.movimentacoes,
         );
         return {
           titulo: "Fluxo de caixa",
-          nomeArquivo: `fluxo-de-caixa-${inicio}-a-${fim}`,
-          periodo: textoDoPeriodo(inicio, fim),
-          filtros: situacao === TODOS ? [] : [`Situação: ${situacao === "REALIZADO" ? "Realizado" : "Previsto"}`],
+          nomeArquivo: `fluxo-de-caixa-${f.inicio}-a-${f.fim}`,
+          periodo: textoDoPeriodo(f.inicio, f.fim),
+          filtros: descrever([
+            ["Tipo", rotuloDe(TIPO_CAIXA, f.tipo)],
+            ["Categoria", rotuloDe(categorias, f.categoriaId)],
+            ["Origem", rotuloDe(ORIGEM_CAIXA, f.origem)],
+            ["Situação", rotuloDe(SITUACAO_CAIXA, f.situacao)],
+          ]),
           resumo: [
             ["Entradas realizadas", formatarMoeda(primeira.resumo.entradasRealizadas)],
             ["Saídas realizadas", formatarMoeda(primeira.resumo.saidasRealizadas)],
@@ -349,35 +466,44 @@ function SecaoFluxo({ inicio, fim }: Props) {
           ],
         };
       }}
-      buscar={() =>
-        relatorioApi.fluxoCaixa({
-          inicio,
-          fim,
-          situacao: situacao === TODOS ? undefined : situacao,
-          pagina,
-          tamanho: 10,
-        })
-      }
       filtros={
-        <div className="campo">
-          <label htmlFor="rel-fluxo-situacao">Situação (movimentações)</label>
-          <Select
-            value={situacao}
-            onValueChange={(valor) => {
-              setSituacao(valor);
-              setPagina(0);
-            }}
-          >
-            <SelectTrigger id="rel-fluxo-situacao" className="w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={TODOS}>Todas</SelectItem>
-              <SelectItem value="REALIZADO">Realizado</SelectItem>
-              <SelectItem value="PREVISTO">Previsto</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        <>
+          <CampoPeriodo prefixo="fluxo" inicio={f.inicio} fim={f.fim} aoMudar={mudar} />
+          <CampoSelecao
+            id="fluxo-tipo"
+            rotulo="Tipo"
+            valor={f.tipo}
+            aoMudar={(tipo) => mudar({ tipo })}
+            opcoes={TIPO_CAIXA}
+            rotuloTodos="Entradas e saídas"
+          />
+          <CampoSelecao
+            id="fluxo-categoria"
+            rotulo="Categoria"
+            valor={f.categoriaId}
+            aoMudar={(categoriaId) => mudar({ categoriaId })}
+            opcoes={categorias}
+            rotuloTodos="Todas"
+          />
+          <CampoSelecao
+            id="fluxo-origem"
+            rotulo="Origem"
+            valor={f.origem}
+            aoMudar={(origem) => mudar({ origem })}
+            opcoes={ORIGEM_CAIXA}
+            rotuloTodos="Todas"
+          />
+          <CampoSelecao
+            id="fluxo-situacao"
+            rotulo="Situação"
+            valor={f.situacao}
+            aoMudar={(situacao) => mudar({ situacao })}
+            opcoes={SITUACAO_CAIXA}
+            rotuloTodos="Todas"
+          />
+          <CampoTamanho id="fluxo-tamanho" valor={f.tamanho} aoMudar={(tamanho) => mudar({ tamanho })} />
+          <BotaoLimpar visivel={alterado} aoClicar={limpar} />
+        </>
       }
     >
       {(dados) => (
@@ -398,7 +524,11 @@ function SecaoFluxo({ inicio, fim }: Props) {
               valor={formatarMoeda(dados.resumo.saldoRealizado)}
               nota={`Projetado: ${formatarMoeda(dados.resumo.saldoProjetado)}`}
             />
-            <Indicador rotulo="Saldo acumulado" valor={formatarMoeda(dados.saldoAcumuladoAteFim)} nota="Realizado até o fim do período" />
+            <Indicador
+              rotulo="Saldo acumulado"
+              valor={formatarMoeda(dados.saldoAcumuladoAteFim)}
+              nota="Realizado até o fim do período"
+            />
           </div>
           <GraficoBarras
             series={[
@@ -434,7 +564,7 @@ function SecaoFluxo({ inicio, fim }: Props) {
             </Table>
           )}
           {dados.movimentacoes.itens.length === 0 ? (
-            <SemRegistros texto="Nenhuma movimentação neste período." />
+            <SemRegistros texto="Nenhuma movimentação com esses filtros." />
           ) : (
             <Table>
               <TableHeader>
@@ -468,7 +598,7 @@ function SecaoFluxo({ inicio, fim }: Props) {
               </TableBody>
             </Table>
           )}
-          <Paginacao pagina={dados.movimentacoes} onMudar={setPagina} />
+          <Paginacao pagina={dados.movimentacoes} onMudar={irParaPagina} />
         </>
       )}
     </SecaoRelatorio>
@@ -476,11 +606,30 @@ function SecaoFluxo({ inicio, fim }: Props) {
 }
 
 export function RelatoriosFinanceiros({ inicio, fim }: Props) {
+  const clientesBrutos = useLista(() => clienteApi.listar());
+  const fornecedoresBrutos = useLista(() => fornecedorApi.listar());
+  const categoriasDespesaBrutas = useLista(() => categoriaDespesaApi.listar());
+  const categoriasCaixaBrutas = useLista(() => categoriaFluxoCaixaApi.listar());
+
+  const clientes = useMemo(() => opcoesDeClientes(clientesBrutos), [clientesBrutos]);
+  const fornecedores = useMemo<OpcaoSelecao[]>(
+    () => fornecedoresBrutos.map((fornecedor) => ({ valor: fornecedor.id, rotulo: fornecedor.nome })),
+    [fornecedoresBrutos],
+  );
+  const categoriasDespesa = useMemo<Opcao[]>(
+    () => categoriasDespesaBrutas.map((categoria) => ({ valor: categoria.id, rotulo: categoria.nome })),
+    [categoriasDespesaBrutas],
+  );
+  const categoriasCaixa = useMemo<Opcao[]>(
+    () => categoriasCaixaBrutas.map((categoria) => ({ valor: categoria.id, rotulo: categoria.nome })),
+    [categoriasCaixaBrutas],
+  );
+
   return (
     <>
-      <SecaoFluxo inicio={inicio} fim={fim} />
-      <SecaoContas tipo="RECEBER" inicio={inicio} fim={fim} />
-      <SecaoContas tipo="PAGAR" inicio={inicio} fim={fim} />
+      <SecaoFluxo inicio={inicio} fim={fim} categorias={categoriasCaixa} />
+      <SecaoContas tipo="RECEBER" inicio={inicio} fim={fim} parceiros={clientes} categorias={[]} />
+      <SecaoContas tipo="PAGAR" inicio={inicio} fim={fim} parceiros={fornecedores} categorias={categoriasDespesa} />
       <SecaoVencimentos inicio={inicio} fim={fim} />
     </>
   );

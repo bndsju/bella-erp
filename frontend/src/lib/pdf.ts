@@ -44,6 +44,15 @@ export function textoDoPeriodo(inicio: string, fim: string): string {
   return `${formatar(inicio)} a ${formatar(fim)}`;
 }
 
+/** Período com pontas opcionais (contas e vencimentos): "a partir de…", "até…" ou "Todos". */
+export function textoDoPeriodoAberto(inicio: string, fim: string): string {
+  const formatar = (data: string) => data.split("-").reverse().join("/");
+  if (inicio && fim) return `Vencimento de ${formatar(inicio)} a ${formatar(fim)}`;
+  if (inicio) return `Vencimento a partir de ${formatar(inicio)}`;
+  if (fim) return `Vencimento até ${formatar(fim)}`;
+  return "Todos os vencimentos";
+}
+
 /** Gera o PDF no navegador e baixa o arquivo. A biblioteca só é carregada quando alguém exporta. */
 export async function gerarPdf(documento: DocumentoPdf): Promise<void> {
   const [{ jsPDF }, modulo] = await Promise.all([import("jspdf"), import("jspdf-autotable")]);

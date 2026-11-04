@@ -22,7 +22,7 @@ export function RelatoriosPage() {
       <Card>
         <div className="barra-filtros">
           <div className="campo">
-            <label htmlFor="rel-de">De</label>
+            <label htmlFor="rel-de">Período geral: de</label>
             <input id="rel-de" type="date" value={inicio} onChange={(e) => setInicio(e.target.value)} />
           </div>
           <div className="campo">
@@ -43,6 +43,10 @@ export function RelatoriosPage() {
             </Button>
           ))}
         </div>
+        <p className="mt-3 text-[13px] text-muted-foreground">
+          O período geral é o ponto de partida: cada relatório tem seus próprios filtros, inclusive as datas. Mudar o
+          período geral reinicia os filtros dos relatórios da aba.
+        </p>
         {!valido && inicio && fim && (
           <p className="mt-3 text-sm font-semibold text-erro">A data final não pode ser anterior à inicial.</p>
         )}
@@ -56,13 +60,13 @@ export function RelatoriosPage() {
             <TabsTrigger value="estoque">Estoque</TabsTrigger>
           </TabsList>
           <TabsContent value="comercial" className="space-y-4">
-            <RelatoriosComerciais inicio={inicio} fim={fim} />
+            <RelatoriosComerciais key={`${inicio}|${fim}`} inicio={inicio} fim={fim} />
           </TabsContent>
           <TabsContent value="financeiro" className="space-y-4">
-            <RelatoriosFinanceiros inicio={inicio} fim={fim} />
+            <RelatoriosFinanceiros key={`${inicio}|${fim}`} inicio={inicio} fim={fim} />
           </TabsContent>
           <TabsContent value="estoque" className="space-y-4">
-            <RelatoriosEstoque inicio={inicio} fim={fim} />
+            <RelatoriosEstoque key={`${inicio}|${fim}`} inicio={inicio} fim={fim} />
           </TabsContent>
         </Tabs>
       )}

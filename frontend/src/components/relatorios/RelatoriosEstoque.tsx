@@ -1,55 +1,68 @@
-import { useEffect, useState } from "react";
+import { useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import type { OpcaoSelecao } from "@/components/ui/selecao-pesquisavel";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { BotaoLimpar, CampoMarcar, CampoPeriodo, CampoPesquisa, CampoSelecao, CampoTamanho } from "@/components/relatorios/filtros";
+import { TODOS, descrever, periodoObrigatorio, rotuloDe, sem, useFiltros, useLista, type Opcao } from "@/components/relatorios/filtrosBase";
 import { Indicador, SemRegistros } from "@/components/relatorios/Indicador";
 import { Paginacao } from "@/components/relatorios/Paginacao";
 import { SecaoRelatorio } from "@/components/relatorios/SecaoRelatorio";
 import { categoriaApi } from "@/lib/categoriaApi";
 import { ROTULO_ORIGEM, ROTULO_TIPO, formatarQuantidade, quantidadeComSinal } from "@/lib/estoqueFormatos";
-import { todasAsPaginas, textoDoPeriodo } from "@/lib/pdf";
+import { textoDoPeriodo, todasAsPaginas } from "@/lib/pdf";
+import { produtoApi } from "@/lib/produtoApi";
+import { opcoesDeProdutos } from "@/lib/produtoOpcoes";
 import { relatorioApi } from "@/lib/relatorioApi";
 import { formatarDataHora } from "@/lib/relatorioRotulos";
-import type { CategoriaResponse } from "@/types/categoria";
 import type { TipoMovimentacaoEstoque } from "@/types/estoque";
-
-const TODOS = "TODOS";
 
 interface Props {
   inicio: string;
   fim: string;
 }
 
-function SecaoPosicao() {
-  const [categorias, setCategorias] = useState<CategoriaResponse[]>([]);
-  const [categoriaId, setCategoriaId] = useState(TODOS);
-  const [apenasAbaixo, setApenasAbaixo] = useState(false);
-  const [pagina, setPagina] = useState(0);
+interface Cadastros {
+  produtos: OpcaoSelecao[];
+  categorias: Opcao[];
+}
 
-  useEffect(() => {
-    categoriaApi.listar().then(setCategorias).catch(() => setCategorias([]));
-  }, []);
+const TIPOS: Opcao[] = (Object.keys(ROTULO_TIPO) as TipoMovimentacaoEstoque[]).map((valor) => ({
+  valor,
+  rotulo: ROTULO_TIPO[valor],
+}));
+
+function SecaoPosicao({ produtos, categorias }: Cadastros) {
+  const { filtros: f, alterado, mudar, irParaPagina, limpar } = useFiltros({
+    produtoId: TODOS,
+    categoriaId: TODOS,
+    apenasAbaixo: false,
+    pagina: 0,
+    tamanho: 10,
+  });
+  const params = {
+    produtoId: sem(f.produtoId),
+    categoriaId: sem(f.categoriaId),
+    apenasAbaixoDoMinimo: f.apenasAbaixo,
+  };
 
   return (
     <SecaoRelatorio
       titulo="Posição do estoque"
-      chave={`${categoriaId}|${apenasAbaixo}|${pagina}`}
+      chave={JSON.stringify(f)}
+      buscar={() => relatorioApi.estoquePosicao({ ...params, pagina: f.pagina, tamanho: f.tamanho })}
       exportar={async () => {
-        const categoria = categorias.find((item) => item.id === categoriaId);
         const { primeira, itens } = await todasAsPaginas(
-          (p, t) =>
-            relatorioApi.estoquePosicao({
-              categoriaId: categoriaId === TODOS ? undefined : categoriaId,
-              apenasAbaixoDoMinimo: apenasAbaixo,
-              pagina: p,
-              tamanho: t,
-            }),
+          (p, t) => relatorioApi.estoquePosicao({ ...params, pagina: p, tamanho: t }),
           (resposta) => resposta.produtos,
         );
         return {
           titulo: "Posição do estoque",
           nomeArquivo: "posicao-do-estoque",
-          filtros: [...(categoria ? [`Categoria: ${categoria.nome}`] : []), ...(apenasAbaixo ? ["Só abaixo do mínimo"] : [])],
+          filtros: descrever([
+            ["Produto", rotuloDe(produtos, f.produtoId)],
+            ["Categoria", rotuloDe(categorias, f.categoriaId)],
+            ["Somente", f.apenasAbaixo ? "abaixo do mínimo" : undefined],
+          ]),
           resumo: [
             ["Produtos", String(primeira.totalProdutos)],
             ["Abaixo do mínimo", String(primeira.produtosAbaixoDoMinimo)],
@@ -71,49 +84,32 @@ function SecaoPosicao() {
           ],
         };
       }}
-      buscar={() =>
-        relatorioApi.estoquePosicao({
-          categoriaId: categoriaId === TODOS ? undefined : categoriaId,
-          apenasAbaixoDoMinimo: apenasAbaixo,
-          pagina,
-          tamanho: 10,
-        })
-      }
       filtros={
         <>
-          <div className="campo">
-            <label htmlFor="rel-estoque-categoria">Categoria</label>
-            <Select
-              value={categoriaId}
-              onValueChange={(valor) => {
-                setCategoriaId(valor);
-                setPagina(0);
-              }}
-            >
-              <SelectTrigger id="rel-estoque-categoria" className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={TODOS}>Todas</SelectItem>
-                {categorias.map((categoria) => (
-                  <SelectItem key={categoria.id} value={categoria.id}>
-                    {categoria.nome}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <label className="flex min-h-11 items-center gap-2 text-sm font-semibold">
-            <input
-              type="checkbox"
-              checked={apenasAbaixo}
-              onChange={(e) => {
-                setApenasAbaixo(e.target.checked);
-                setPagina(0);
-              }}
-            />
-            Só abaixo do mínimo
-          </label>
+          <CampoPesquisa
+            id="posicao-produto"
+            rotulo="Produto"
+            valor={f.produtoId}
+            aoMudar={(produtoId) => mudar({ produtoId })}
+            opcoes={produtos}
+            rotuloTodos="Todos os produtos"
+            placeholder="Buscar por código ou nome"
+          />
+          <CampoSelecao
+            id="posicao-categoria"
+            rotulo="Categoria"
+            valor={f.categoriaId}
+            aoMudar={(categoriaId) => mudar({ categoriaId })}
+            opcoes={categorias}
+            rotuloTodos="Todas"
+          />
+          <CampoMarcar
+            rotulo="Só abaixo do mínimo"
+            marcado={f.apenasAbaixo}
+            aoMudar={(apenasAbaixo) => mudar({ apenasAbaixo })}
+          />
+          <CampoTamanho id="posicao-tamanho" valor={f.tamanho} aoMudar={(tamanho) => mudar({ tamanho })} />
+          <BotaoLimpar visivel={alterado} aoClicar={limpar} />
         </>
       }
     >
@@ -161,37 +157,43 @@ function SecaoPosicao() {
               </TableBody>
             </Table>
           )}
-          <Paginacao pagina={dados.produtos} onMudar={setPagina} />
+          <Paginacao pagina={dados.produtos} onMudar={irParaPagina} />
         </>
       )}
     </SecaoRelatorio>
   );
 }
 
-function SecaoMovimentacoes({ inicio, fim }: Props) {
-  const [tipo, setTipo] = useState(TODOS);
-  const [pagina, setPagina] = useState(0);
+function SecaoMovimentacoes({ inicio, fim, produtos }: Props & Pick<Cadastros, "produtos">) {
+  const { filtros: f, alterado, mudar, irParaPagina, limpar } = useFiltros({
+    inicio,
+    fim,
+    produtoId: TODOS,
+    tipo: TODOS,
+    pagina: 0,
+    tamanho: 10,
+  });
+  const params = { inicio: f.inicio, fim: f.fim, produtoId: sem(f.produtoId), tipo: sem(f.tipo) };
+
   return (
     <SecaoRelatorio
       titulo="Movimentações de estoque"
-      chave={`${inicio}|${fim}|${tipo}|${pagina}`}
+      chave={JSON.stringify(f)}
+      bloqueio={periodoObrigatorio(f.inicio, f.fim)}
+      buscar={() => relatorioApi.estoqueMovimentacoes({ ...params, pagina: f.pagina, tamanho: f.tamanho })}
       exportar={async () => {
         const { primeira, itens } = await todasAsPaginas(
-          (p, t) =>
-            relatorioApi.estoqueMovimentacoes({
-              inicio,
-              fim,
-              tipo: tipo === TODOS ? undefined : tipo,
-              pagina: p,
-              tamanho: t,
-            }),
+          (p, t) => relatorioApi.estoqueMovimentacoes({ ...params, pagina: p, tamanho: t }),
           (resposta) => resposta.movimentacoes,
         );
         return {
           titulo: "Movimentações de estoque",
-          nomeArquivo: `movimentacoes-estoque-${inicio}-a-${fim}`,
-          periodo: textoDoPeriodo(inicio, fim),
-          filtros: tipo === TODOS ? [] : [`Tipo: ${ROTULO_TIPO[tipo as TipoMovimentacaoEstoque]}`],
+          nomeArquivo: `movimentacoes-estoque-${f.inicio}-a-${f.fim}`,
+          periodo: textoDoPeriodo(f.inicio, f.fim),
+          filtros: descrever([
+            ["Produto", rotuloDe(produtos, f.produtoId)],
+            ["Tipo", rotuloDe(TIPOS, f.tipo)],
+          ]),
           resumo: primeira.totaisPorTipo.map((total): [string, string] => [
             ROTULO_TIPO[total.tipo],
             `${formatarQuantidade(total.quantidadeTotal)} (${total.quantidadeMovimentacoes} mov.)`,
@@ -212,38 +214,29 @@ function SecaoMovimentacoes({ inicio, fim }: Props) {
           ],
         };
       }}
-      buscar={() =>
-        relatorioApi.estoqueMovimentacoes({
-          inicio,
-          fim,
-          tipo: tipo === TODOS ? undefined : tipo,
-          pagina,
-          tamanho: 10,
-        })
-      }
       filtros={
-        <div className="campo">
-          <label htmlFor="rel-estoque-tipo">Tipo</label>
-          <Select
-            value={tipo}
-            onValueChange={(valor) => {
-              setTipo(valor);
-              setPagina(0);
-            }}
-          >
-            <SelectTrigger id="rel-estoque-tipo" className="w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={TODOS}>Todos</SelectItem>
-              {(Object.keys(ROTULO_TIPO) as TipoMovimentacaoEstoque[]).map((valor) => (
-                <SelectItem key={valor} value={valor}>
-                  {ROTULO_TIPO[valor]}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        <>
+          <CampoPeriodo prefixo="mov-estoque" inicio={f.inicio} fim={f.fim} aoMudar={mudar} />
+          <CampoPesquisa
+            id="mov-estoque-produto"
+            rotulo="Produto"
+            valor={f.produtoId}
+            aoMudar={(produtoId) => mudar({ produtoId })}
+            opcoes={produtos}
+            rotuloTodos="Todos os produtos"
+            placeholder="Buscar por código ou nome"
+          />
+          <CampoSelecao
+            id="mov-estoque-tipo"
+            rotulo="Tipo"
+            valor={f.tipo}
+            aoMudar={(tipo) => mudar({ tipo })}
+            opcoes={TIPOS}
+            rotuloTodos="Todos"
+          />
+          <CampoTamanho id="mov-estoque-tamanho" valor={f.tamanho} aoMudar={(tamanho) => mudar({ tamanho })} />
+          <BotaoLimpar visivel={alterado} aoClicar={limpar} />
+        </>
       }
     >
       {(dados) => (
@@ -261,7 +254,7 @@ function SecaoMovimentacoes({ inicio, fim }: Props) {
             </div>
           )}
           {dados.movimentacoes.itens.length === 0 ? (
-            <SemRegistros texto="Nenhuma movimentação neste período." />
+            <SemRegistros texto="Nenhuma movimentação com esses filtros." />
           ) : (
             <Table>
               <TableHeader>
@@ -288,7 +281,7 @@ function SecaoMovimentacoes({ inicio, fim }: Props) {
               </TableBody>
             </Table>
           )}
-          <Paginacao pagina={dados.movimentacoes} onMudar={setPagina} />
+          <Paginacao pagina={dados.movimentacoes} onMudar={irParaPagina} />
         </>
       )}
     </SecaoRelatorio>
@@ -296,10 +289,18 @@ function SecaoMovimentacoes({ inicio, fim }: Props) {
 }
 
 export function RelatoriosEstoque({ inicio, fim }: Props) {
+  const produtosBrutos = useLista(() => produtoApi.listar());
+  const categoriasBrutas = useLista(() => categoriaApi.listar());
+  const produtos = useMemo(() => opcoesDeProdutos(produtosBrutos), [produtosBrutos]);
+  const categorias = useMemo<Opcao[]>(
+    () => categoriasBrutas.map((categoria) => ({ valor: categoria.id, rotulo: categoria.nome })),
+    [categoriasBrutas],
+  );
+
   return (
     <>
-      <SecaoPosicao />
-      <SecaoMovimentacoes inicio={inicio} fim={fim} />
+      <SecaoPosicao produtos={produtos} categorias={categorias} />
+      <SecaoMovimentacoes inicio={inicio} fim={fim} produtos={produtos} />
     </>
   );
 }
