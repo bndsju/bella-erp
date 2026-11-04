@@ -153,12 +153,12 @@ export function ContasReceberListPage() {
             <SelectItem value="CANCELADA">Cancelada</SelectItem>
           </SelectContent>
         </Select>
-        <div className="space-y-1">
-          <label className="block text-xs text-muted-foreground">Vencimento de</label>
+        <div className="campo">
+          <label>Vencimento de</label>
           <Input type="date" className="w-40" value={vencimentoInicio} onChange={(e) => setVencimentoInicio(e.target.value)} />
         </div>
-        <div className="space-y-1">
-          <label className="block text-xs text-muted-foreground">até</label>
+        <div className="campo">
+          <label>até</label>
           <Input type="date" className="w-40" value={vencimentoFim} onChange={(e) => setVencimentoFim(e.target.value)} />
         </div>
       </div>

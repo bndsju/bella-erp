@@ -60,8 +60,8 @@ export function ConcluirVendaDialog({ open, onOpenChange, pedidoId }: ConcluirVe
         <DialogHeader>
           <DialogTitle>Concluir venda</DialogTitle>
         </DialogHeader>
-        <div className="space-y-2">
-          <label className="block text-sm font-medium">Forma de pagamento</label>
+        <div className="campo">
+          <label>Forma de pagamento</label>
           <Select value={formaPagamento} onValueChange={(v) => setFormaPagamento(v as FormaPagamento)}>
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Selecione a forma de pagamento" />

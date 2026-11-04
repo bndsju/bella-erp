@@ -206,12 +206,12 @@ export function FluxoCaixaPage() {
       </div>
 
       <div className="cartao flex flex-wrap items-end gap-3">
-        <div className="space-y-1">
-          <label className="block text-xs text-muted-foreground">De</label>
+        <div className="campo">
+          <label>De</label>
           <Input type="date" className="w-40" value={dataInicio} onChange={(e) => setDataInicio(e.target.value)} />
         </div>
-        <div className="space-y-1">
-          <label className="block text-xs text-muted-foreground">Até</label>
+        <div className="campo">
+          <label>Até</label>
           <Input type="date" className="w-40" value={dataFim} onChange={(e) => setDataFim(e.target.value)} />
         </div>
         <Select value={tipo} onValueChange={(v) => setTipo(v as TipoMovimentacaoCaixa | "TODOS")}>

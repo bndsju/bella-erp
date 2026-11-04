@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardTitle } from "@/components/ui/card";
 import {
   Form,
   FormControl,
@@ -14,7 +14,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
@@ -23,6 +22,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { PedidoItensField } from "@/components/pedidos/PedidoItensField";
 import { PedidoResumoValores } from "@/components/pedidos/PedidoResumoValores";
 import { PedidoStatusBadge } from "@/components/pedidos/PedidoStatusBadge";
@@ -161,13 +168,16 @@ export function PedidoFormPage() {
 
   if (carregando) {
     return (
-      <Card>
-        <CardContent className="space-y-4 pt-6">
-          <Skeleton className="h-9 w-full" />
-          <Skeleton className="h-9 w-full" />
-          <Skeleton className="h-9 w-full" />
-        </CardContent>
-      </Card>
+      <>
+        <CabecalhoPagina titulo="Pedido" />
+        <Card>
+          <div className="space-y-4">
+            <Skeleton className="h-11 w-full" />
+            <Skeleton className="h-11 w-full" />
+            <Skeleton className="h-11 w-full" />
+          </div>
+        </Card>
+      </>
     );
   }
 
@@ -176,234 +186,228 @@ export function PedidoFormPage() {
   const podeCancelar = modo === "editar" && pedido && pedido.status !== "ENTREGUE" && pedido.status !== "CANCELADO";
 
   return (
-    <div className="space-y-4">
+    <>
       <CabecalhoPagina
         titulo={modo === "editar" ? "Pedido" : "Novo pedido"}
-        acao={
-          <>
-          {pedido && <PedidoStatusBadge status={pedido.status} />}
-          </>
-        }
+        acao={pedido && <PedidoStatusBadge status={pedido.status} />}
       />
 
       {editavel ? (
-        <Card>
-          <CardContent className="pt-6">
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="clienteId"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Cliente</FormLabel>
-                        <Select value={field.value} onValueChange={field.onChange}>
-                          <FormControl>
-                            <SelectTrigger className="w-full">
-                              <SelectValue placeholder="Selecione o cliente" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {clientes.map((cliente) => (
-                              <SelectItem key={cliente.id} value={cliente.id}>
-                                {nomeExibicaoCliente(cliente)}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="transportadoraId"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Transportadora</FormLabel>
-                        <Select value={field.value} onValueChange={field.onChange}>
-                          <FormControl>
-                            <SelectTrigger className="w-full">
-                              <SelectValue />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value={SEM_TRANSPORTADORA}>Sem transportadora</SelectItem>
-                            {transportadoras.map((transportadora) => (
-                              <SelectItem key={transportadora.id} value={transportadora.id}>
-                                {transportadora.nome}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <Separator />
-
-                <PedidoItensField produtos={produtos} />
-
-                <Separator />
-
-                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-                  <FormField
-                    control={form.control}
-                    name="percentualDesconto"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Desconto (%)</FormLabel>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="contents">
+            <Card>
+              <CardTitle>Cliente e entrega</CardTitle>
+              <div className="grade grade--2">
+                <FormField
+                  control={form.control}
+                  name="clienteId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Cliente</FormLabel>
+                      <Select value={field.value} onValueChange={field.onChange}>
                         <FormControl>
-                          <Input
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            max="100"
-                            {...field}
-                            onChange={(e) => field.onChange(e.target.valueAsNumber)}
-                          />
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Selecione o cliente" />
+                          </SelectTrigger>
                         </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="valorFrete"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Frete</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            {...field}
-                            onChange={(e) => field.onChange(e.target.valueAsNumber)}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="condicaoPagamento"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Condição de pagamento</FormLabel>
-                        <FormControl>
-                          <Input placeholder="À vista, 30/60/90 dias..." {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <PedidoResumoValores
-                  subtotal={subtotal}
-                  valorDesconto={valorDesconto}
-                  valorFrete={valorFreteForm || 0}
-                  valorTotal={valorTotal}
+                        <SelectContent>
+                          {clientes.map((cliente) => (
+                            <SelectItem key={cliente.id} value={cliente.id}>
+                              {nomeExibicaoCliente(cliente)}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
+                <FormField
+                  control={form.control}
+                  name="transportadoraId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Transportadora</FormLabel>
+                      <Select value={field.value} onValueChange={field.onChange}>
+                        <FormControl>
+                          <SelectTrigger className="w-full">
+                            <SelectValue />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value={SEM_TRANSPORTADORA}>Sem transportadora</SelectItem>
+                          {transportadoras.map((transportadora) => (
+                            <SelectItem key={transportadora.id} value={transportadora.id}>
+                              {transportadora.nome}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </Card>
 
-                <div className="flex justify-end gap-2 pt-2">
-                  {podeCancelar && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      disabled={processandoAcao}
-                      onClick={() => executarAcao(pedidoApi.cancelar, "Pedido cancelado")}
-                    >
-                      Cancelar pedido
-                    </Button>
+            <Card>
+              <CardTitle>Itens</CardTitle>
+              <PedidoItensField produtos={produtos} />
+            </Card>
+
+            <Card>
+              <CardTitle>Condições</CardTitle>
+              <div className="grade grade--3">
+                <FormField
+                  control={form.control}
+                  name="percentualDesconto"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Desconto (%)</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          max="100"
+                          {...field}
+                          onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
                   )}
-                  <Button type="submit" disabled={form.formState.isSubmitting}>
-                    {form.formState.isSubmitting ? "Salvando..." : "Salvar"}
-                  </Button>
-                  {modo === "editar" && proximaAcao && (
-                    <Button
-                      type="button"
-                      disabled={processandoAcao}
-                      onClick={() => executarAcao(proximaAcao.executar, "Pedido atualizado")}
-                    >
-                      {proximaAcao.label}
-                    </Button>
+                />
+                <FormField
+                  control={form.control}
+                  name="valorFrete"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Frete</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          {...field}
+                          onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
                   )}
-                </div>
-              </form>
-            </Form>
-          </CardContent>
-        </Card>
+                />
+                <FormField
+                  control={form.control}
+                  name="condicaoPagamento"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Condição de pagamento</FormLabel>
+                      <FormControl>
+                        <Input placeholder="À vista, 30/60/90 dias..." {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </Card>
+
+            <PedidoResumoValores
+              subtotal={subtotal}
+              valorDesconto={valorDesconto}
+              valorFrete={valorFreteForm || 0}
+              valorTotal={valorTotal}
+            />
+
+            <div className="acoes">
+              {podeCancelar && (
+                <Button
+                  type="button"
+                  variant="secondary"
+                  disabled={processandoAcao}
+                  onClick={() => executarAcao(pedidoApi.cancelar, "Pedido cancelado")}
+                >
+                  Cancelar pedido
+                </Button>
+              )}
+              <Button type="submit" variant={modo === "editar" ? "secondary" : "default"} disabled={form.formState.isSubmitting}>
+                {form.formState.isSubmitting ? "Salvando..." : "Salvar"}
+              </Button>
+              {modo === "editar" && proximaAcao && (
+                <Button
+                  type="button"
+                  disabled={processandoAcao}
+                  onClick={() => executarAcao(proximaAcao.executar, "Pedido atualizado")}
+                >
+                  {proximaAcao.label}
+                </Button>
+              )}
+            </div>
+          </form>
+        </Form>
       ) : (
         pedido && (
-          <Card>
-            <CardHeader>
+          <>
+            <Card>
               <CardTitle>{pedido.clienteNome}</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="rounded-xl border border-border">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-border text-left text-muted-foreground">
-                      <th className="p-3 font-normal">Produto</th>
-                      <th className="p-3 font-normal">Quantidade</th>
-                      <th className="p-3 font-normal">Valor unitário</th>
-                      <th className="p-3 text-right font-normal">Subtotal</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {pedido.itens.map((item) => (
-                      <tr key={item.id} className="border-b border-border last:border-0">
-                        <td className="p-3">
-                          {item.produtoCodigoInterno} — {item.produtoNome}
-                        </td>
-                        <td className="p-3">{item.quantidade}</td>
-                        <td className="p-3">{formatoMoeda.format(item.valorUnitario)}</td>
-                        <td className="p-3 text-right">{formatoMoeda.format(item.subtotal)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Produto</TableHead>
+                    <TableHead>Quantidade</TableHead>
+                    <TableHead>Valor unitário</TableHead>
+                    <TableHead className="text-right">Subtotal</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {pedido.itens.map((item) => (
+                    <TableRow key={item.id}>
+                      <TableCell className="tabela__forte">
+                        {item.produtoCodigoInterno} — {item.produtoNome}
+                      </TableCell>
+                      <TableCell>{item.quantidade}</TableCell>
+                      <TableCell>{formatoMoeda.format(item.valorUnitario)}</TableCell>
+                      <TableCell className="text-right">{formatoMoeda.format(item.subtotal)}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </Card>
+
+            <PedidoResumoValores
+              subtotal={pedido.subtotal}
+              valorDesconto={pedido.valorDesconto}
+              valorFrete={pedido.valorFrete}
+              valorTotal={pedido.valorTotal}
+            />
+
+            <Card>
+              <CardTitle>Entrega e pagamento</CardTitle>
+              <div className="linha">
+                <span>Transportadora</span>
+                <span>{pedido.transportadoraNome ?? "—"}</span>
               </div>
-
-              <PedidoResumoValores
-                subtotal={pedido.subtotal}
-                valorDesconto={pedido.valorDesconto}
-                valorFrete={pedido.valorFrete}
-                valorTotal={pedido.valorTotal}
-              />
-
-              <div className="grid grid-cols-2 gap-4 text-sm sm:grid-cols-3">
-                <div>
-                  <p className="text-muted-foreground">Transportadora</p>
-                  <p className="font-medium">{pedido.transportadoraNome ?? "—"}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Condição de pagamento</p>
-                  <p className="font-medium">{pedido.condicaoPagamento}</p>
-                </div>
+              <div className="linha">
+                <span>Condição de pagamento</span>
+                <span>{pedido.condicaoPagamento}</span>
               </div>
+            </Card>
 
-              {pedido.status === "ENTREGUE" && (
-                <div className="flex justify-end gap-2 pt-2">
-                  <Button type="button" onClick={() => setDialogVendaAberto(true)}>
-                    Concluir venda
-                  </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+            {pedido.status === "ENTREGUE" && (
+              <div className="acoes">
+                <Button type="button" onClick={() => setDialogVendaAberto(true)}>
+                  Concluir venda
+                </Button>
+              </div>
+            )}
+          </>
         )
       )}
 
       {pedido && (
         <ConcluirVendaDialog open={dialogVendaAberto} onOpenChange={setDialogVendaAberto} pedidoId={pedido.id} />
       )}
-    </div>
+    </>
   );
 }

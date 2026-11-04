@@ -293,8 +293,8 @@ export function ContaPagarFormPage() {
               {modo === "PARCELADO" && (
                 <div className="space-y-4 rounded-xl border border-border p-4">
                   <div className="flex flex-wrap items-end gap-3">
-                    <div className="space-y-1">
-                      <label className="block text-xs text-muted-foreground">Quantidade de parcelas</label>
+                    <div className="campo">
+                      <label>Quantidade de parcelas</label>
                       <Input
                         type="number"
                         min="1"
@@ -303,8 +303,8 @@ export function ContaPagarFormPage() {
                         onChange={(e) => setQuantidadeParcelas(Math.max(1, Math.floor(e.target.valueAsNumber) || 1))}
                       />
                     </div>
-                    <div className="space-y-1">
-                      <label className="block text-xs text-muted-foreground">Primeiro vencimento</label>
+                    <div className="campo">
+                      <label>Primeiro vencimento</label>
                       <Input
                         type="date"
                         className="w-44"

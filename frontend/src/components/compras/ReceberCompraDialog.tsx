@@ -40,8 +40,8 @@ export function ReceberCompraDialog({ open, onOpenChange, processando, onConfirm
             O recebimento gera uma entrada no estoque para cada item e só pode ser feito uma vez.
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-2">
-          <label className="block text-sm font-medium">Data do recebimento</label>
+        <div className="campo">
+          <label>Data do recebimento</label>
           <Input type="date" max={hoje()} value={data} onChange={(e) => setData(e.target.value)} />
         </div>
         <DialogFooter>

@@ -103,12 +103,12 @@ export function ComprasListPage() {
             <SelectItem value="CANCELADA">Cancelada</SelectItem>
           </SelectContent>
         </Select>
-        <div className="space-y-1">
-          <label className="block text-xs text-muted-foreground">Compra de</label>
+        <div className="campo">
+          <label>Compra de</label>
           <Input type="date" className="w-40" value={dataInicio} onChange={(e) => setDataInicio(e.target.value)} />
         </div>
-        <div className="space-y-1">
-          <label className="block text-xs text-muted-foreground">até</label>
+        <div className="campo">
+          <label>até</label>
           <Input type="date" className="w-40" value={dataFim} onChange={(e) => setDataFim(e.target.value)} />
         </div>
       </div>
