@@ -319,7 +319,7 @@ export function FluxoCaixaPage() {
                     <TableCell>{movimentacao.categoriaNome ?? "—"}</TableCell>
                     <TableCell>{ROTULO_ORIGEM[movimentacao.origem]}</TableCell>
                     <TableCell
-                      className={`text-right ${movimentacao.tipo === "ENTRADA" ? "text-primary" : "text-destructive"}`}
+                      className={`text-right ${movimentacao.tipo === "ENTRADA" ? "text-primary" : "text-erro"}`}
                     >
                       {movimentacao.tipo === "ENTRADA" ? "+" : "−"} {formatarMoeda(movimentacao.valor)}
                     </TableCell>

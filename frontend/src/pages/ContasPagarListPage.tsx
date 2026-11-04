@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -101,24 +101,18 @@ export function ContasPagarListPage() {
         }
       />
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <Card>
-          <CardContent className="pt-6">
-            <p className="text-xs text-muted-foreground">A pagar (saldo pendente)</p>
-            <p className="text-lg font-medium">{formatarMoeda(aPagar)}</p>
-          </CardContent>
+      <div className="grade grade--3">
+        <Card className="indicador">
+          <div className="indicador__rotulo">A pagar (saldo pendente)</div>
+          <div className="indicador__valor">{formatarMoeda(aPagar)}</div>
         </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <p className="text-xs text-muted-foreground">Vencido</p>
-            <p className="text-lg font-medium text-destructive">{formatarMoeda(vencido)}</p>
-          </CardContent>
+        <Card className="indicador">
+          <div className="indicador__rotulo">Vencido</div>
+          <div className="indicador__valor">{formatarMoeda(vencido)}</div>
         </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <p className="text-xs text-muted-foreground">Já pago</p>
-            <p className="text-lg font-medium text-primary">{formatarMoeda(pago)}</p>
-          </CardContent>
+        <Card className="indicador">
+          <div className="indicador__rotulo">Já pago</div>
+          <div className="indicador__valor">{formatarMoeda(pago)}</div>
         </Card>
       </div>
 

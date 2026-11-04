@@ -68,7 +68,7 @@ export function MovimentacoesEstoquePage() {
         titulo="Histórico de movimentações"
         acao={
           <>
-          <div className="flex gap-2">
+          <div className="contents">
             <Button variant="outline" asChild>
               <Link to="/estoque">Voltar ao estoque</Link>
             </Button>

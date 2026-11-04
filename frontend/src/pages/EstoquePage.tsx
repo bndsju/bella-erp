@@ -71,7 +71,7 @@ export function EstoquePage() {
         titulo="Estoque"
         acao={
           <>
-          <div className="flex gap-2">
+          <div className="contents">
             <Button variant="outline" asChild>
               <Link to="/estoque/movimentacoes">Histórico de movimentações</Link>
             </Button>

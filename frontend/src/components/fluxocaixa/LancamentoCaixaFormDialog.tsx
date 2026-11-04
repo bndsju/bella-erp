@@ -119,7 +119,7 @@ export function LancamentoCaixaFormDialog({ open, onOpenChange, movimentacao, on
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="grade grade--2">
               <FormField
                 control={form.control}
                 name="tipo"
@@ -182,7 +182,7 @@ export function LancamentoCaixaFormDialog({ open, onOpenChange, movimentacao, on
                 </FormItem>
               )}
             />
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="grade grade--2">
               <FormField
                 control={form.control}
                 name="valor"

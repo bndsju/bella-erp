@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import {
   Form,
   FormControl,
@@ -15,7 +15,6 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
@@ -24,6 +23,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { CompraItensField } from "@/components/compras/CompraItensField";
 import { CompraResumoValores } from "@/components/compras/CompraResumoValores";
 import { CompraStatusBadge } from "@/components/compras/CompraStatusBadge";
@@ -174,10 +181,10 @@ export function CompraFormPage() {
   if (carregando) {
     return (
       <Card>
-        <CardContent className="space-y-4 pt-6">
-          <Skeleton className="h-9 w-full" />
-          <Skeleton className="h-9 w-full" />
-          <Skeleton className="h-9 w-full" />
+        <CardContent className="space-y-4">
+          <Skeleton className="h-11 w-full" />
+          <Skeleton className="h-11 w-full" />
+          <Skeleton className="h-11 w-full" />
         </CardContent>
       </Card>
     );
@@ -186,7 +193,7 @@ export function CompraFormPage() {
   const editavel = modo === "novo" || compra?.status === "RASCUNHO";
 
   return (
-    <div className="space-y-4">
+    <>
       <CabecalhoPagina
         titulo={modo === "editar" ? "Compra" : "Nova compra"}
         acao={
@@ -197,11 +204,11 @@ export function CompraFormPage() {
       />
 
       {editavel ? (
-        <Card>
-          <CardContent className="pt-6">
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                <div className="grid grid-cols-2 gap-4">
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="contents">
+            <Card>
+              <CardTitle>Fornecedor e recebimento</CardTitle>
+              <div className="grade grade--2">
                   <FormField
                     control={form.control}
                     name="fornecedorId"
@@ -239,15 +246,17 @@ export function CompraFormPage() {
                       </FormItem>
                     )}
                   />
-                </div>
+              </div>
+            </Card>
 
-                <Separator />
+            <Card>
+              <CardTitle>Itens</CardTitle>
+              <CompraItensField produtos={produtos} />
+            </Card>
 
-                <CompraItensField produtos={produtos} />
-
-                <Separator />
-
-                <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+            <Card>
+              <CardTitle>Condições</CardTitle>
+              <div className="grade grade--4">
                   <FormField
                     control={form.control}
                     name="descontoGeral"
@@ -318,8 +327,10 @@ export function CompraFormPage() {
                       </FormItem>
                     )}
                   />
-                </div>
+              </div>
+            </Card>
 
+            <Card>
                 <FormField
                   control={form.control}
                   name="observacoes"
@@ -333,6 +344,7 @@ export function CompraFormPage() {
                     </FormItem>
                   )}
                 />
+            </Card>
 
                 <CompraResumoValores
                   valorProdutos={valorProdutos}
@@ -342,11 +354,11 @@ export function CompraFormPage() {
                   valorTotal={valorTotal}
                 />
 
-                <div className="flex justify-end gap-2 pt-2">
+                <div className="acoes">
                   {modo === "editar" && (
                     <Button
                       type="button"
-                      variant="outline"
+                      variant="secondary"
                       disabled={processandoAcao}
                       onClick={() => setDialogCancelarAberto(true)}
                     >
@@ -362,100 +374,95 @@ export function CompraFormPage() {
                     </Button>
                   )}
                 </div>
-              </form>
-            </Form>
-          </CardContent>
-        </Card>
+          </form>
+        </Form>
       ) : (
         compra && (
-          <Card>
-            <CardHeader>
+          <>
+            <Card>
               <CardTitle>{compra.fornecedorNome}</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="rounded-xl border border-border">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-border text-left text-muted-foreground">
-                      <th className="p-3 font-normal">Produto</th>
-                      <th className="p-3 font-normal">Quantidade</th>
-                      <th className="p-3 font-normal">Custo unitário</th>
-                      <th className="p-3 font-normal">Desconto</th>
-                      <th className="p-3 text-right font-normal">Total</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {compra.itens.map((item) => (
-                      <tr key={item.id} className="border-b border-border last:border-0">
-                        <td className="p-3">
-                          {item.produtoCodigoInterno} — {item.produtoNome}
-                        </td>
-                        <td className="p-3">{item.quantidade}</td>
-                        <td className="p-3">{formatoMoeda.format(item.custoUnitario)}</td>
-                        <td className="p-3">{formatoMoeda.format(item.desconto)}</td>
-                        <td className="p-3 text-right">{formatoMoeda.format(item.valorTotal)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Produto</TableHead>
+                    <TableHead>Quantidade</TableHead>
+                    <TableHead>Custo unitário</TableHead>
+                    <TableHead>Desconto</TableHead>
+                    <TableHead className="text-right">Total</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {compra.itens.map((item) => (
+                    <TableRow key={item.id}>
+                      <TableCell className="tabela__forte">
+                        {item.produtoCodigoInterno} — {item.produtoNome}
+                      </TableCell>
+                      <TableCell>{item.quantidade}</TableCell>
+                      <TableCell>{formatoMoeda.format(item.custoUnitario)}</TableCell>
+                      <TableCell>{formatoMoeda.format(item.desconto)}</TableCell>
+                      <TableCell className="text-right">{formatoMoeda.format(item.valorTotal)}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </Card>
+
+            <CompraResumoValores
+              valorProdutos={compra.valorProdutos}
+              descontoTotal={compra.descontoTotal}
+              frete={compra.frete}
+              outrasDespesas={compra.outrasDespesas}
+              valorTotal={compra.valorTotal}
+            />
+
+            <Card>
+              <CardTitle>Datas e condições</CardTitle>
+              <div className="linha">
+                <span>Data da compra</span>
+                <span>{formatarData(compra.dataCompra)}</span>
               </div>
-
-              <CompraResumoValores
-                valorProdutos={compra.valorProdutos}
-                descontoTotal={compra.descontoTotal}
-                frete={compra.frete}
-                outrasDespesas={compra.outrasDespesas}
-                valorTotal={compra.valorTotal}
-              />
-
-              <div className="grid grid-cols-2 gap-4 text-sm sm:grid-cols-4">
-                <div>
-                  <p className="text-muted-foreground">Data da compra</p>
-                  <p className="font-medium">{formatarData(compra.dataCompra)}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Previsão de recebimento</p>
-                  <p className="font-medium">{formatarData(compra.previsaoRecebimento)}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Data do recebimento</p>
-                  <p className="font-medium">{formatarData(compra.dataRecebimento)}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Condição de pagamento</p>
-                  <p className="font-medium">{compra.condicaoPagamento}</p>
-                </div>
-                {compra.observacoes && (
-                  <div className="col-span-2 sm:col-span-4">
-                    <p className="text-muted-foreground">Observações</p>
-                    <p className="font-medium">{compra.observacoes}</p>
-                  </div>
-                )}
-                {compra.status === "CANCELADA" && (
-                  <div className="col-span-2 sm:col-span-4">
-                    <p className="text-muted-foreground">Motivo do cancelamento</p>
-                    <p className="font-medium">{compra.motivoCancelamento}</p>
-                  </div>
-                )}
+              <div className="linha">
+                <span>Previsão de recebimento</span>
+                <span>{formatarData(compra.previsaoRecebimento)}</span>
               </div>
-
-              {compra.status === "CONFIRMADA" && (
-                <div className="flex justify-end gap-2 pt-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    disabled={processandoAcao}
-                    onClick={() => setDialogCancelarAberto(true)}
-                  >
-                    Cancelar compra
-                  </Button>
-                  <Button type="button" disabled={processandoAcao} onClick={() => setDialogReceberAberto(true)}>
-                    Receber compra
-                  </Button>
+              <div className="linha">
+                <span>Data do recebimento</span>
+                <span>{formatarData(compra.dataRecebimento)}</span>
+              </div>
+              <div className="linha">
+                <span>Condição de pagamento</span>
+                <span>{compra.condicaoPagamento}</span>
+              </div>
+              {compra.observacoes && (
+                <div className="linha">
+                  <span>Observações</span>
+                  <span>{compra.observacoes}</span>
                 </div>
               )}
-            </CardContent>
-          </Card>
+              {compra.status === "CANCELADA" && (
+                <div className="linha">
+                  <span>Motivo do cancelamento</span>
+                  <span>{compra.motivoCancelamento}</span>
+                </div>
+              )}
+            </Card>
+
+            {compra.status === "CONFIRMADA" && (
+              <div className="acoes">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  disabled={processandoAcao}
+                  onClick={() => setDialogCancelarAberto(true)}
+                >
+                  Cancelar compra
+                </Button>
+                <Button type="button" disabled={processandoAcao} onClick={() => setDialogReceberAberto(true)}>
+                  Receber compra
+                </Button>
+              </div>
+            )}
+          </>
         )
       )}
 
@@ -471,6 +478,6 @@ export function CompraFormPage() {
         processando={processandoAcao}
         onConfirmar={(data) => id && executarAcao(() => compraApi.receber(id, data), "Compra recebida")}
       />
-    </div>
+    </>
   );
 }
