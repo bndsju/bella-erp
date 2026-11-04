@@ -1,8 +1,11 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { SelecaoPesquisavel } from "@/components/ui/selecao-pesquisavel";
 import {
   Select,
   SelectContent,
@@ -18,21 +21,16 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { MenuAcoes } from "@/components/ui/menu-acoes";
+import { CabecalhoPagina } from "@/components/layout/CabecalhoPagina";
 import { PedidoStatusBadge } from "@/components/pedidos/PedidoStatusBadge";
 import { CriarPedidoDeOrcamentoDialog } from "@/components/pedidos/CriarPedidoDeOrcamentoDialog";
 import { pedidoApi } from "@/lib/pedidoApi";
 import { clienteApi } from "@/lib/clienteApi";
+import { opcoesDeClientes } from "@/lib/clienteOpcoes";
+import { formatarMoeda } from "@/lib/formatos";
 import type { PedidoResponse, StatusPedido } from "@/types/pedido";
 import type { ClienteResponse } from "@/types/cliente";
-import { ExternalLink } from "lucide-react";
-import { MenuAcoes } from "@/components/ui/menu-acoes";
-import { CabecalhoPagina } from "@/components/layout/CabecalhoPagina";
-
-const formatoMoeda = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
-
-function nomeExibicaoCliente(cliente: ClienteResponse): string {
-  return cliente.tipoPessoa === "PF" ? (cliente.nomeCompleto ?? "") : (cliente.razaoSocial ?? "");
-}
 
 export function PedidosListPage() {
   const navigate = useNavigate();
@@ -46,6 +44,8 @@ export function PedidosListPage() {
   useEffect(() => {
     clienteApi.listar().then(setClientes).catch(() => {});
   }, []);
+
+  const opcoesClientes = useMemo(() => opcoesDeClientes(clientes), [clientes]);
 
   const carregar = useCallback(() => {
     setCarregando(true);
@@ -61,61 +61,76 @@ export function PedidosListPage() {
 
   useEffect(carregar, [carregar]);
 
+  const temFiltro = clienteId !== "TODOS" || status !== "TODOS";
+
   return (
-    <div className="space-y-4">
+    <>
       <CabecalhoPagina
         titulo="Pedidos"
         acao={
           <>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setDialogOrcamentoAberto(true)}>
+            <Button variant="secondary" onClick={() => setDialogOrcamentoAberto(true)}>
               Criar a partir de orçamento
             </Button>
             <Button asChild>
               <Link to="/pedidos/novo">Novo pedido</Link>
             </Button>
-          </div>
           </>
         }
       />
 
-      <div className="cartao flex flex-wrap items-end gap-3">
-        <Select value={clienteId} onValueChange={setClienteId}>
-          <SelectTrigger className="w-56">
-            <SelectValue placeholder="Cliente" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="TODOS">Todos os clientes</SelectItem>
-            {clientes.map((cliente) => (
-              <SelectItem key={cliente.id} value={cliente.id}>
-                {nomeExibicaoCliente(cliente)}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select value={status} onValueChange={(v) => setStatus(v as StatusPedido | "TODOS")}>
-          <SelectTrigger className="w-52">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="TODOS">Todos os status</SelectItem>
-            <SelectItem value="CRIADO">Criado</SelectItem>
-            <SelectItem value="CONFIRMADO">Confirmado</SelectItem>
-            <SelectItem value="EM_SEPARACAO">Em separação</SelectItem>
-            <SelectItem value="PRONTO_PARA_ENTREGA">Pronto para entrega</SelectItem>
-            <SelectItem value="ENTREGUE">Entregue</SelectItem>
-            <SelectItem value="CANCELADO">Cancelado</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+      <Card>
+        <div className="barra-filtros">
+          <div className="campo">
+            <label htmlFor="filtro-cliente">Cliente</label>
+            <SelecaoPesquisavel
+              id="filtro-cliente"
+              value={clienteId}
+              onChange={setClienteId}
+              opcoes={opcoesClientes}
+              valorTodos="TODOS"
+              rotuloTodos="Todos os clientes"
+              placeholderBusca="Buscar por nome ou empresa"
+              textoVazio="Nenhum cliente encontrado"
+            />
+          </div>
+          <div className="campo">
+            <label htmlFor="filtro-status">Status</label>
+            <Select value={status} onValueChange={(v) => setStatus(v as StatusPedido | "TODOS")}>
+              <SelectTrigger id="filtro-status" className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="TODOS">Todos os status</SelectItem>
+                <SelectItem value="CRIADO">Criado</SelectItem>
+                <SelectItem value="CONFIRMADO">Confirmado</SelectItem>
+                <SelectItem value="EM_SEPARACAO">Em separação</SelectItem>
+                <SelectItem value="PRONTO_PARA_ENTREGA">Pronto para entrega</SelectItem>
+                <SelectItem value="ENTREGUE">Entregue</SelectItem>
+                <SelectItem value="CANCELADO">Cancelado</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <Button
+            variant="secondary"
+            disabled={!temFiltro}
+            onClick={() => {
+              setClienteId("TODOS");
+              setStatus("TODOS");
+            }}
+          >
+            Limpar filtros
+          </Button>
+        </div>
+      </Card>
 
-      <div className="rounded-cartao bg-card p-2">
+      <Card>
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Cliente</TableHead>
               <TableHead>Transportadora</TableHead>
-              <TableHead>Total</TableHead>
+              <TableHead className="text-right">Total</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>
@@ -131,16 +146,19 @@ export function PedidosListPage() {
               ))
             ) : pedidos.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="py-8 text-center text-muted-foreground">
-                  Nenhum pedido encontrado.
+                <TableCell colSpan={5}>
+                  <div className="vazio">
+                    <h3>{temFiltro ? "Nenhum pedido com esses filtros" : "Nenhum pedido ainda"}</h3>
+                    <p>{temFiltro ? "Ajuste ou limpe os filtros para ver mais." : "Seu primeiro pedido aparece aqui."}</p>
+                  </div>
                 </TableCell>
               </TableRow>
             ) : (
               pedidos.map((pedido) => (
-                <TableRow key={pedido.id} className="cursor-pointer" onClick={() => navigate(`/pedidos/${pedido.id}/editar`)}>
-                  <TableCell className="font-medium">{pedido.clienteNome}</TableCell>
+                <TableRow key={pedido.id} onClick={() => navigate(`/pedidos/${pedido.id}/editar`)}>
+                  <TableCell className="tabela__forte">{pedido.clienteNome}</TableCell>
                   <TableCell>{pedido.transportadoraNome ?? "—"}</TableCell>
-                  <TableCell>{formatoMoeda.format(pedido.valorTotal)}</TableCell>
+                  <TableCell className="text-right">{formatarMoeda(pedido.valorTotal)}</TableCell>
                   <TableCell>
                     <PedidoStatusBadge status={pedido.status} />
                   </TableCell>
@@ -152,9 +170,9 @@ export function PedidosListPage() {
             )}
           </TableBody>
         </Table>
-      </div>
+      </Card>
 
       <CriarPedidoDeOrcamentoDialog open={dialogOrcamentoAberto} onOpenChange={setDialogOrcamentoAberto} />
-    </div>
+    </>
   );
 }
