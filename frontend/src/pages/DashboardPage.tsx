@@ -120,6 +120,7 @@ export function DashboardPage() {
   const [fim, setFim] = useState(fimPadrao);
   const [dados, setDados] = useState<DashboardResponse | null>(null);
   const [carregando, setCarregando] = useState(true);
+  const [falhou, setFalhou] = useState(false);
 
   const carregar = useCallback(() => {
     if (!inicio || !fim) return;
@@ -128,10 +129,14 @@ export function DashboardPage() {
       return;
     }
     setCarregando(true);
+    setFalhou(false);
     dashboardApi
       .consultar(inicio, fim)
       .then(setDados)
-      .catch(() => toast.error("Não foi possível carregar o painel"))
+      .catch(() => {
+        setFalhou(true);
+        toast.error("Não foi possível carregar o painel");
+      })
       .finally(() => setCarregando(false));
   }, [inicio, fim]);
 
@@ -171,7 +176,15 @@ export function DashboardPage() {
         </div>
       </Card>
 
-      {carregando && !dados ? (
+      {falhou && !dados ? (
+        <Card>
+          <div className="vazio">
+            <h3>Não consegui carregar o painel</h3>
+            <p>Confira se o sistema está no ar e tente de novo.</p>
+            <Button onClick={carregar}>Tentar de novo</Button>
+          </div>
+        </Card>
+      ) : carregando && !dados ? (
         <>
           <Skeleton className="h-28 w-full rounded-[20px]" />
           <Skeleton className="h-64 w-full rounded-[20px]" />
