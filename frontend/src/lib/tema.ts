@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 
-/** Escolha do usuário: claro, escuro ou, por padrão, a preferência do aparelho. */
+/** Escolha do usuário: claro (padrão), escuro ou a preferência do aparelho. */
 export type PreferenciaTema = "sistema" | "claro" | "dark";
 
 const CHAVE = "bella-tema";
@@ -9,9 +9,9 @@ const CONSULTA_ESCURO = "(prefers-color-scheme: dark)";
 export function lerPreferencia(): PreferenciaTema {
   try {
     const salvo = localStorage.getItem(CHAVE);
-    return salvo === "claro" || salvo === "dark" ? salvo : "sistema";
+    return salvo === "dark" || salvo === "sistema" ? salvo : "claro";
   } catch {
-    return "sistema";
+    return "claro";
   }
 }
 
