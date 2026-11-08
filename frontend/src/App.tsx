@@ -26,6 +26,7 @@ import { CategoriasDespesaPage } from "@/pages/CategoriasDespesaPage";
 import { DashboardPage } from "@/pages/DashboardPage";
 import { AjustesPage } from "@/pages/AjustesPage";
 import { RelatoriosPage } from "@/pages/RelatoriosPage";
+import { AuditoriaPage } from "@/pages/AuditoriaPage";
 import { FluxoCaixaPage } from "@/pages/FluxoCaixaPage";
 import { CategoriasFluxoCaixaPage } from "@/pages/CategoriasFluxoCaixaPage";
 import { EstoquePage } from "@/pages/EstoquePage";
@@ -37,6 +38,7 @@ function App() {
       <Route element={<AppLayout />}>
         <Route path="/" element={<DashboardPage />} />
         <Route path="/relatorios" element={<RelatoriosPage />} />
+        <Route path="/auditoria" element={<AuditoriaPage />} />
         <Route path="/ajustes" element={<AjustesPage />} />
         <Route path="/clientes" element={<ClientesListPage />} />
         <Route path="/clientes/novo" element={<ClienteFormPage />} />

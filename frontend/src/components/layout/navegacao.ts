@@ -6,6 +6,7 @@ import {
   ChartColumn,
   ClipboardList,
   FileText,
+  History,
   Landmark,
   Layers,
   LayoutDashboard,
@@ -80,6 +81,7 @@ export const mais: GrupoMenu = {
   titulo: "Mais",
   itens: [
     { to: "/relatorios", label: "Relatórios", icon: ChartColumn },
+    { to: "/auditoria", label: "Auditoria", icon: History },
     { to: "/ajustes", label: "Ajustes", icon: Settings },
   ],
 };

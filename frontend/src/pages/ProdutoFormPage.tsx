@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardTitle } from "@/components/ui/card";
+import { HistoricoAlteracoes } from "@/components/auditoria/HistoricoAlteracoes";
 import { CabecalhoPagina } from "@/components/layout/CabecalhoPagina";
 import {
   Form,
@@ -304,6 +305,10 @@ export function ProdutoFormPage() {
               </div>
             </form>
           </Form>
+      )}
+
+      {modo === "editar" && id && (
+        <HistoricoAlteracoes modulo="PRODUTO" entidadeId={id} />
       )}
     </>
   );
