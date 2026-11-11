@@ -44,6 +44,7 @@ import type { ClienteResponse } from "@/types/cliente";
 import type { ProdutoResponse } from "@/types/produto";
 import type { PedidoResponse, StatusPedido } from "@/types/pedido";
 import type { TransportadoraResponse } from "@/types/transportadora";
+import { HistoricoAlteracoes } from "@/components/auditoria/HistoricoAlteracoes";
 import { CabecalhoPagina } from "@/components/layout/CabecalhoPagina";
 
 const formatoMoeda = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
@@ -407,6 +408,10 @@ export function PedidoFormPage() {
 
       {pedido && (
         <ConcluirVendaDialog open={dialogVendaAberto} onOpenChange={setDialogVendaAberto} pedidoId={pedido.id} />
+      )}
+
+      {modo === "editar" && id && (
+        <HistoricoAlteracoes modulo="PEDIDO" entidadeId={id} atualizarCom={pedido?.status} />
       )}
     </>
   );

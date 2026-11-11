@@ -42,6 +42,7 @@ import { orcamentoSchema, type OrcamentoFormValues } from "@/lib/orcamentoSchema
 import type { ClienteResponse } from "@/types/cliente";
 import type { ProdutoResponse } from "@/types/produto";
 import type { OrcamentoResponse } from "@/types/orcamento";
+import { HistoricoAlteracoes } from "@/components/auditoria/HistoricoAlteracoes";
 import { CabecalhoPagina } from "@/components/layout/CabecalhoPagina";
 
 const formatoMoeda = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
@@ -413,6 +414,10 @@ export function OrcamentoFormPage() {
             )}
           </>
         )
+      )}
+
+      {modo === "editar" && id && (
+        <HistoricoAlteracoes modulo="ORCAMENTO" entidadeId={id} atualizarCom={orcamento?.status} />
       )}
     </>
   );

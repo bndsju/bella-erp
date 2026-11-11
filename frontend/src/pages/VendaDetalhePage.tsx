@@ -18,6 +18,7 @@ import { ApiError } from "@/lib/api";
 import { labelFormaPagamento } from "@/lib/formaPagamento";
 import { VendaResumoValores } from "@/components/vendas/VendaResumoValores";
 import type { VendaResponse } from "@/types/venda";
+import { HistoricoAlteracoes } from "@/components/auditoria/HistoricoAlteracoes";
 import { CabecalhoPagina } from "@/components/layout/CabecalhoPagina";
 
 const formatoMoeda = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
@@ -128,6 +129,8 @@ export function VendaDetalhePage() {
           </Button>
         </div>
       )}
+
+      <HistoricoAlteracoes modulo="VENDA" entidadeId={venda.id} atualizarCom={venda.status} />
     </>
   );
 }

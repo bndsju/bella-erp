@@ -44,6 +44,7 @@ import { compraSchema, type CompraFormValues } from "@/lib/compraSchema";
 import type { CompraResponse } from "@/types/compra";
 import type { FornecedorResponse } from "@/types/fornecedor";
 import type { ProdutoResponse } from "@/types/produto";
+import { HistoricoAlteracoes } from "@/components/auditoria/HistoricoAlteracoes";
 import { CabecalhoPagina } from "@/components/layout/CabecalhoPagina";
 
 const formatoMoeda = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
@@ -478,6 +479,10 @@ export function CompraFormPage() {
         processando={processandoAcao}
         onConfirmar={(data) => id && executarAcao(() => compraApi.receber(id, data), "Compra recebida")}
       />
+
+      {modo === "editar" && id && (
+        <HistoricoAlteracoes modulo="COMPRA" entidadeId={id} atualizarCom={compra?.status} />
+      )}
     </>
   );
 }

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
+import { HistoricoAlteracoes } from "@/components/auditoria/HistoricoAlteracoes";
 import { CabecalhoPagina } from "@/components/layout/CabecalhoPagina";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ClienteForm } from "@/components/clientes/ClienteForm";
@@ -108,6 +109,10 @@ export function ClienteFormPage() {
           enviando={enviando}
           onSubmit={handleSubmit}
         />
+      )}
+
+      {modo === "editar" && id && (
+        <HistoricoAlteracoes modulo="CLIENTE" entidadeId={id} />
       )}
     </>
   );

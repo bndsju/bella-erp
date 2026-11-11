@@ -23,6 +23,7 @@ import { formatarData, formatarMoeda } from "@/lib/formatos";
 import type { ContaPagarResponse, ParcelaContaPagarResponse, StatusParcela } from "@/types/contaPagar";
 import { HandCoins } from "lucide-react";
 import { MenuAcoes } from "@/components/ui/menu-acoes";
+import { HistoricoAlteracoes } from "@/components/auditoria/HistoricoAlteracoes";
 import { CabecalhoPagina } from "@/components/layout/CabecalhoPagina";
 
 const ROTULO_PARCELA: Record<StatusParcela, string> = {
@@ -256,6 +257,8 @@ export function ContaPagarDetalhePage() {
         processando={cancelando}
         onConfirmar={cancelar}
       />
+
+      <HistoricoAlteracoes modulo="CONTA_PAGAR" entidadeId={conta.id} atualizarCom={conta} />
     </>
   );
 }
