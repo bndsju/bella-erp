@@ -1,5 +1,10 @@
 import { Route, Routes } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { RotaPorPerfil, RotaProtegida } from "@/components/auth/RotaProtegida";
+import { LoginPage } from "@/pages/LoginPage";
+import { EsqueciSenhaPage } from "@/pages/EsqueciSenhaPage";
+import { TrocarSenhaPage } from "@/pages/TrocarSenhaPage";
+import { UsuariosPage } from "@/pages/UsuariosPage";
 import { ClientesListPage } from "@/pages/ClientesListPage";
 import { ClienteFormPage } from "@/pages/ClienteFormPage";
 import { ProdutosListPage } from "@/pages/ProdutosListPage";
@@ -35,45 +40,53 @@ import { MovimentacoesEstoquePage } from "@/pages/MovimentacoesEstoquePage";
 function App() {
   return (
     <Routes>
-      <Route element={<AppLayout />}>
-        <Route path="/" element={<DashboardPage />} />
-        <Route path="/relatorios" element={<RelatoriosPage />} />
-        <Route path="/auditoria" element={<AuditoriaPage />} />
-        <Route path="/ajustes" element={<AjustesPage />} />
-        <Route path="/clientes" element={<ClientesListPage />} />
-        <Route path="/clientes/novo" element={<ClienteFormPage />} />
-        <Route path="/clientes/:id/editar" element={<ClienteFormPage />} />
-        <Route path="/produtos" element={<ProdutosListPage />} />
-        <Route path="/produtos/novo" element={<ProdutoFormPage />} />
-        <Route path="/produtos/:id/editar" element={<ProdutoFormPage />} />
-        <Route path="/categorias" element={<CategoriasPage />} />
-        <Route path="/unidades-medida" element={<UnidadesMedidaPage />} />
-        <Route path="/orcamentos" element={<OrcamentosListPage />} />
-        <Route path="/orcamentos/novo" element={<OrcamentoFormPage />} />
-        <Route path="/orcamentos/:id/editar" element={<OrcamentoFormPage />} />
-        <Route path="/transportadoras" element={<TransportadorasPage />} />
-        <Route path="/fornecedores" element={<FornecedoresPage />} />
-        <Route path="/compras" element={<ComprasListPage />} />
-        <Route path="/compras/novo" element={<CompraFormPage />} />
-        <Route path="/compras/:id" element={<CompraFormPage />} />
-        <Route path="/pedidos" element={<PedidosListPage />} />
-        <Route path="/pedidos/novo" element={<PedidoFormPage />} />
-        <Route path="/pedidos/:id/editar" element={<PedidoFormPage />} />
-        <Route path="/vendas" element={<VendasListPage />} />
-        <Route path="/vendas/:id" element={<VendaDetalhePage />} />
-        <Route path="/contas-receber" element={<ContasReceberListPage />} />
-        <Route path="/contas-receber/novo" element={<ContaReceberFormPage />} />
-        <Route path="/contas-receber/:id/editar" element={<ContaReceberFormPage />} />
-        <Route path="/contas-receber/:id" element={<ContaReceberDetalhePage />} />
-        <Route path="/contas-pagar" element={<ContasPagarListPage />} />
-        <Route path="/contas-pagar/novo" element={<ContaPagarFormPage />} />
-        <Route path="/contas-pagar/:id/editar" element={<ContaPagarFormPage />} />
-        <Route path="/contas-pagar/:id" element={<ContaPagarDetalhePage />} />
-        <Route path="/categorias-despesa" element={<CategoriasDespesaPage />} />
-        <Route path="/fluxo-caixa" element={<FluxoCaixaPage />} />
-        <Route path="/categorias-fluxo-caixa" element={<CategoriasFluxoCaixaPage />} />
-        <Route path="/estoque" element={<EstoquePage />} />
-        <Route path="/estoque/movimentacoes" element={<MovimentacoesEstoquePage />} />
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/esqueci-senha" element={<EsqueciSenhaPage />} />
+      <Route element={<RotaProtegida />}>
+        <Route path="/trocar-senha" element={<TrocarSenhaPage />} />
+        <Route element={<AppLayout />}>
+          <Route element={<RotaPorPerfil />}>
+            <Route path="/" element={<DashboardPage />} />
+            <Route path="/relatorios" element={<RelatoriosPage />} />
+            <Route path="/auditoria" element={<AuditoriaPage />} />
+            <Route path="/usuarios" element={<UsuariosPage />} />
+            <Route path="/ajustes" element={<AjustesPage />} />
+            <Route path="/clientes" element={<ClientesListPage />} />
+            <Route path="/clientes/novo" element={<ClienteFormPage />} />
+            <Route path="/clientes/:id/editar" element={<ClienteFormPage />} />
+            <Route path="/produtos" element={<ProdutosListPage />} />
+            <Route path="/produtos/novo" element={<ProdutoFormPage />} />
+            <Route path="/produtos/:id/editar" element={<ProdutoFormPage />} />
+            <Route path="/categorias" element={<CategoriasPage />} />
+            <Route path="/unidades-medida" element={<UnidadesMedidaPage />} />
+            <Route path="/orcamentos" element={<OrcamentosListPage />} />
+            <Route path="/orcamentos/novo" element={<OrcamentoFormPage />} />
+            <Route path="/orcamentos/:id/editar" element={<OrcamentoFormPage />} />
+            <Route path="/transportadoras" element={<TransportadorasPage />} />
+            <Route path="/fornecedores" element={<FornecedoresPage />} />
+            <Route path="/compras" element={<ComprasListPage />} />
+            <Route path="/compras/novo" element={<CompraFormPage />} />
+            <Route path="/compras/:id" element={<CompraFormPage />} />
+            <Route path="/pedidos" element={<PedidosListPage />} />
+            <Route path="/pedidos/novo" element={<PedidoFormPage />} />
+            <Route path="/pedidos/:id/editar" element={<PedidoFormPage />} />
+            <Route path="/vendas" element={<VendasListPage />} />
+            <Route path="/vendas/:id" element={<VendaDetalhePage />} />
+            <Route path="/contas-receber" element={<ContasReceberListPage />} />
+            <Route path="/contas-receber/novo" element={<ContaReceberFormPage />} />
+            <Route path="/contas-receber/:id/editar" element={<ContaReceberFormPage />} />
+            <Route path="/contas-receber/:id" element={<ContaReceberDetalhePage />} />
+            <Route path="/contas-pagar" element={<ContasPagarListPage />} />
+            <Route path="/contas-pagar/novo" element={<ContaPagarFormPage />} />
+            <Route path="/contas-pagar/:id/editar" element={<ContaPagarFormPage />} />
+            <Route path="/contas-pagar/:id" element={<ContaPagarDetalhePage />} />
+            <Route path="/categorias-despesa" element={<CategoriasDespesaPage />} />
+            <Route path="/fluxo-caixa" element={<FluxoCaixaPage />} />
+            <Route path="/categorias-fluxo-caixa" element={<CategoriasFluxoCaixaPage />} />
+            <Route path="/estoque" element={<EstoquePage />} />
+            <Route path="/estoque/movimentacoes" element={<MovimentacoesEstoquePage />} />
+          </Route>
+        </Route>
       </Route>
     </Routes>
   );

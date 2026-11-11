@@ -18,10 +18,14 @@ import {
   ShoppingCart,
   Tags,
   Truck,
+  UserCog,
   Users,
   Wallet,
   type LucideIcon,
 } from "lucide-react";
+
+import { podeAcessar } from "@/lib/permissoes";
+import type { PerfilUsuario } from "@/types/usuario";
 
 export interface ItemMenu {
   to: string;
@@ -82,6 +86,7 @@ export const mais: GrupoMenu = {
   itens: [
     { to: "/relatorios", label: "Relatórios", icon: ChartColumn },
     { to: "/auditoria", label: "Auditoria", icon: History },
+    { to: "/usuarios", label: "Usuários", icon: UserCog },
     { to: "/ajustes", label: "Ajustes", icon: Settings },
   ],
 };
@@ -93,6 +98,18 @@ export const atalhosCelular: ItemMenu[] = [
   { to: "/estoque", label: "Estoque", icon: Boxes },
   { to: "/clientes", label: "Clientes", icon: Users },
 ];
+
+/** Só os itens que o perfil pode abrir; grupo que ficar vazio some do menu. */
+export function menuParaPerfil(perfil: PerfilUsuario): { grupos: GrupoMenu[]; mais: GrupoMenu } {
+  const visivel = (grupo: GrupoMenu): GrupoMenu => ({
+    ...grupo,
+    itens: grupo.itens.filter((item) => podeAcessar(perfil, item.to)),
+  });
+  return {
+    grupos: grupos.map(visivel).filter((grupo) => grupo.itens.length > 0),
+    mais: visivel(mais),
+  };
+}
 
 export function estaAtivo(item: ItemMenu, caminho: string): boolean {
   return item.to === "/" ? caminho === "/" : caminho === item.to || caminho.startsWith(`${item.to}/`);

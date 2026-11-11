@@ -1,10 +1,12 @@
 import { useCallback, useMemo, useState } from "react";
 import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import { DropdownMenu } from "radix-ui";
-import { ChevronDown, Menu, X } from "lucide-react";
+import { ChevronDown, CircleUserRound, LogOut, Menu, X } from "lucide-react";
+import { useAuth } from "@/lib/authContexto";
+import { ROTULO_PERFIL } from "@/lib/permissoes";
 import { cn } from "@/lib/utils";
 import { EncaixesContexto, type EncaixesLayout } from "./CabecalhoPagina";
-import { atalhosCelular, estaAtivo, grupoAtivo, grupos, inicio, mais, type GrupoMenu } from "./navegacao";
+import { atalhosCelular, estaAtivo, grupoAtivo, inicio, menuParaPerfil, type GrupoMenu } from "./navegacao";
 
 function MenuDoGrupo({ grupo, caminho }: { grupo: GrupoMenu; caminho: string }) {
   const ativo = grupoAtivo(grupo, caminho);
@@ -49,8 +51,10 @@ function BarraInferior({ aoAbrirMais, caminho }: { aoAbrirMais: () => void; cami
 
 /** Todos os módulos no celular: folha que sobe da barra inferior, no mesmo cartão de 20 px. */
 function FolhaMais({ aberta, aoFechar }: { aberta: boolean; aoFechar: () => void }) {
-  if (!aberta) return null;
-  const todos: GrupoMenu[] = [{ titulo: "Geral", itens: [inicio] }, ...grupos, mais];
+  const { usuario, sair } = useAuth();
+  if (!aberta || !usuario) return null;
+  const menu = menuParaPerfil(usuario.perfil);
+  const todos: GrupoMenu[] = [{ titulo: "Geral", itens: [inicio] }, ...menu.grupos, menu.mais];
   return (
     <div className="fixed inset-0 z-50 md:hidden" role="dialog" aria-modal="true" aria-label="Todos os módulos">
       <div className="janela-sobreposicao absolute inset-0" onClick={aoFechar} aria-hidden="true" />
@@ -83,12 +87,61 @@ function FolhaMais({ aberta, aoFechar }: { aberta: boolean; aoFechar: () => void
             ))}
           </div>
         ))}
+        <div className="mb-3">
+          <p className="rotulo mb-1 px-3.5 text-auxiliar">
+            {usuario.nome} · {ROTULO_PERFIL[usuario.perfil]}
+          </p>
+          <button
+            type="button"
+            onClick={() => {
+              aoFechar();
+              sair();
+            }}
+            className="flex min-h-11 w-full items-center gap-3 rounded-full px-3.5 font-semibold hover:bg-selecionado"
+          >
+            <LogOut size={18} strokeWidth={1.75} aria-hidden="true" />
+            Sair
+          </button>
+        </div>
       </div>
     </div>
   );
 }
 
+function MenuDoUsuario() {
+  const { usuario, sair } = useAuth();
+  if (!usuario) return null;
+  return (
+    <DropdownMenu.Root>
+      <DropdownMenu.Trigger className="menu__item" aria-label={`Conta de ${usuario.nome}`}>
+        <CircleUserRound size={20} strokeWidth={1.75} aria-hidden="true" />
+        <span className="hidden md:inline">{usuario.nome.split(" ")[0]}</span>
+        <ChevronDown size={16} strokeWidth={1.75} aria-hidden="true" />
+      </DropdownMenu.Trigger>
+      <DropdownMenu.Portal>
+        <DropdownMenu.Content align="end" sideOffset={6} className="painel">
+          <p className="rotulo px-3.5 pt-2 text-auxiliar">
+            {usuario.nome} · {ROTULO_PERFIL[usuario.perfil]}
+          </p>
+          <DropdownMenu.Item asChild className="painel__item">
+            <NavLink to="/ajustes">
+              <CircleUserRound size={18} strokeWidth={1.75} aria-hidden="true" />
+              Minha conta
+            </NavLink>
+          </DropdownMenu.Item>
+          <DropdownMenu.Item className="painel__item" onSelect={sair}>
+            <LogOut size={18} strokeWidth={1.75} aria-hidden="true" />
+            Sair
+          </DropdownMenu.Item>
+        </DropdownMenu.Content>
+      </DropdownMenu.Portal>
+    </DropdownMenu.Root>
+  );
+}
+
 export function AppLayout() {
+  const { usuario } = useAuth();
+  const menu = menuParaPerfil(usuario?.perfil ?? "VENDEDOR");
   const { pathname } = useLocation();
   const [titulo, setTitulo] = useState<HTMLElement | null>(null);
   const [frase, setFrase] = useState<HTMLElement | null>(null);
@@ -113,11 +166,12 @@ export function AppLayout() {
           <NavLink className="menu__item" to={inicio.to} end>
             {inicio.label}
           </NavLink>
-          {grupos.map((grupo) => (
+          {menu.grupos.map((grupo) => (
             <MenuDoGrupo key={grupo.titulo} grupo={grupo} caminho={pathname} />
           ))}
-          <MenuDoGrupo grupo={mais} caminho={pathname} />
+          <MenuDoGrupo grupo={menu.mais} caminho={pathname} />
         </nav>
+        <MenuDoUsuario />
       </header>
 
       <div className={cn("faixa", faixaBaixa && "faixa--baixa")}>
