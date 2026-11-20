@@ -22,6 +22,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { MenuAcoes } from "@/components/ui/menu-acoes";
+import { Pode } from "@/components/auth/Pode";
 import { CabecalhoPagina } from "@/components/layout/CabecalhoPagina";
 import { PedidoStatusBadge } from "@/components/pedidos/PedidoStatusBadge";
 import { CriarPedidoDeOrcamentoDialog } from "@/components/pedidos/CriarPedidoDeOrcamentoDialog";
@@ -68,6 +69,7 @@ export function PedidosListPage() {
       <CabecalhoPagina
         titulo="Pedidos"
         acao={
+<Pode modulo="PEDIDOS" acao="CRIAR">
           <>
             <Button variant="secondary" onClick={() => setDialogOrcamentoAberto(true)}>
               Criar a partir de orçamento
@@ -76,7 +78,8 @@ export function PedidosListPage() {
               <Link to="/pedidos/novo">Novo pedido</Link>
             </Button>
           </>
-        }
+        </Pode>
+}
       />
 
       <Card>
@@ -163,7 +166,7 @@ export function PedidosListPage() {
                     <PedidoStatusBadge status={pedido.status} />
                   </TableCell>
                   <TableCell className="text-right">
-                    <MenuAcoes itens={[{ rotulo: "Abrir", icone: ExternalLink, para: `/pedidos/${pedido.id}/editar` }]} />
+                    <MenuAcoes modulo="PEDIDOS" itens={[{ rotulo: "Abrir", icone: ExternalLink, para: `/pedidos/${pedido.id}/editar` }]} />
                   </TableCell>
                 </TableRow>
               ))

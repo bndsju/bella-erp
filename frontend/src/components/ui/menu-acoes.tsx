@@ -3,7 +3,9 @@ import { Link } from "react-router-dom";
 import { DropdownMenu } from "radix-ui";
 import { Ellipsis, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/lib/authContexto";
 import { cn } from "@/lib/utils";
+import type { AcaoPermissao } from "@/types/permissao";
 
 export interface ItemAcao {
   rotulo: string;
@@ -20,11 +22,28 @@ export interface ItemAcao {
 }
 
 /**
- * Menu de ações de uma linha de tabela (botão "⋯"), no mesmo painel escuro do submenu do menu principal.
- * Ações destrutivas ficam no fim, separadas. Sem nenhum item visível, o menu não é desenhado.
+ * Permissão que cada ação exige, pelo nome dela. "Abrir" e "Histórico" só consultam (não pedem nada além de ver a
+ * tela); nomes que não se reconhecem também não são barrados aqui, a API continua sendo quem decide.
  */
-export function MenuAcoes({ itens }: { itens: ItemAcao[] }) {
-  const visiveis = itens.filter((item) => !item.oculto);
+function acaoExigida(rotulo: string): AcaoPermissao | null {
+  if (/^editar/i.test(rotulo) || /^realizar/i.test(rotulo)) return "EDITAR";
+  if (/^(ativar|inativar|cancelar)/i.test(rotulo)) return "CANCELAR";
+  if (/^(registrar|movimentar)/i.test(rotulo)) return "CRIAR";
+  return null;
+}
+
+/**
+ * Menu de ações de uma linha de tabela (botão "⋯"), no mesmo painel escuro do submenu do menu principal.
+ * Ações destrutivas ficam no fim, separadas. Sem nenhum item visível, o menu não é desenhado. Com {@code modulo},
+ * esconde as ações que o perfil do usuário não pode executar naquele módulo.
+ */
+export function MenuAcoes({ itens, modulo }: { itens: ItemAcao[]; modulo?: string }) {
+  const { pode } = useAuth();
+  const visiveis = itens.filter((item) => {
+    if (item.oculto) return false;
+    const exigida = modulo ? acaoExigida(item.rotulo) : null;
+    return !modulo || !exigida || pode(modulo, exigida);
+  });
   if (visiveis.length === 0) return null;
 
   const primeiroPerigo = visiveis.findIndex((item) => item.perigo);

@@ -24,6 +24,7 @@ import { categoriaDespesaApi } from "@/lib/categoriaDespesaApi";
 import type { CategoriaDespesaResponse, StatusCategoriaDespesa } from "@/types/categoriaDespesa";
 import { CircleCheck, Pencil, Power } from "lucide-react";
 import { MenuAcoes } from "@/components/ui/menu-acoes";
+import { Pode } from "@/components/auth/Pode";
 import { CabecalhoPagina } from "@/components/layout/CabecalhoPagina";
 
 /** Categoria criada pelo sistema (usada nas contas geradas por compras): não pode ser editada nem inativada. */
@@ -63,6 +64,7 @@ export function CategoriasDespesaPage() {
       <CabecalhoPagina
         titulo="Categorias de despesa"
         acao={
+<Pode modulo="CONTAS_PAGAR" acao="CRIAR">
           <>
           <Button
             onClick={() => {
@@ -73,7 +75,8 @@ export function CategoriasDespesaPage() {
             Nova categoria de despesa
           </Button>
           </>
-        }
+        </Pode>
+}
       />
 
       <Card>
@@ -134,7 +137,7 @@ export function CategoriasDespesaPage() {
                     )}
                   </TableCell>
                   <TableCell className="text-right">
-                    <MenuAcoes
+                    <MenuAcoes modulo="CONTAS_PAGAR"
                       itens={[
                         {
                           rotulo: "Editar",

@@ -29,6 +29,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { MenuAcoes } from "@/components/ui/menu-acoes";
+import { Pode } from "@/components/auth/Pode";
 import { CabecalhoPagina } from "@/components/layout/CabecalhoPagina";
 import { StatusBadge } from "@/components/clientes/StatusBadge";
 import { clienteApi } from "@/lib/clienteApi";
@@ -114,10 +115,12 @@ export function ClientesListPage() {
       <CabecalhoPagina
         titulo="Clientes"
         acao={
+<Pode modulo="CLIENTES" acao="CRIAR">
           <Button asChild>
             <Link to="/clientes/novo">Novo cliente</Link>
           </Button>
-        }
+        </Pode>
+}
       />
 
       <Card>
@@ -207,7 +210,7 @@ export function ClientesListPage() {
                     <StatusBadge status={cliente.status} />
                   </TableCell>
                   <TableCell className="text-right">
-                    <MenuAcoes
+                    <MenuAcoes modulo="CLIENTES"
                       itens={[
                         { rotulo: "Editar", icone: Pencil, para: `/clientes/${cliente.id}/editar` },
                         {

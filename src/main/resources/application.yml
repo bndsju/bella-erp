@@ -28,5 +28,14 @@ logging:
     com.bella: DEBUG
 
 bella:
+  seguranca:
+    habilitada: true
+    # Defina JWT_SEGREDO (32+ caracteres) para os logins sobreviverem a reinicios; sem ele, um segredo temporario e usado.
+    jwt-segredo: ${JWT_SEGREDO:}
+    jwt-validade-horas: ${JWT_VALIDADE_HORAS:8}
+    # Primeiro acesso (so e criado se nao houver nenhum usuario). Sem ADMIN_SENHA, a senha e gerada e escrita no log.
+    admin-login: ${ADMIN_LOGIN:admin}
+    admin-nome: ${ADMIN_NOME:Administrador}
+    admin-senha: ${ADMIN_SENHA:}
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173}

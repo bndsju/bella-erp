@@ -5,3 +5,8 @@ spring:
 
   flyway:
     enabled: true
+
+bella:
+  seguranca:
+    # Os testes dos outros modulos nao se autenticam; o teste de seguranca liga isto de volta.
+    habilitada: false

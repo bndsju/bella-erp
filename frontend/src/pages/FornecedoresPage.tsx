@@ -24,6 +24,7 @@ import { fornecedorApi } from "@/lib/fornecedorApi";
 import type { StatusFornecedor, FornecedorResponse } from "@/types/fornecedor";
 import { CircleCheck, Pencil, Power } from "lucide-react";
 import { MenuAcoes } from "@/components/ui/menu-acoes";
+import { Pode } from "@/components/auth/Pode";
 import { CabecalhoPagina } from "@/components/layout/CabecalhoPagina";
 
 export function FornecedoresPage() {
@@ -60,6 +61,7 @@ export function FornecedoresPage() {
       <CabecalhoPagina
         titulo="Fornecedores"
         acao={
+<Pode modulo="FORNECEDORES" acao="CRIAR">
           <>
           <Button
             onClick={() => {
@@ -70,7 +72,8 @@ export function FornecedoresPage() {
             Novo fornecedor
           </Button>
           </>
-        }
+        </Pode>
+}
       />
 
       <Card>
@@ -128,7 +131,7 @@ export function FornecedoresPage() {
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">
-                    <MenuAcoes
+                    <MenuAcoes modulo="FORNECEDORES"
                       itens={[
                         {
                           rotulo: "Editar",

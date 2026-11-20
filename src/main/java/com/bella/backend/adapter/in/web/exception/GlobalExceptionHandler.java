@@ -2,6 +2,8 @@ package com.bella.backend.adapter.in.web.exception;
 
 import com.bella.backend.domain.shared.EntidadeNaoEncontradaException;
 import com.bella.backend.domain.shared.RegraDeNegocioException;
+import com.bella.backend.domain.usuario.model.CredenciaisInvalidasException;
+import com.bella.backend.domain.usuario.model.LoginBloqueadoException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -28,6 +30,16 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(RegraDeNegocioException.class)
     public ResponseEntity<Map<String, Object>> handleRegraDeNegocio(RegraDeNegocioException ex) {
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(corpoErro(HttpStatus.UNPROCESSABLE_ENTITY, ex.getMessage()));
+    }
+
+    @ExceptionHandler(CredenciaisInvalidasException.class)
+    public ResponseEntity<Map<String, Object>> handleCredenciaisInvalidas(CredenciaisInvalidasException ex) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(corpoErro(HttpStatus.UNAUTHORIZED, ex.getMessage()));
+    }
+
+    @ExceptionHandler(LoginBloqueadoException.class)
+    public ResponseEntity<Map<String, Object>> handleLoginBloqueado(LoginBloqueadoException ex) {
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(corpoErro(HttpStatus.TOO_MANY_REQUESTS, ex.getMessage()));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

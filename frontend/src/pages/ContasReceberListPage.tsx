@@ -28,6 +28,7 @@ import type { ClienteResponse } from "@/types/cliente";
 import type { ContaReceberResponse, SituacaoContaReceber, StatusContaReceber } from "@/types/contaReceber";
 import { ExternalLink } from "lucide-react";
 import { MenuAcoes } from "@/components/ui/menu-acoes";
+import { Pode } from "@/components/auth/Pode";
 import { CabecalhoPagina } from "@/components/layout/CabecalhoPagina";
 
 function nomeExibicaoCliente(cliente: ClienteResponse): string {
@@ -87,12 +88,14 @@ export function ContasReceberListPage() {
       <CabecalhoPagina
         titulo="Contas a receber"
         acao={
+<Pode modulo="CONTAS_RECEBER" acao="CRIAR">
           <>
           <Button asChild>
             <Link to="/contas-receber/novo">Nova conta</Link>
           </Button>
           </>
-        }
+        </Pode>
+}
       />
 
       <div className="grade grade--3">
@@ -211,7 +214,7 @@ export function ContasReceberListPage() {
                     <StatusContaReceberBadge status={conta.status} vencida={conta.vencida} />
                   </TableCell>
                   <TableCell className="text-right">
-                    <MenuAcoes itens={[{ rotulo: "Abrir", icone: ExternalLink, para: `/contas-receber/${conta.id}` }]} />
+                    <MenuAcoes modulo="CONTAS_RECEBER" itens={[{ rotulo: "Abrir", icone: ExternalLink, para: `/contas-receber/${conta.id}` }]} />
                   </TableCell>
                 </TableRow>
               ))

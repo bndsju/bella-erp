@@ -146,7 +146,7 @@ export function VendasListPage() {
                     <VendaStatusBadge status={venda.status} />
                   </TableCell>
                   <TableCell className="text-right">
-                    <MenuAcoes itens={[{ rotulo: "Abrir", icone: ExternalLink, para: `/vendas/${venda.id}` }]} />
+                    <MenuAcoes modulo="VENDAS" itens={[{ rotulo: "Abrir", icone: ExternalLink, para: `/vendas/${venda.id}` }]} />
                   </TableCell>
                 </TableRow>
               ))

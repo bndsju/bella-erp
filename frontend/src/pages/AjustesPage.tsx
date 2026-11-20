@@ -1,3 +1,4 @@
+import { MinhaContaCard } from "@/components/auth/MinhaContaCard";
 import { Card, CardTitle } from "@/components/ui/card";
 import { CabecalhoPagina } from "@/components/layout/CabecalhoPagina";
 import { useTema, type PreferenciaTema } from "@/lib/tema";
@@ -14,7 +15,7 @@ export function AjustesPage() {
 
   return (
     <>
-      <CabecalhoPagina titulo="Ajustes" frase="Preferências do sistema" />
+      <CabecalhoPagina titulo="Ajustes" frase="Sua conta e preferências do sistema" />
 
       <Card>
         <CardTitle>Aparência</CardTitle>
@@ -34,6 +35,8 @@ export function AjustesPage() {
           ))}
         </div>
       </Card>
+
+      <MinhaContaCard />
     </>
   );
 }

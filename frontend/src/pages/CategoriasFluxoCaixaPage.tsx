@@ -24,6 +24,7 @@ import { categoriaFluxoCaixaApi } from "@/lib/categoriaFluxoCaixaApi";
 import type { CategoriaFluxoCaixaResponse, StatusCategoriaFluxoCaixa } from "@/types/categoriaFluxoCaixa";
 import { CircleCheck, Pencil, Power } from "lucide-react";
 import { MenuAcoes } from "@/components/ui/menu-acoes";
+import { Pode } from "@/components/auth/Pode";
 import { CabecalhoPagina } from "@/components/layout/CabecalhoPagina";
 
 export function CategoriasFluxoCaixaPage() {
@@ -60,6 +61,7 @@ export function CategoriasFluxoCaixaPage() {
       <CabecalhoPagina
         titulo="Categorias de fluxo de caixa"
         acao={
+<Pode modulo="FLUXO_CAIXA" acao="CRIAR">
           <>
           <Button
             onClick={() => {
@@ -70,7 +72,8 @@ export function CategoriasFluxoCaixaPage() {
             Nova categoria de fluxo de caixa
           </Button>
           </>
-        }
+        </Pode>
+}
       />
 
       <Card>
@@ -126,7 +129,7 @@ export function CategoriasFluxoCaixaPage() {
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">
-                    <MenuAcoes
+                    <MenuAcoes modulo="FLUXO_CAIXA"
                       itens={[
                         {
                           rotulo: "Editar",

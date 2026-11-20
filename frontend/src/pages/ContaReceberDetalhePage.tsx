@@ -24,6 +24,7 @@ import type { ContaReceberResponse, ParcelaContaReceberResponse, StatusParcela }
 import { HandCoins } from "lucide-react";
 import { MenuAcoes } from "@/components/ui/menu-acoes";
 import { HistoricoAlteracoes } from "@/components/auditoria/HistoricoAlteracoes";
+import { Pode } from "@/components/auth/Pode";
 import { CabecalhoPagina } from "@/components/layout/CabecalhoPagina";
 
 const ROTULO_PARCELA: Record<StatusParcela, string> = {
@@ -96,19 +97,19 @@ export function ContaReceberDetalhePage() {
               <Link to="/contas-receber">Voltar</Link>
             </Button>
             {!cancelada && (
-              <Button variant="outline" onClick={() => setDialogDadosAberto(true)}>
+              <Pode modulo="CONTAS_RECEBER" acao="EDITAR"><Button variant="outline" onClick={() => setDialogDadosAberto(true)}>
                 Editar dados
-              </Button>
+              </Button></Pode>
             )}
             {!cancelada && !temRecebimentos && conta.origem === "MANUAL" && (
-              <Button variant="outline" asChild>
+              <Pode modulo="CONTAS_RECEBER" acao="EDITAR"><Button variant="outline" asChild>
                 <Link to={`/contas-receber/${conta.id}/editar`}>Editar valor e parcelas</Link>
-              </Button>
+              </Button></Pode>
             )}
             {!cancelada && !temRecebimentos && (
-              <Button variant="outline" onClick={() => setDialogCancelarAberto(true)}>
+              <Pode modulo="CONTAS_RECEBER" acao="CANCELAR"><Button variant="outline" onClick={() => setDialogCancelarAberto(true)}>
                 Cancelar conta
-              </Button>
+              </Button></Pode>
             )}
           </>
         }
@@ -199,7 +200,7 @@ export function ContaReceberDetalhePage() {
                         </span>
                       </TableCell>
                       <TableCell className="text-right">
-                        <MenuAcoes
+                        <MenuAcoes modulo="CONTAS_RECEBER"
                           itens={[
                             {
                               rotulo: "Registrar recebimento",
