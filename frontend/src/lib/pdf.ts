@@ -53,8 +53,8 @@ export function textoDoPeriodoAberto(inicio: string, fim: string): string {
   return "Todos os vencimentos";
 }
 
-/** Gera o PDF no navegador e baixa o arquivo. A biblioteca só é carregada quando alguém exporta. */
-export async function gerarPdf(documento: DocumentoPdf): Promise<void> {
+/** Carrega as bibliotecas de PDF só quando alguém gera um arquivo (ficam fora do pacote principal). */
+export async function carregarBibliotecasPdf() {
   const [{ jsPDF }, modulo] = await Promise.all([import("jspdf"), import("jspdf-autotable")]);
   // O pacote é CommonJS: conforme o empacotador, a função vem em `default`, em `default.default` ou em `autoTable`.
   const candidato = modulo as unknown as { default?: unknown; autoTable?: unknown };
@@ -65,6 +65,12 @@ export async function gerarPdf(documento: DocumentoPdf): Promise<void> {
         ? candidato.default
         : (candidato.default as { default: unknown }).default
   ) as typeof import("jspdf-autotable").default;
+  return { jsPDF, autoTable };
+}
+
+/** Gera o PDF no navegador e baixa o arquivo. A biblioteca só é carregada quando alguém exporta. */
+export async function gerarPdf(documento: DocumentoPdf): Promise<void> {
+  const { jsPDF, autoTable } = await carregarBibliotecasPdf();
   const pdf = new jsPDF({ orientation: "landscape", unit: "pt", format: "a4" });
   const larguraPagina = pdf.internal.pageSize.getWidth();
   const alturaPagina = pdf.internal.pageSize.getHeight();
