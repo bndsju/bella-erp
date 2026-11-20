@@ -5,6 +5,7 @@ import { LoginPage } from "@/pages/LoginPage";
 import { EsqueciSenhaPage } from "@/pages/EsqueciSenhaPage";
 import { TrocarSenhaPage } from "@/pages/TrocarSenhaPage";
 import { UsuariosPage } from "@/pages/UsuariosPage";
+import { PermissoesPage } from "@/pages/PermissoesPage";
 import { ClientesListPage } from "@/pages/ClientesListPage";
 import { ClienteFormPage } from "@/pages/ClienteFormPage";
 import { ProdutosListPage } from "@/pages/ProdutosListPage";
@@ -50,6 +51,7 @@ function App() {
             <Route path="/relatorios" element={<RelatoriosPage />} />
             <Route path="/auditoria" element={<AuditoriaPage />} />
             <Route path="/usuarios" element={<UsuariosPage />} />
+            <Route path="/permissoes" element={<PermissoesPage />} />
             <Route path="/ajustes" element={<AjustesPage />} />
             <Route path="/clientes" element={<ClientesListPage />} />
             <Route path="/clientes/novo" element={<ClienteFormPage />} />

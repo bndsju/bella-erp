@@ -24,6 +24,7 @@ import type { ContaPagarResponse, ParcelaContaPagarResponse, StatusParcela } fro
 import { HandCoins } from "lucide-react";
 import { MenuAcoes } from "@/components/ui/menu-acoes";
 import { HistoricoAlteracoes } from "@/components/auditoria/HistoricoAlteracoes";
+import { Pode } from "@/components/auth/Pode";
 import { CabecalhoPagina } from "@/components/layout/CabecalhoPagina";
 
 const ROTULO_PARCELA: Record<StatusParcela, string> = {
@@ -96,19 +97,19 @@ export function ContaPagarDetalhePage() {
               <Link to="/contas-pagar">Voltar</Link>
             </Button>
             {!cancelada && (
-              <Button variant="outline" onClick={() => setDialogDadosAberto(true)}>
+              <Pode modulo="CONTAS_PAGAR" acao="EDITAR"><Button variant="outline" onClick={() => setDialogDadosAberto(true)}>
                 Editar dados
-              </Button>
+              </Button></Pode>
             )}
             {!cancelada && !temPagamentos && conta.origem === "MANUAL" && (
-              <Button variant="outline" asChild>
+              <Pode modulo="CONTAS_PAGAR" acao="EDITAR"><Button variant="outline" asChild>
                 <Link to={`/contas-pagar/${conta.id}/editar`}>Editar valor e parcelas</Link>
-              </Button>
+              </Button></Pode>
             )}
             {!cancelada && !temPagamentos && (
-              <Button variant="outline" onClick={() => setDialogCancelarAberto(true)}>
+              <Pode modulo="CONTAS_PAGAR" acao="CANCELAR"><Button variant="outline" onClick={() => setDialogCancelarAberto(true)}>
                 Cancelar conta
-              </Button>
+              </Button></Pode>
             )}
           </>
         }
@@ -203,7 +204,7 @@ export function ContaPagarDetalhePage() {
                         </span>
                       </TableCell>
                       <TableCell className="text-right">
-                        <MenuAcoes
+                        <MenuAcoes modulo="CONTAS_PAGAR"
                           itens={[
                             {
                               rotulo: "Registrar pagamento",

@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/table";
 import { OrcamentoStatusBadge } from "@/components/orcamentos/OrcamentoStatusBadge";
 import { MenuAcoes } from "@/components/ui/menu-acoes";
+import { Pode } from "@/components/auth/Pode";
 import { CabecalhoPagina } from "@/components/layout/CabecalhoPagina";
 import { orcamentoApi } from "@/lib/orcamentoApi";
 import { clienteApi } from "@/lib/clienteApi";
@@ -89,10 +90,12 @@ export function OrcamentosListPage() {
       <CabecalhoPagina
         titulo="Orçamentos"
         acao={
+<Pode modulo="ORCAMENTOS" acao="CRIAR">
           <Button asChild>
             <Link to="/orcamentos/novo">Novo orçamento</Link>
           </Button>
-        }
+        </Pode>
+}
       />
 
       <Card>
@@ -203,7 +206,7 @@ export function OrcamentosListPage() {
                     <OrcamentoStatusBadge status={orcamento.status} />
                   </TableCell>
                   <TableCell className="text-right">
-                    <MenuAcoes
+                    <MenuAcoes modulo="ORCAMENTOS"
                       itens={[{ rotulo: "Abrir", icone: ExternalLink, para: `/orcamentos/${orcamento.id}/editar` }]}
                     />
                   </TableCell>

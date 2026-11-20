@@ -27,6 +27,7 @@ import { fimDoDia, inicioDoDia, quantidadeComSinal, ROTULO_ORIGEM, ROTULO_TIPO }
 import { produtoApi } from "@/lib/produtoApi";
 import type { MovimentacaoEstoqueResponse, TipoMovimentacaoEstoque } from "@/types/estoque";
 import type { ProdutoResponse } from "@/types/produto";
+import { Pode } from "@/components/auth/Pode";
 import { CabecalhoPagina } from "@/components/layout/CabecalhoPagina";
 
 const TIPOS = Object.keys(ROTULO_TIPO) as TipoMovimentacaoEstoque[];
@@ -72,7 +73,7 @@ export function MovimentacoesEstoquePage() {
             <Button variant="outline" asChild>
               <Link to="/estoque">Voltar ao estoque</Link>
             </Button>
-            <Button onClick={() => setDialogAberto(true)}>Registrar movimentação</Button>
+            <Pode modulo="ESTOQUE" acao="CRIAR"><Button onClick={() => setDialogAberto(true)}>Registrar movimentação</Button></Pode>
           </div>
           </>
         }

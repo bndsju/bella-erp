@@ -35,6 +35,7 @@ import type { ProdutoResponse, StatusProduto } from "@/types/produto";
 import type { CategoriaResponse } from "@/types/categoria";
 import { CircleCheck, Pencil, Power } from "lucide-react";
 import { MenuAcoes } from "@/components/ui/menu-acoes";
+import { Pode } from "@/components/auth/Pode";
 import { CabecalhoPagina } from "@/components/layout/CabecalhoPagina";
 
 const formatoMoeda = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
@@ -106,12 +107,14 @@ export function ProdutosListPage() {
       <CabecalhoPagina
         titulo="Produtos"
         acao={
+<Pode modulo="PRODUTOS" acao="CRIAR">
           <>
           <Button asChild>
             <Link to="/produtos/novo">Novo produto</Link>
           </Button>
           </>
-        }
+        </Pode>
+}
       />
 
       <Card>
@@ -202,7 +205,7 @@ export function ProdutosListPage() {
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">
-                    <MenuAcoes
+                    <MenuAcoes modulo="PRODUTOS"
                       itens={[
                         { rotulo: "Editar", icone: Pencil, para: `/produtos/${produto.id}/editar` },
                         {

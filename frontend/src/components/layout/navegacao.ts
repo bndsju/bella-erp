@@ -13,6 +13,7 @@ import {
   House,
   Package,
   Settings,
+  ShieldCheck,
   Receipt,
   Ruler,
   ShoppingCart,
@@ -23,9 +24,6 @@ import {
   Wallet,
   type LucideIcon,
 } from "lucide-react";
-
-import { podeAcessar } from "@/lib/permissoes";
-import type { PerfilUsuario } from "@/types/usuario";
 
 export interface ItemMenu {
   to: string;
@@ -87,6 +85,7 @@ export const mais: GrupoMenu = {
     { to: "/relatorios", label: "Relatórios", icon: ChartColumn },
     { to: "/auditoria", label: "Auditoria", icon: History },
     { to: "/usuarios", label: "Usuários", icon: UserCog },
+    { to: "/permissoes", label: "Permissões", icon: ShieldCheck },
     { to: "/ajustes", label: "Ajustes", icon: Settings },
   ],
 };
@@ -99,11 +98,11 @@ export const atalhosCelular: ItemMenu[] = [
   { to: "/clientes", label: "Clientes", icon: Users },
 ];
 
-/** Só os itens que o perfil pode abrir; grupo que ficar vazio some do menu. */
-export function menuParaPerfil(perfil: PerfilUsuario): { grupos: GrupoMenu[]; mais: GrupoMenu } {
+/** Só os itens que o usuário pode abrir; grupo que ficar vazio some do menu. */
+export function menuFiltrado(podeAcessarRota: (caminho: string) => boolean): { grupos: GrupoMenu[]; mais: GrupoMenu } {
   const visivel = (grupo: GrupoMenu): GrupoMenu => ({
     ...grupo,
-    itens: grupo.itens.filter((item) => podeAcessar(perfil, item.to)),
+    itens: grupo.itens.filter((item) => podeAcessarRota(item.to)),
   });
   return {
     grupos: grupos.map(visivel).filter((grupo) => grupo.itens.length > 0),

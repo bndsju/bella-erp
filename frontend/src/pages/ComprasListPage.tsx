@@ -27,6 +27,7 @@ import type { CompraResponse, StatusCompra } from "@/types/compra";
 import type { FornecedorResponse } from "@/types/fornecedor";
 import { ExternalLink } from "lucide-react";
 import { MenuAcoes } from "@/components/ui/menu-acoes";
+import { Pode } from "@/components/auth/Pode";
 import { CabecalhoPagina } from "@/components/layout/CabecalhoPagina";
 
 const formatoMoeda = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
@@ -70,12 +71,14 @@ export function ComprasListPage() {
       <CabecalhoPagina
         titulo="Compras"
         acao={
+<Pode modulo="COMPRAS" acao="CRIAR">
           <>
           <Button asChild>
             <Link to="/compras/novo">Nova compra</Link>
           </Button>
           </>
-        }
+        </Pode>
+}
       />
 
       <Card>
@@ -163,7 +166,7 @@ export function ComprasListPage() {
                     <CompraStatusBadge status={compra.status} />
                   </TableCell>
                   <TableCell className="text-right">
-                    <MenuAcoes itens={[{ rotulo: "Abrir", icone: ExternalLink, para: `/compras/${compra.id}` }]} />
+                    <MenuAcoes modulo="COMPRAS" itens={[{ rotulo: "Abrir", icone: ExternalLink, para: `/compras/${compra.id}` }]} />
                   </TableCell>
                 </TableRow>
               ))

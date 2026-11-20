@@ -1,13 +1,18 @@
 import { createContext, useContext } from "react";
+import type { AcaoPermissao } from "@/types/permissao";
 import type { UsuarioResponse } from "@/types/usuario";
 
 export interface Autenticacao {
   /** Usuário logado; nulo quando não há sessão. */
   usuario: UsuarioResponse | null;
-  /** Verificando, ao abrir o sistema, se o token guardado ainda vale. */
+  /** Verificando o token guardado e carregando as permissões ao abrir o sistema. */
   carregando: boolean;
   entrar: (login: string, senha: string) => Promise<void>;
   sair: () => void;
+  /** O usuário pode fazer a ação no módulo? Sem a ação informada, basta poder ver. */
+  pode: (modulo: string, acao?: AcaoPermissao) => boolean;
+  /** O usuário pode abrir esta rota da tela? */
+  podeAcessarRota: (caminho: string) => boolean;
 }
 
 export const AuthContexto = createContext<Autenticacao | null>(null);

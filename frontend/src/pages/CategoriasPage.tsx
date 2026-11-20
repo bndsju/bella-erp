@@ -24,6 +24,7 @@ import { categoriaApi } from "@/lib/categoriaApi";
 import type { CategoriaResponse, StatusCategoria } from "@/types/categoria";
 import { CircleCheck, Pencil, Power } from "lucide-react";
 import { MenuAcoes } from "@/components/ui/menu-acoes";
+import { Pode } from "@/components/auth/Pode";
 import { CabecalhoPagina } from "@/components/layout/CabecalhoPagina";
 
 export function CategoriasPage() {
@@ -70,6 +71,7 @@ export function CategoriasPage() {
       <CabecalhoPagina
         titulo="Categorias"
         acao={
+<Pode modulo="PRODUTOS" acao="CRIAR">
           <>
           <Button
             onClick={() => {
@@ -80,7 +82,8 @@ export function CategoriasPage() {
             Nova categoria
           </Button>
           </>
-        }
+        </Pode>
+}
       />
 
       <Card>
@@ -155,7 +158,7 @@ export function CategoriasPage() {
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">
-                    <MenuAcoes
+                    <MenuAcoes modulo="PRODUTOS"
                       itens={[
                         {
                           rotulo: "Editar",

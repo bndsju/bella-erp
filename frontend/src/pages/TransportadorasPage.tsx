@@ -24,6 +24,7 @@ import { transportadoraApi } from "@/lib/transportadoraApi";
 import type { StatusTransportadora, TransportadoraResponse } from "@/types/transportadora";
 import { CircleCheck, Pencil, Power } from "lucide-react";
 import { MenuAcoes } from "@/components/ui/menu-acoes";
+import { Pode } from "@/components/auth/Pode";
 import { CabecalhoPagina } from "@/components/layout/CabecalhoPagina";
 
 export function TransportadorasPage() {
@@ -60,6 +61,7 @@ export function TransportadorasPage() {
       <CabecalhoPagina
         titulo="Transportadoras"
         acao={
+<Pode modulo="TRANSPORTADORAS" acao="CRIAR">
           <>
           <Button
             onClick={() => {
@@ -70,7 +72,8 @@ export function TransportadorasPage() {
             Nova transportadora
           </Button>
           </>
-        }
+        </Pode>
+}
       />
 
       <Card>
@@ -128,7 +131,7 @@ export function TransportadorasPage() {
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">
-                    <MenuAcoes
+                    <MenuAcoes modulo="TRANSPORTADORAS"
                       itens={[
                         {
                           rotulo: "Editar",

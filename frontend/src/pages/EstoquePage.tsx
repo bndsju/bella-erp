@@ -27,6 +27,7 @@ import { formatarQuantidade } from "@/lib/estoqueFormatos";
 import type { SaldoEstoqueResponse } from "@/types/estoque";
 import { ArrowLeftRight, History } from "lucide-react";
 import { MenuAcoes } from "@/components/ui/menu-acoes";
+import { Pode } from "@/components/auth/Pode";
 import { CabecalhoPagina } from "@/components/layout/CabecalhoPagina";
 
 type VisaoEstoque = "TODOS" | "ABAIXO_DO_MINIMO";
@@ -75,7 +76,7 @@ export function EstoquePage() {
             <Button variant="outline" asChild>
               <Link to="/estoque/movimentacoes">Histórico de movimentações</Link>
             </Button>
-            <Button onClick={() => abrirMovimentacao()}>Registrar movimentação</Button>
+            <Pode modulo="ESTOQUE" acao="CRIAR"><Button onClick={() => abrirMovimentacao()}>Registrar movimentação</Button></Pode>
           </div>
           </>
         }
@@ -159,7 +160,7 @@ export function EstoquePage() {
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
-                      <MenuAcoes
+                      <MenuAcoes modulo="ESTOQUE"
                         itens={[
                           { rotulo: "Movimentar", icone: ArrowLeftRight, aoClicar: () => abrirMovimentacao(saldo.produtoId) },
                           { rotulo: "Histórico", icone: History, para: `/estoque/movimentacoes?produtoId=${saldo.produtoId}` },

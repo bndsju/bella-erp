@@ -6,7 +6,7 @@ import { useAuth } from "@/lib/authContexto";
 import { ROTULO_PERFIL } from "@/lib/permissoes";
 import { cn } from "@/lib/utils";
 import { EncaixesContexto, type EncaixesLayout } from "./CabecalhoPagina";
-import { atalhosCelular, estaAtivo, grupoAtivo, inicio, menuParaPerfil, type GrupoMenu } from "./navegacao";
+import { atalhosCelular, estaAtivo, grupoAtivo, inicio, menuFiltrado, type GrupoMenu } from "./navegacao";
 
 function MenuDoGrupo({ grupo, caminho }: { grupo: GrupoMenu; caminho: string }) {
   const ativo = grupoAtivo(grupo, caminho);
@@ -33,9 +33,10 @@ function MenuDoGrupo({ grupo, caminho }: { grupo: GrupoMenu; caminho: string }) 
 }
 
 function BarraInferior({ aoAbrirMais, caminho }: { aoAbrirMais: () => void; caminho: string }) {
+  const { podeAcessarRota } = useAuth();
   return (
     <nav className="barra-inferior" aria-label="Menu principal no celular">
-      {atalhosCelular.map((item) => (
+      {atalhosCelular.filter((item) => podeAcessarRota(item.to)).map((item) => (
         <NavLink key={item.to} to={item.to} end={item.to === "/"} aria-current={estaAtivo(item, caminho) ? "page" : undefined}>
           <item.icon size={22} strokeWidth={1.75} aria-hidden="true" />
           {item.label}
@@ -51,9 +52,9 @@ function BarraInferior({ aoAbrirMais, caminho }: { aoAbrirMais: () => void; cami
 
 /** Todos os módulos no celular: folha que sobe da barra inferior, no mesmo cartão de 20 px. */
 function FolhaMais({ aberta, aoFechar }: { aberta: boolean; aoFechar: () => void }) {
-  const { usuario, sair } = useAuth();
+  const { usuario, sair, podeAcessarRota } = useAuth();
   if (!aberta || !usuario) return null;
-  const menu = menuParaPerfil(usuario.perfil);
+  const menu = menuFiltrado(podeAcessarRota);
   const todos: GrupoMenu[] = [{ titulo: "Geral", itens: [inicio] }, ...menu.grupos, menu.mais];
   return (
     <div className="fixed inset-0 z-50 md:hidden" role="dialog" aria-modal="true" aria-label="Todos os módulos">
@@ -140,8 +141,8 @@ function MenuDoUsuario() {
 }
 
 export function AppLayout() {
-  const { usuario } = useAuth();
-  const menu = menuParaPerfil(usuario?.perfil ?? "VENDEDOR");
+  const { podeAcessarRota } = useAuth();
+  const menu = menuFiltrado(podeAcessarRota);
   const { pathname } = useLocation();
   const [titulo, setTitulo] = useState<HTMLElement | null>(null);
   const [frase, setFrase] = useState<HTMLElement | null>(null);

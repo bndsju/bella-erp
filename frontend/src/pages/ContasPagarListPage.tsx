@@ -30,6 +30,7 @@ import type { FornecedorResponse } from "@/types/fornecedor";
 import type { ContaPagarResponse, SituacaoContaPagar, StatusContaPagar } from "@/types/contaPagar";
 import { ExternalLink } from "lucide-react";
 import { MenuAcoes } from "@/components/ui/menu-acoes";
+import { Pode } from "@/components/auth/Pode";
 import { CabecalhoPagina } from "@/components/layout/CabecalhoPagina";
 
 function nomeExibicaoFornecedor(fornecedor: FornecedorResponse): string {
@@ -93,12 +94,14 @@ export function ContasPagarListPage() {
       <CabecalhoPagina
         titulo="Contas a pagar"
         acao={
+<Pode modulo="CONTAS_PAGAR" acao="CRIAR">
           <>
           <Button asChild>
             <Link to="/contas-pagar/novo">Nova conta</Link>
           </Button>
           </>
-        }
+        </Pode>
+}
       />
 
       <div className="grade grade--3">
@@ -235,7 +238,7 @@ export function ContasPagarListPage() {
                     <StatusContaPagarBadge status={conta.status} vencida={conta.vencida} />
                   </TableCell>
                   <TableCell className="text-right">
-                    <MenuAcoes itens={[{ rotulo: "Abrir", icone: ExternalLink, para: `/contas-pagar/${conta.id}` }]} />
+                    <MenuAcoes modulo="CONTAS_PAGAR" itens={[{ rotulo: "Abrir", icone: ExternalLink, para: `/contas-pagar/${conta.id}` }]} />
                   </TableCell>
                 </TableRow>
               ))

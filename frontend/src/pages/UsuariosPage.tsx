@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { CircleCheck, KeyRound, Pencil, Power } from "lucide-react";
 import { toast } from "sonner";
 import { CabecalhoPagina } from "@/components/layout/CabecalhoPagina";
@@ -7,29 +8,37 @@ import { UsuarioFormDialog } from "@/components/usuarios/UsuarioFormDialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { MenuAcoes } from "@/components/ui/menu-acoes";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ApiError } from "@/lib/api";
 import { useAuth } from "@/lib/authContexto";
-import { ROTULO_PERFIL } from "@/lib/permissoes";
+import { PERFIS, ROTULO_PERFIL } from "@/lib/permissoes";
 import { formatarDataHora } from "@/lib/relatorioRotulos";
 import { usuarioApi } from "@/lib/usuarioApi";
-import type { StatusUsuario, UsuarioResponse } from "@/types/usuario";
+import type { PerfilUsuario, StatusUsuario, UsuarioResponse } from "@/types/usuario";
+
+/** Sem acento e em minúsculas, para "jose" achar "José". */
+function normalizar(texto: string): string {
+  return texto.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
+}
 
 export function UsuariosPage() {
   const { usuario: eu } = useAuth();
   const [usuarios, setUsuarios] = useState<UsuarioResponse[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [status, setStatus] = useState<StatusUsuario | "TODOS">("TODOS");
+  const [perfil, setPerfil] = useState<PerfilUsuario | "TODOS">("TODOS");
+  const [busca, setBusca] = useState("");
   const [dialogAberto, setDialogAberto] = useState(false);
   const [emEdicao, setEmEdicao] = useState<UsuarioResponse | null>(null);
   const [comSenhaProvisoria, setComSenhaProvisoria] = useState<UsuarioResponse | null>(null);
 
   // Carrega todos e filtra na tela: os pedidos de nova senha aparecem no topo qualquer que seja o filtro.
+  // A lista antiga fica na tela enquanto recarrega (depois de uma ação), sem piscar o "carregando".
   const carregar = useCallback(() => {
-    setCarregando(true);
     usuarioApi
       .listar()
       .then(setUsuarios)
@@ -44,10 +53,16 @@ export function UsuariosPage() {
         .sort((a, b) => (a.redefinicaoSolicitadaEm ?? "").localeCompare(b.redefinicaoSolicitadaEm ?? "")),
     [usuarios],
   );
-  const visiveis = useMemo(
-    () => (status === "TODOS" ? usuarios : usuarios.filter((u) => u.status === status)),
-    [usuarios, status],
-  );
+  const visiveis = useMemo(() => {
+    const termo = normalizar(busca.trim());
+    return usuarios.filter(
+      (u) =>
+        (status === "TODOS" || u.status === status) &&
+        (perfil === "TODOS" || u.perfil === perfil) &&
+        (termo === "" || normalizar(u.nome).includes(termo) || normalizar(u.login).includes(termo)),
+    );
+  }, [usuarios, status, perfil, busca]);
+  const filtrado = busca.trim() !== "" || status !== "TODOS" || perfil !== "TODOS";
 
   useEffect(carregar, [carregar]);
 
@@ -106,6 +121,31 @@ export function UsuariosPage() {
       <Card>
         <div className="barra-filtros">
           <div className="campo">
+            <label htmlFor="filtro-busca">Buscar</label>
+            <Input
+              id="filtro-busca"
+              placeholder="Nome ou login"
+              value={busca}
+              onChange={(e) => setBusca(e.target.value)}
+            />
+          </div>
+          <div className="campo">
+            <label htmlFor="filtro-perfil">Perfil</label>
+            <Select value={perfil} onValueChange={(v) => setPerfil(v as PerfilUsuario | "TODOS")}>
+              <SelectTrigger id="filtro-perfil" className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="TODOS">Todos os perfis</SelectItem>
+                {PERFIS.map((p) => (
+                  <SelectItem key={p} value={p}>
+                    {ROTULO_PERFIL[p]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="campo">
             <label htmlFor="filtro-status">Status</label>
             <Select value={status} onValueChange={(v) => setStatus(v as StatusUsuario | "TODOS")}>
               <SelectTrigger id="filtro-status" className="w-full">
@@ -118,7 +158,26 @@ export function UsuariosPage() {
               </SelectContent>
             </Select>
           </div>
+          {filtrado && (
+            <Button
+              variant="outline"
+              onClick={() => {
+                setBusca("");
+                setPerfil("TODOS");
+                setStatus("TODOS");
+              }}
+            >
+              Limpar filtros
+            </Button>
+          )}
         </div>
+        <p className="mt-3 text-auxiliar">
+          {visiveis.length === usuarios.length
+            ? `${usuarios.length} usuário(s)`
+            : `${visiveis.length} de ${usuarios.length} usuário(s)`}
+          {" · "}
+          <Link to="/permissoes">Ver o que cada perfil pode fazer</Link>
+        </p>
       </Card>
 
       <Card>
@@ -145,7 +204,7 @@ export function UsuariosPage() {
                 <TableCell colSpan={6}>
                   <div className="vazio">
                     <h3>Nenhum usuário encontrado</h3>
-                    <p>Ajuste o filtro ou cadastre um novo usuário.</p>
+                    <p>Ajuste a busca e os filtros ou cadastre um novo usuário.</p>
                   </div>
                 </TableCell>
               </TableRow>

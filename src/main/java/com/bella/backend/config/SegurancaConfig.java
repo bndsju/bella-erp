@@ -1,6 +1,8 @@
 package com.bella.backend.config;
 
+import com.bella.backend.adapter.in.web.seguranca.AutorizadorPorPermissao;
 import com.bella.backend.adapter.in.web.seguranca.FiltroAutenticacaoJwt;
+import com.bella.backend.domain.permissao.port.in.ConsultarPermissoesUseCase;
 import com.bella.backend.domain.usuario.port.out.EmissorTokenPort;
 import com.bella.backend.domain.usuario.port.out.UsuarioRepositoryPort;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -25,7 +27,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * Segurança da API: sem sessão, autenticação por token JWT (Bearer) e acesso por perfil.
+ * Segurança da API: sem sessão, autenticação por token JWT (Bearer) e acesso por permissões configuráveis do perfil.
  * <p>
  * Com {@code bella.seguranca.habilitada=false} tudo fica liberado; isso existe só para os testes de integração dos
  * demais módulos e nunca deve ser usado fora deles.
@@ -34,12 +36,11 @@ import java.util.Map;
 public class SegurancaConfig {
 
     private static final String ADMINISTRADOR = "ADMINISTRADOR";
-    private static final String GERENTE = "GERENTE";
-    private static final String FINANCEIRO = "FINANCEIRO";
 
     @Bean
     SecurityFilterChain filtroDeSeguranca(HttpSecurity http, EmissorTokenPort emissorTokenPort,
-                                          UsuarioRepositoryPort usuarioRepositoryPort, ObjectMapper objectMapper,
+                                          UsuarioRepositoryPort usuarioRepositoryPort, ConsultarPermissoesUseCase permissoes,
+                                          ObjectMapper objectMapper,
                                           @Value("${bella.seguranca.habilitada:true}") boolean habilitada) throws Exception {
         http.csrf(AbstractHttpConfigurer::disable)
                 .cors(Customizer.withDefaults())
@@ -70,14 +71,10 @@ public class SegurancaConfig {
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/login", "/api/auth/esqueci-senha").permitAll()
                         .requestMatchers("/api/auth/**").authenticated()
-                        .requestMatchers("/api/usuarios/**").hasRole(ADMINISTRADOR)
-                        .requestMatchers("/api/auditoria/**").hasAnyRole(ADMINISTRADOR, GERENTE)
-                        .requestMatchers(
-                                "/api/contas-receber/**", "/api/contas-pagar/**", "/api/fluxo-caixa/**",
-                                "/api/categorias-despesa/**", "/api/categorias-fluxo-caixa/**", "/api/relatorios/**")
-                        .hasAnyRole(ADMINISTRADOR, GERENTE, FINANCEIRO)
-                        // exige um perfil (e não só "autenticado") para quem está com senha provisória ficar de fora
-                        .anyRequest().hasAnyRole(ADMINISTRADOR, GERENTE, FINANCEIRO, "VENDEDOR"));
+                        // usuários e permissões: sempre e só o administrador, não são configuráveis
+                        .requestMatchers("/api/usuarios/**", "/api/permissoes/**").hasRole(ADMINISTRADOR)
+                        // o resto, pela matriz de permissões do perfil (módulo + ação)
+                        .anyRequest().access(new AutorizadorPorPermissao(permissoes)));
         return http.build();
     }
 

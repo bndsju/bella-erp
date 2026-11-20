@@ -31,6 +31,7 @@ import { formatarData, formatarMoeda } from "@/lib/formatos";
 import type { CategoriaFluxoCaixaResponse } from "@/types/categoriaFluxoCaixa";
 import { Ban, CircleCheck, Pencil } from "lucide-react";
 import { MenuAcoes } from "@/components/ui/menu-acoes";
+import { Pode } from "@/components/auth/Pode";
 import { CabecalhoPagina } from "@/components/layout/CabecalhoPagina";
 import type {
   MovimentacaoCaixaResponse,
@@ -156,6 +157,7 @@ export function FluxoCaixaPage() {
       <CabecalhoPagina
         titulo="Fluxo de caixa"
         acao={
+<Pode modulo="FLUXO_CAIXA" acao="CRIAR">
           <>
           <Button
             onClick={() => {
@@ -166,7 +168,8 @@ export function FluxoCaixaPage() {
             Novo lançamento
           </Button>
           </>
-        }
+        </Pode>
+}
       />
 
       <div className="grade grade--4">
@@ -333,7 +336,7 @@ export function FluxoCaixaPage() {
                       )}
                     </TableCell>
                     <TableCell className="text-right">
-                      <MenuAcoes
+                      <MenuAcoes modulo="FLUXO_CAIXA"
                         itens={[
                           {
                             rotulo: "Realizar",

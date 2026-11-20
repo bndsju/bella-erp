@@ -24,6 +24,7 @@ import { unidadeMedidaApi } from "@/lib/unidadeMedidaApi";
 import type { StatusUnidadeMedida, UnidadeMedidaResponse } from "@/types/unidadeMedida";
 import { CircleCheck, Pencil, Power } from "lucide-react";
 import { MenuAcoes } from "@/components/ui/menu-acoes";
+import { Pode } from "@/components/auth/Pode";
 import { CabecalhoPagina } from "@/components/layout/CabecalhoPagina";
 
 export function UnidadesMedidaPage() {
@@ -63,6 +64,7 @@ export function UnidadesMedidaPage() {
       <CabecalhoPagina
         titulo="Unidades de medida"
         acao={
+<Pode modulo="PRODUTOS" acao="CRIAR">
           <>
           <Button
             onClick={() => {
@@ -73,7 +75,8 @@ export function UnidadesMedidaPage() {
             Nova unidade de medida
           </Button>
           </>
-        }
+        </Pode>
+}
       />
 
       <Card>
@@ -135,7 +138,7 @@ export function UnidadesMedidaPage() {
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">
-                    <MenuAcoes
+                    <MenuAcoes modulo="PRODUTOS"
                       itens={[
                         {
                           rotulo: "Editar",

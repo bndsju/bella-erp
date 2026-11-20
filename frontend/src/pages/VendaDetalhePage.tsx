@@ -19,6 +19,7 @@ import { labelFormaPagamento } from "@/lib/formaPagamento";
 import { VendaResumoValores } from "@/components/vendas/VendaResumoValores";
 import type { VendaResponse } from "@/types/venda";
 import { HistoricoAlteracoes } from "@/components/auditoria/HistoricoAlteracoes";
+import { Pode } from "@/components/auth/Pode";
 import { CabecalhoPagina } from "@/components/layout/CabecalhoPagina";
 
 const formatoMoeda = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
@@ -124,9 +125,9 @@ export function VendaDetalhePage() {
 
       {venda.status === "CONCLUIDA" && (
         <div className="acoes">
-          <Button type="button" variant="secondary" disabled={processandoAcao} onClick={cancelar}>
+          <Pode modulo="VENDAS" acao="CANCELAR"><Button type="button" variant="secondary" disabled={processandoAcao} onClick={cancelar}>
             Cancelar venda
-          </Button>
+          </Button></Pode>
         </div>
       )}
 
