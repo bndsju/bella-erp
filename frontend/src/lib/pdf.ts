@@ -14,6 +14,8 @@ export interface DocumentoPdf {
   periodo?: string;
   /** Filtros aplicados, um por item (ex.: "Cliente: Maria Silva"). */
   filtros?: string[];
+  /** Observação sobre como ler o relatório, impressa no cabeçalho (ex.: o que entra ou não nos totais). */
+  nota?: string;
   /** Totais em destaque, como pares rótulo/valor. */
   resumo?: [string, string][];
   tabelas: TabelaPdf[];
@@ -96,6 +98,11 @@ export async function gerarPdf(documento: DocumentoPdf): Promise<void> {
   if (documento.filtros && documento.filtros.length > 0) {
     pdf.text(`Filtros: ${documento.filtros.join(" · ")}`, margem, y);
     y += 14;
+  }
+  if (documento.nota) {
+    const linhasNota = pdf.splitTextToSize(documento.nota, larguraPagina - 2 * margem) as string[];
+    pdf.text(linhasNota, margem, y);
+    y += linhasNota.length * 12 + 2;
   }
   pdf.text(`Gerado em ${new Date().toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}`, margem, y);
   y += 18;
