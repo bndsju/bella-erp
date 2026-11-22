@@ -45,6 +45,8 @@ import type { ProdutoResponse } from "@/types/produto";
 import type { PedidoResponse, StatusPedido } from "@/types/pedido";
 import type { TransportadoraResponse } from "@/types/transportadora";
 import { HistoricoAlteracoes } from "@/components/auditoria/HistoricoAlteracoes";
+import { BotaoBaixarPdf } from "@/components/pdf/BotaoBaixarPdf";
+import { baixarPdfPedido } from "@/lib/pdfComercial";
 import { CabecalhoPagina } from "@/components/layout/CabecalhoPagina";
 
 const formatoMoeda = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
@@ -190,7 +192,14 @@ export function PedidoFormPage() {
     <>
       <CabecalhoPagina
         titulo={modo === "editar" ? "Pedido" : "Novo pedido"}
-        acao={pedido && <PedidoStatusBadge status={pedido.status} />}
+        acao={
+          pedido && (
+            <>
+              <BotaoBaixarPdf gerar={() => baixarPdfPedido(pedido)} />
+              <PedidoStatusBadge status={pedido.status} />
+            </>
+          )
+        }
       />
 
       {editavel ? (

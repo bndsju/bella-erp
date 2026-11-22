@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, FileDown } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/table";
 import { MenuAcoes } from "@/components/ui/menu-acoes";
 import { Pode } from "@/components/auth/Pode";
+import { baixarPdfPedido, tentarBaixarPdf } from "@/lib/pdfComercial";
 import { CabecalhoPagina } from "@/components/layout/CabecalhoPagina";
 import { PedidoStatusBadge } from "@/components/pedidos/PedidoStatusBadge";
 import { CriarPedidoDeOrcamentoDialog } from "@/components/pedidos/CriarPedidoDeOrcamentoDialog";
@@ -166,7 +167,12 @@ export function PedidosListPage() {
                     <PedidoStatusBadge status={pedido.status} />
                   </TableCell>
                   <TableCell className="text-right">
-                    <MenuAcoes modulo="PEDIDOS" itens={[{ rotulo: "Abrir", icone: ExternalLink, para: `/pedidos/${pedido.id}/editar` }]} />
+                    <MenuAcoes modulo="PEDIDOS" itens={[{ rotulo: "Abrir", icone: ExternalLink, para: `/pedidos/${pedido.id}/editar` },
+                        {
+                          rotulo: "Baixar PDF",
+                          icone: FileDown,
+                          aoClicar: () => tentarBaixarPdf(() => baixarPdfPedido(pedido)),
+                        }]} />
                   </TableCell>
                 </TableRow>
               ))

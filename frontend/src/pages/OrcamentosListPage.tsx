@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, FileDown } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -23,6 +23,7 @@ import {
 import { OrcamentoStatusBadge } from "@/components/orcamentos/OrcamentoStatusBadge";
 import { MenuAcoes } from "@/components/ui/menu-acoes";
 import { Pode } from "@/components/auth/Pode";
+import { baixarPdfOrcamento, tentarBaixarPdf } from "@/lib/pdfComercial";
 import { CabecalhoPagina } from "@/components/layout/CabecalhoPagina";
 import { orcamentoApi } from "@/lib/orcamentoApi";
 import { clienteApi } from "@/lib/clienteApi";
@@ -207,7 +208,12 @@ export function OrcamentosListPage() {
                   </TableCell>
                   <TableCell className="text-right">
                     <MenuAcoes modulo="ORCAMENTOS"
-                      itens={[{ rotulo: "Abrir", icone: ExternalLink, para: `/orcamentos/${orcamento.id}/editar` }]}
+                      itens={[{ rotulo: "Abrir", icone: ExternalLink, para: `/orcamentos/${orcamento.id}/editar` },
+                        {
+                          rotulo: "Baixar PDF",
+                          icone: FileDown,
+                          aoClicar: () => tentarBaixarPdf(() => baixarPdfOrcamento(orcamento)),
+                        }]}
                     />
                   </TableCell>
                 </TableRow>

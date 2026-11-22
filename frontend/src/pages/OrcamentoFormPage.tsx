@@ -43,6 +43,8 @@ import type { ClienteResponse } from "@/types/cliente";
 import type { ProdutoResponse } from "@/types/produto";
 import type { OrcamentoResponse } from "@/types/orcamento";
 import { HistoricoAlteracoes } from "@/components/auditoria/HistoricoAlteracoes";
+import { BotaoBaixarPdf } from "@/components/pdf/BotaoBaixarPdf";
+import { baixarPdfOrcamento } from "@/lib/pdfComercial";
 import { CabecalhoPagina } from "@/components/layout/CabecalhoPagina";
 
 const formatoMoeda = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
@@ -172,7 +174,14 @@ export function OrcamentoFormPage() {
     <>
       <CabecalhoPagina
         titulo={modo === "editar" ? "Orçamento" : "Novo orçamento"}
-        acao={orcamento && <OrcamentoStatusBadge status={orcamento.status} />}
+        acao={
+          orcamento && (
+            <>
+              <BotaoBaixarPdf gerar={() => baixarPdfOrcamento(orcamento)} />
+              <OrcamentoStatusBadge status={orcamento.status} />
+            </>
+          )
+        }
       />
 
       {editavel ? (
