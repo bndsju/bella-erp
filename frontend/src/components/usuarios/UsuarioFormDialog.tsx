@@ -11,7 +11,7 @@ import { ApiError } from "@/lib/api";
 import { DESCRICAO_PERFIL, PERFIS, ROTULO_PERFIL } from "@/lib/permissoes";
 import { usuarioApi } from "@/lib/usuarioApi";
 import {
-  TAMANHO_MINIMO_SENHA,
+  DICA_SENHA,
   usuarioCadastroSchema,
   usuarioEdicaoSchema,
   type UsuarioCadastroValues,
@@ -109,7 +109,7 @@ export function UsuarioFormDialog({ open, onOpenChange, usuario, onSalvo }: Prop
                     <FormControl>
                       <Input type="password" autoComplete="new-password" {...field} />
                     </FormControl>
-                    <FormDescription>Mínimo de {TAMANHO_MINIMO_SENHA} caracteres. A pessoa pode trocá-la em "Minha conta".</FormDescription>
+                    <FormDescription>{DICA_SENHA} A pessoa pode trocá-la em "Minha conta".</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}

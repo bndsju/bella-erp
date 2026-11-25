@@ -12,6 +12,9 @@ export const ROTULO_MODULO: Record<ModuloAuditoria, string> = {
   ESTOQUE: "Estoque",
   CONTA_RECEBER: "Conta a receber",
   CONTA_PAGAR: "Conta a pagar",
+  USUARIO: "Usuário",
+  PERMISSAO: "Permissões",
+  SEGURANCA: "Segurança",
 };
 
 export const MODULOS = Object.keys(ROTULO_MODULO) as ModuloAuditoria[];
@@ -25,6 +28,14 @@ const ROTULO_OPERACAO: Record<OperacaoAuditoria, string> = {
   ALTERACAO_STATUS: "Mudança de status",
   REGISTRO_PAGAMENTO: "Pagamento",
   MOVIMENTACAO_ESTOQUE: "Movimentação de estoque",
+  LOGIN_SUCESSO: "Login realizado",
+  LOGIN_FALHA: "Login recusado",
+  LOGIN_BLOQUEADO: "Login bloqueado",
+  LIMITE_EXCEDIDO: "Limite de tentativas",
+  REDEFINICAO_SOLICITADA: "Esqueci a senha",
+  SENHA_ALTERADA: "Senha alterada",
+  SENHA_PROVISORIA: "Senha provisória",
+  ALTERACAO_PERMISSOES: "Permissões alteradas",
 };
 
 export const OPERACOES = Object.keys(ROTULO_OPERACAO) as OperacaoAuditoria[];
@@ -38,6 +49,8 @@ export function rotuloOperacao(operacao: OperacaoAuditoria, modulo?: ModuloAudit
 export function varianteOperacao(operacao: OperacaoAuditoria): "default" | "destructive" | "outline" {
   if (operacao === "CRIACAO" || operacao === "REATIVACAO") return "default";
   if (operacao === "CANCELAMENTO" || operacao === "INATIVACAO") return "destructive";
+  if (operacao === "LOGIN_FALHA" || operacao === "LOGIN_BLOQUEADO" || operacao === "LIMITE_EXCEDIDO") return "destructive";
+  if (operacao === "LOGIN_SUCESSO") return "default";
   return "outline";
 }
 
@@ -71,6 +84,9 @@ const ROTULO_CAMPO: Record<string, string> = {
   status: "Status",
   nome: "Nome",
   nomeCompleto: "Nome completo",
+  login: "Login",
+  ip: "Endereço IP",
+  perfil: "Perfil",
   razaoSocial: "Razão social",
   nomeFantasia: "Nome fantasia",
   cpf: "CPF",
@@ -195,7 +211,11 @@ export function formatarValorAuditoria(chave: string, valor: unknown): string {
     return REGEX_DINHEIRO.test(chave) && !/quantidade/i.test(chave) ? formatarMoeda(valor) : formatarQuantidade(valor);
   }
   if (typeof valor === "string") return valor === "" ? "—" : formatarTexto(valor);
-  if (Array.isArray(valor)) return valor.length === 0 ? "(vazio)" : `${valor.length} registro(s)`;
+  if (Array.isArray(valor)) {
+    if (valor.length === 0) return "(vazio)";
+    if (valor.every((item) => typeof item === "string")) return valor.map((item) => formatarTexto(item as string)).join(", ");
+    return `${valor.length} registro(s)`;
+  }
   return "(vazio)";
 }
 
@@ -333,6 +353,19 @@ export function resumoDoRegistro(registro: RegistroAuditoria): string {
           : "Movimentação registrada";
       return motivo ? `${base} · ${motivo}` : base;
     }
+    case "LOGIN_SUCESSO":
+    case "LOGIN_FALHA":
+    case "LOGIN_BLOQUEADO":
+    case "LIMITE_EXCEDIDO":
+    case "REDEFINICAO_SOLICITADA": {
+      const login = valorTopo(depois, "login");
+      const ip = valorTopo(depois, "ip");
+      return [typeof login === "string" ? login : null, typeof ip === "string" ? `IP ${ip}` : null, motivo].filter(Boolean).join(" · ");
+    }
+    case "SENHA_ALTERADA":
+    case "SENHA_PROVISORIA":
+    case "ALTERACAO_PERMISSOES":
+      return motivo ?? rotuloOperacao(operacao);
     default: {
       const quantidade = compararValores(registro).length;
       return quantidade > 0 ? `${quantidade} campo(s) alterado(s)` : "Registro alterado";

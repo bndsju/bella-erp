@@ -12,11 +12,17 @@ public final class SenhaProvisoria {
     private SenhaProvisoria() {
     }
 
+    /** Sempre com pelo menos uma letra e um número, para valer também na política de senha. */
     public static String gerar() {
-        StringBuilder sb = new StringBuilder(TAMANHO);
-        for (int i = 0; i < TAMANHO; i++) {
-            sb.append(ALFABETO.charAt(ALEATORIO.nextInt(ALFABETO.length())));
+        while (true) {
+            StringBuilder sb = new StringBuilder(TAMANHO);
+            for (int i = 0; i < TAMANHO; i++) {
+                sb.append(ALFABETO.charAt(ALEATORIO.nextInt(ALFABETO.length())));
+            }
+            String senha = sb.toString();
+            if (senha.chars().anyMatch(Character::isDigit) && senha.chars().anyMatch(Character::isLetter)) {
+                return senha;
+            }
         }
-        return sb.toString();
     }
 }

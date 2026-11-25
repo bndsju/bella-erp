@@ -27,12 +27,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @TestPropertySource(properties = {
         "bella.seguranca.habilitada=true",
         "bella.seguranca.admin-login=admin",
-        "bella.seguranca.admin-senha=senha-do-admin-1",
+        "bella.seguranca.admin-senha=senha-do-chefe-1",
         "bella.seguranca.jwt-segredo=segredo-de-teste-com-mais-de-32-caracteres"
 })
 class PermissaoIntegrationTest extends IntegrationTestBase {
 
-    private static final String SENHA_ADMIN = "senha-do-admin-1";
+    private static final String SENHA_ADMIN = "senha-do-chefe-1";
 
     @Autowired
     private MockMvc mockMvc;

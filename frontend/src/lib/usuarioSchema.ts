@@ -2,12 +2,14 @@ import { z } from "zod";
 
 const PERFIS = ["ADMINISTRADOR", "GERENTE", "FINANCEIRO", "VENDEDOR"] as const;
 
-export const TAMANHO_MINIMO_SENHA = 8;
+export const TAMANHO_MINIMO_SENHA = 10;
+export const DICA_SENHA = `Mínimo de ${TAMANHO_MINIMO_SENHA} caracteres, com letras e números. Evite senhas óbvias e não use o seu login.`;
 
 const senhaNova = z
   .string()
   .min(TAMANHO_MINIMO_SENHA, `A senha deve ter pelo menos ${TAMANHO_MINIMO_SENHA} caracteres`)
-  .max(72, "A senha deve ter no máximo 72 caracteres");
+  .max(72, "A senha deve ter no máximo 72 caracteres")
+  .refine((valor) => /\p{L}/u.test(valor) && /\d/.test(valor), "A senha deve ter pelo menos uma letra e um número");
 
 export const usuarioCadastroSchema = z.object({
   nome: z.string().trim().min(1, "Nome é obrigatório").max(100, "Nome muito longo"),

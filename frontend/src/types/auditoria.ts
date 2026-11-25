@@ -7,7 +7,10 @@ export type ModuloAuditoria =
   | "COMPRA"
   | "ESTOQUE"
   | "CONTA_RECEBER"
-  | "CONTA_PAGAR";
+  | "CONTA_PAGAR"
+  | "USUARIO"
+  | "PERMISSAO"
+  | "SEGURANCA";
 
 export type OperacaoAuditoria =
   | "CRIACAO"
@@ -17,7 +20,15 @@ export type OperacaoAuditoria =
   | "CANCELAMENTO"
   | "ALTERACAO_STATUS"
   | "REGISTRO_PAGAMENTO"
-  | "MOVIMENTACAO_ESTOQUE";
+  | "MOVIMENTACAO_ESTOQUE"
+  | "LOGIN_SUCESSO"
+  | "LOGIN_FALHA"
+  | "LOGIN_BLOQUEADO"
+  | "LIMITE_EXCEDIDO"
+  | "REDEFINICAO_SOLICITADA"
+  | "SENHA_ALTERADA"
+  | "SENHA_PROVISORIA"
+  | "ALTERACAO_PERMISSOES";
 
 export interface RegistroAuditoria {
   id: string;

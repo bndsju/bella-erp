@@ -37,5 +37,10 @@ bella:
     admin-login: ${ADMIN_LOGIN:admin}
     admin-nome: ${ADMIN_NOME:Administrador}
     admin-senha: ${ADMIN_SENHA:}
+    # Limite de chamadas por endereco IP em cada janela (alem do bloqueio por login, de 5 erros em 15 minutos)
+    limite:
+      janela-minutos: ${LIMITE_JANELA_MINUTOS:15}
+      login-por-ip: ${LIMITE_LOGIN_POR_IP:30}
+      esqueci-senha-por-ip: ${LIMITE_ESQUECI_SENHA_POR_IP:5}
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173}

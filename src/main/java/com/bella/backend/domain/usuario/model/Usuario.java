@@ -8,8 +8,6 @@ import java.util.regex.Pattern;
 
 public class Usuario {
 
-    public static final int TAMANHO_MINIMO_SENHA = 8;
-    public static final int TAMANHO_MAXIMO_SENHA = 72; // limite do BCrypt
     private static final Pattern LOGIN_VALIDO = Pattern.compile("^[a-z0-9._-]{3,50}$");
 
     private final UUID id;
@@ -66,13 +64,8 @@ public class Usuario {
         return limpo;
     }
 
-    public static void validarSenhaNova(String senha) {
-        if (senha == null || senha.length() < TAMANHO_MINIMO_SENHA) {
-            throw new RegraDeNegocioException("A senha deve ter pelo menos " + TAMANHO_MINIMO_SENHA + " caracteres");
-        }
-        if (senha.length() > TAMANHO_MAXIMO_SENHA) {
-            throw new RegraDeNegocioException("A senha deve ter no máximo " + TAMANHO_MAXIMO_SENHA + " caracteres");
-        }
+    public static void validarSenhaNova(String senha, String login) {
+        PoliticaDeSenha.validar(senha, login);
     }
 
     public void editar(String nome, PerfilUsuario perfil) {

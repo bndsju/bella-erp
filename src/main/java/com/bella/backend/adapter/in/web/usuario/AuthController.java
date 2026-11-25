@@ -7,6 +7,7 @@ import com.bella.backend.domain.usuario.port.in.AlterarMinhaSenhaUseCase;
 import com.bella.backend.domain.usuario.port.in.AutenticarUseCase;
 import com.bella.backend.domain.usuario.port.in.GerenciarUsuariosUseCase;
 import com.bella.backend.domain.usuario.port.in.SolicitarRedefinicaoSenhaUseCase;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -46,9 +47,9 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public SessaoResponse login(@Valid @RequestBody UsuarioRequests.Login request) {
+    public SessaoResponse login(@Valid @RequestBody UsuarioRequests.Login request, HttpServletRequest http) {
         AutenticarUseCase.Sessao sessao = autenticarUseCase.autenticar(
-                new AutenticarUseCase.Comando(request.login(), request.senha()));
+                new AutenticarUseCase.Comando(request.login(), request.senha(), http.getRemoteAddr()));
         return new SessaoResponse(sessao.token(), sessao.expiraEm(), UsuarioResponse.de(sessao.usuario()));
     }
 
@@ -57,8 +58,9 @@ public class AuthController {
 
     /** Resposta idêntica para login existente ou não, para não revelar quem tem cadastro. */
     @PostMapping("/esqueci-senha")
-    public ResponseEntity<MensagemResponse> esqueciSenha(@Valid @RequestBody UsuarioRequests.EsqueciSenha request) {
-        solicitarRedefinicaoSenhaUseCase.solicitar(request.login());
+    public ResponseEntity<MensagemResponse> esqueciSenha(@Valid @RequestBody UsuarioRequests.EsqueciSenha request,
+                                                         HttpServletRequest http) {
+        solicitarRedefinicaoSenhaUseCase.solicitar(request.login(), http.getRemoteAddr());
         return ResponseEntity.accepted().body(new MensagemResponse(
                 "Pedido registrado. Se o login existir, o administrador vai gerar uma senha provisória e passar para você."));
     }

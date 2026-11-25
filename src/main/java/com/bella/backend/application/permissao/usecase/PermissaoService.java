@@ -1,5 +1,8 @@
 package com.bella.backend.application.permissao.usecase;
 
+import com.bella.backend.domain.auditoria.model.ModuloAuditoria;
+import com.bella.backend.domain.auditoria.model.OperacaoAuditoria;
+import com.bella.backend.domain.auditoria.port.in.RegistrarAuditoriaUseCase;
 import com.bella.backend.domain.permissao.model.AcaoPermissao;
 import com.bella.backend.domain.permissao.model.ModuloSistema;
 import com.bella.backend.domain.permissao.model.PermissoesPadrao;
@@ -17,7 +20,10 @@ import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.util.EnumMap;
+import java.nio.charset.StandardCharsets;
 import java.util.EnumSet;
+import java.util.LinkedHashMap;
+import java.util.UUID;
 import java.util.Map;
 import java.util.Set;
 
@@ -35,7 +41,10 @@ public class PermissaoService implements ConsultarPermissoesUseCase, AlterarPerm
     private final PermissaoRepositoryPort permissaoRepositoryPort;
     private volatile Map<PerfilUsuario, Map<ModuloSistema, Set<AcaoPermissao>>> cache;
 
-    public PermissaoService(PermissaoRepositoryPort permissaoRepositoryPort) {
+    private final RegistrarAuditoriaUseCase auditoria;
+
+    public PermissaoService(PermissaoRepositoryPort permissaoRepositoryPort, RegistrarAuditoriaUseCase auditoria) {
+        this.auditoria = auditoria;
         this.permissaoRepositoryPort = permissaoRepositoryPort;
     }
 
@@ -71,7 +80,9 @@ public class PermissaoService implements ConsultarPermissoesUseCase, AlterarPerm
                                                           Map<ModuloSistema, Set<AcaoPermissao>> permissoes) {
         exigirPerfilEditavel(perfil);
         Map<ModuloSistema, Set<AcaoPermissao>> normalizadas = normalizar(permissoes);
+        Map<ModuloSistema, Set<AcaoPermissao>> antes = doPerfil(perfil);
         permissaoRepositoryPort.substituir(perfil, normalizadas);
+        registrar(perfil, antes, normalizadas, "Permissões do perfil alteradas");
         descartarCacheAposConfirmar();
         LOG.info("Permissões do perfil {} alteradas: {}", perfil, normalizadas);
         return normalizadas;
@@ -81,7 +92,9 @@ public class PermissaoService implements ConsultarPermissoesUseCase, AlterarPerm
     public Map<ModuloSistema, Set<AcaoPermissao>> restaurarPadrao(PerfilUsuario perfil) {
         exigirPerfilEditavel(perfil);
         Map<ModuloSistema, Set<AcaoPermissao>> padrao = PermissoesPadrao.de(perfil);
+        Map<ModuloSistema, Set<AcaoPermissao>> antes = doPerfil(perfil);
         permissaoRepositoryPort.substituir(perfil, padrao);
+        registrar(perfil, antes, padrao, "Permissões do perfil restauradas para o padrão");
         descartarCacheAposConfirmar();
         LOG.info("Permissões do perfil {} restauradas para o padrão", perfil);
         return padrao;
@@ -96,6 +109,28 @@ public class PermissaoService implements ConsultarPermissoesUseCase, AlterarPerm
                     : doBanco.getOrDefault(perfil, Map.of()));
         }
         return todas;
+    }
+
+    /** Guarda só o que mudou (módulo a módulo), com as ações em texto. */
+    private void registrar(PerfilUsuario perfil, Map<ModuloSistema, Set<AcaoPermissao>> antes,
+                           Map<ModuloSistema, Set<AcaoPermissao>> depois, String motivo) {
+        Map<String, Object> valoresAntes = new LinkedHashMap<>();
+        Map<String, Object> valoresDepois = new LinkedHashMap<>();
+        for (ModuloSistema modulo : ModuloSistema.values()) {
+            Set<AcaoPermissao> a = antes.getOrDefault(modulo, Set.of());
+            Set<AcaoPermissao> d = depois.getOrDefault(modulo, Set.of());
+            if (!a.equals(d)) {
+                valoresAntes.put(modulo.name(), a.stream().map(Enum::name).sorted().toList());
+                valoresDepois.put(modulo.name(), d.stream().map(Enum::name).sorted().toList());
+            }
+        }
+        if (valoresDepois.isEmpty()) {
+            return;
+        }
+        UUID entidade = UUID.nameUUIDFromBytes(("perfil:" + perfil.name()).getBytes(StandardCharsets.UTF_8));
+        auditoria.registrar(new RegistrarAuditoriaUseCase.ComandoAuditoria(
+                ModuloAuditoria.PERMISSAO, entidade, OperacaoAuditoria.ALTERACAO_PERMISSOES, null,
+                valoresAntes, valoresDepois, "Perfil " + perfil.name() + ": " + motivo));
     }
 
     private static void exigirPerfilEditavel(PerfilUsuario perfil) {

@@ -15,6 +15,12 @@ public interface RegistrarAuditoriaUseCase {
 
     RegistroAuditoria registrar(ComandoAuditoria comando);
 
+    /**
+     * Grava numa transação própria, que não é desfeita se a operação de origem falhar. Serve para eventos de
+     * segurança, como o login recusado, que terminam em erro mas precisam ficar registrados.
+     */
+    RegistroAuditoria registrarIndependente(ComandoAuditoria comando);
+
     record ComandoAuditoria(
             ModuloAuditoria modulo,
             UUID entidadeId,

@@ -9,7 +9,7 @@ import { authApi } from "@/lib/authApi";
 import { useAuth } from "@/lib/authContexto";
 import {
   alterarMinhaSenhaSchema,
-  TAMANHO_MINIMO_SENHA,
+  DICA_SENHA,
   type AlterarMinhaSenhaValues,
 } from "@/lib/usuarioSchema";
 
@@ -56,7 +56,7 @@ export function TrocarSenhaForm({ rotuloSenhaAtual = "Senha atual" }: { rotuloSe
               <FormControl>
                 <Input type="password" autoComplete="new-password" {...field} />
               </FormControl>
-              <FormDescription>Mínimo de {TAMANHO_MINIMO_SENHA} caracteres.</FormDescription>
+              <FormDescription>{DICA_SENHA}</FormDescription>
               <FormMessage />
             </FormItem>
           )}

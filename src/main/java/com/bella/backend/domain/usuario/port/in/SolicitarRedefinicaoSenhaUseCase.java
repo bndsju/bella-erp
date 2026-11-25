@@ -7,4 +7,8 @@ public interface SolicitarRedefinicaoSenhaUseCase {
      * é ignorado em silêncio, para a tela não servir de lista de usuários.
      */
     void solicitar(String login);
+
+    default void solicitar(String login, String enderecoIp) {
+        solicitar(login);
+    }
 }
