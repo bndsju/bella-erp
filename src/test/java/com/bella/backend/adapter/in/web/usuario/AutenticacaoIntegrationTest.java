@@ -68,6 +68,13 @@ class AutenticacaoIntegrationTest extends IntegrationTestBase {
     }
 
     @Test
+    void corpoMalFormadoNoLoginRetorna400ComMensagemClara() throws Exception {
+        mockMvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON).content("{isso nao e json"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.mensagem").value("Corpo da requisição inválido ou mal formatado"));
+    }
+
+    @Test
     void loginComCredenciaisCertasDaAcessoEResponde() throws Exception {
         login("admin", SENHA_ADMIN).andExpect(status().isOk())
                 .andExpect(jsonPath("$.token").isNotEmpty())
