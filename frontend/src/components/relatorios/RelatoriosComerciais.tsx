@@ -192,6 +192,14 @@ function SecaoVendas({ inicio, fim, clientes, produtos }: Props & Pick<Cadastros
   );
 }
 
+/**
+ * Os pedidos são contados pelo status que têm hoje, e a venda de um pedido pode ser cancelada sem que o pedido mude:
+ * esse pedido continua somando aqui e some do relatório de Vendas (que só conta vendas concluídas).
+ */
+const NOTA_PEDIDOS_POR_STATUS =
+  "Os pedidos são contados pelo status que têm hoje: um pedido entregue cuja venda foi cancelada continua somando " +
+  "aqui. Para o faturamento do período, use o relatório de Vendas.";
+
 function SecaoPedidos({ inicio, fim, clientes }: Props & Pick<Cadastros, "clientes">) {
   const { filtros: f, alterado, mudar, limpar } = useFiltros({ inicio, fim, clienteId: TODOS, pagina: 0 });
   const params = { inicio: f.inicio, fim: f.fim, clienteId: sem(f.clienteId) };
@@ -209,6 +217,7 @@ function SecaoPedidos({ inicio, fim, clientes }: Props & Pick<Cadastros, "client
           nomeArquivo: `pedidos-por-status-${f.inicio}-a-${f.fim}`,
           periodo: textoDoPeriodo(f.inicio, f.fim),
           filtros: descrever([["Cliente", rotuloDe(clientes, f.clienteId)]]),
+          nota: NOTA_PEDIDOS_POR_STATUS,
           resumo: [
             ["Pedidos (sem cancelados)", String(dados.quantidadeValidos)],
             ["Valor", formatarMoeda(dados.valorValidos)],
@@ -269,6 +278,7 @@ function SecaoPedidos({ inicio, fim, clientes }: Props & Pick<Cadastros, "client
               <strong>Total sem cancelados ({dados.quantidadeValidos})</strong>
               <strong>{formatarMoeda(dados.valorValidos)}</strong>
             </div>
+            <p className="mt-3 text-auxiliar">{NOTA_PEDIDOS_POR_STATUS}</p>
           </>
         )
       }
