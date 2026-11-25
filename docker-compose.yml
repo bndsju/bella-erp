@@ -10,7 +10,7 @@ services:
       POSTGRES_USER: bella
       POSTGRES_PASSWORD: bella
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - bella_pg_data:/var/lib/postgresql/data
     healthcheck:
@@ -33,7 +33,7 @@ services:
       DB_USER: bella
       DB_PASSWORD: bella
     ports:
-      - "8080:8080"
+      - "127.0.0.1:8080:8080"
 
 volumes:
   bella_pg_data:

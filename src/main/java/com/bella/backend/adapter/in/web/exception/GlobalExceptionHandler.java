@@ -6,6 +6,7 @@ import com.bella.backend.domain.usuario.model.CredenciaisInvalidasException;
 import com.bella.backend.domain.usuario.model.LoginBloqueadoException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -51,6 +52,11 @@ public class GlobalExceptionHandler {
         Map<String, Object> corpo = corpoErro(HttpStatus.BAD_REQUEST, "Erro de validação");
         corpo.put("erros", erros);
         return ResponseEntity.badRequest().body(corpo);
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<Map<String, Object>> handleCorpoIlegivel(HttpMessageNotReadableException ex) {
+        return ResponseEntity.badRequest().body(corpoErro(HttpStatus.BAD_REQUEST, "Corpo da requisição inválido ou mal formatado"));
     }
 
     private Map<String, Object> corpoErro(HttpStatus status, String mensagem) {
