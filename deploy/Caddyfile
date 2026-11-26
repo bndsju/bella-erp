@@ -1,0 +1,39 @@
+# SITE_ADDRESS vem do .env: um dominio (ou algo como 203-0-113-10.sslip.io). Com um nome valido o Caddy pede e
+# renova o certificado HTTPS sozinho e redireciona HTTP para HTTPS. Em teste local use SITE_ADDRESS=localhost.
+{$SITE_ADDRESS} {
+	encode zstd gzip
+
+	header {
+		-Server
+		# So HTTPS: o navegador passa a recusar abrir o site sem HTTPS por 1 ano
+		Strict-Transport-Security "max-age=31536000"
+	}
+
+	# A API manda os proprios cabecalhos de seguranca
+	handle /api/* {
+		reverse_proxy backend:8080
+	}
+
+	handle {
+		root * /srv
+
+		# Mantenha igual a frontend/cabecalhos-seguranca.ts (aqui com upgrade-insecure-requests a mais)
+		header {
+			Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' https://viacep.com.br; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests"
+			Referrer-Policy "strict-origin-when-cross-origin"
+			Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+			X-Content-Type-Options "nosniff"
+			X-Frame-Options "DENY"
+		}
+
+		# Arquivos com hash no nome nunca mudam; o resto (index.html) sempre confere se esta atualizado
+		@estaticos path /assets/*
+		header @estaticos Cache-Control "public, max-age=31536000, immutable"
+		@pagina not path /assets/*
+		header @pagina Cache-Control "no-cache"
+
+		# Rotas do React (/clientes, /pedidos...) caem no index.html
+		try_files {path} /index.html
+		file_server
+	}
+}

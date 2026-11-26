@@ -1,6 +1,7 @@
-# Producao: use com um arquivo .env (nunca versionado) com DB_PASSWORD, JWT_SEGREDO, ADMIN_SENHA e CORS_ALLOWED_ORIGINS.
+# Producao. Passo a passo em docs/deploy.md.
+#   cp .env.exemplo .env   (preencha) e depois:
 #   docker compose -f docker-compose.prod.yml --env-file .env up -d --build
-# O banco nao publica porta. O backend so escuta em 127.0.0.1 (o proxy HTTPS, na fase 3, fica na frente).
+# Somente as portas 80 e 443 (Caddy) ficam abertas para a internet; banco e API so conversam dentro da rede do Docker.
 services:
   postgres:
     image: postgres:16-alpine
@@ -31,9 +32,28 @@ services:
       DB_PASSWORD: ${DB_PASSWORD:?defina DB_PASSWORD}
       JWT_SEGREDO: ${JWT_SEGREDO:?defina JWT_SEGREDO com 32+ caracteres}
       ADMIN_SENHA: ${ADMIN_SENHA:?defina ADMIN_SENHA}
-      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:?defina CORS_ALLOWED_ORIGINS}
+      CORS_ALLOWED_ORIGINS: https://${SITE_ADDRESS:?defina SITE_ADDRESS}
+      # A maquina e pequena: deixa o Java usar so metade da memoria, o resto fica para o banco e o sistema
+      JAVA_TOOL_OPTIONS: -XX:MaxRAMPercentage=50
+
+  site:
+    build:
+      context: .
+      dockerfile: deploy/Dockerfile.web
+    restart: unless-stopped
+    depends_on:
+      - backend
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS:?defina SITE_ADDRESS}
     ports:
-      - "127.0.0.1:8080:8080"
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
 
 volumes:
   bella_pg_data:
+  caddy_data:
+  caddy_config:
