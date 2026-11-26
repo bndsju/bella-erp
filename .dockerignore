@@ -1,0 +1,13 @@
+.git
+.github
+.idea
+.vscode
+target
+**/node_modules
+frontend/dist
+frontend/dev.log
+*.log
+.env
+.env.*
+!.env.exemplo
+pr-corpo.md
