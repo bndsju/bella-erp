@@ -315,6 +315,21 @@ class AutenticacaoIntegrationTest extends IntegrationTestBase {
                 .andExpect(status().isOk()).andExpect(jsonPath("$.totalItens").value(0));
     }
 
+    @Test
+    void apiResponseComCabecalhosDeSeguranca() throws Exception {
+        mockMvc.perform(get("/api/clientes"))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.header()
+                        .string("Content-Security-Policy", "default-src 'none'; frame-ancestors 'none'"))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.header()
+                        .string("Referrer-Policy", "no-referrer"))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.header()
+                        .string("X-Content-Type-Options", "nosniff"))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.header()
+                        .string("X-Frame-Options", "DENY"))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.header()
+                        .exists("Permissions-Policy"));
+    }
+
     private JsonNode eventos(String tokenAdmin, String modulo, String operacao) throws Exception {
         String corpo = mockMvc.perform(get("/api/auditoria").param("modulo", modulo).param("operacao", operacao)
                         .param("tamanho", "50").header("Authorization", bearer(tokenAdmin)))
