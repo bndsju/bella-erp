@@ -2,6 +2,8 @@ package com.bella.backend.config;
 
 import com.bella.backend.adapter.in.web.seguranca.AutorizadorPorPermissao;
 import com.bella.backend.adapter.in.web.seguranca.FiltroAutenticacaoJwt;
+import com.bella.backend.adapter.in.web.seguranca.LimitadorDeRequisicoesFiltro;
+import com.bella.backend.application.auditoria.EventosSeguranca;
 import com.bella.backend.domain.permissao.port.in.ConsultarPermissoesUseCase;
 import com.bella.backend.domain.usuario.port.out.EmissorTokenPort;
 import com.bella.backend.domain.usuario.port.out.UsuarioRepositoryPort;
@@ -22,6 +24,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -40,8 +43,11 @@ public class SegurancaConfig {
     @Bean
     SecurityFilterChain filtroDeSeguranca(HttpSecurity http, EmissorTokenPort emissorTokenPort,
                                           UsuarioRepositoryPort usuarioRepositoryPort, ConsultarPermissoesUseCase permissoes,
-                                          ObjectMapper objectMapper,
-                                          @Value("${bella.seguranca.habilitada:true}") boolean habilitada) throws Exception {
+                                          ObjectMapper objectMapper, EventosSeguranca eventosSeguranca,
+                                          @Value("${bella.seguranca.habilitada:true}") boolean habilitada,
+                                          @Value("${bella.seguranca.limite.janela-minutos:15}") long janelaMinutos,
+                                          @Value("${bella.seguranca.limite.login-por-ip:30}") int loginPorIp,
+                                          @Value("${bella.seguranca.limite.esqueci-senha-por-ip:5}") int esqueciSenhaPorIp) throws Exception {
         http.csrf(AbstractHttpConfigurer::disable)
                 .cors(Customizer.withDefaults())
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -54,7 +60,11 @@ public class SegurancaConfig {
             return http.build();
         }
 
-        http.addFilterBefore(new FiltroAutenticacaoJwt(emissorTokenPort, usuarioRepositoryPort),
+        http.addFilterBefore(new LimitadorDeRequisicoesFiltro(Duration.ofMinutes(janelaMinutos), eventosSeguranca, objectMapper,
+                                new LimitadorDeRequisicoesFiltro.Regra("/api/auth/login", loginPorIp),
+                                new LimitadorDeRequisicoesFiltro.Regra("/api/auth/esqueci-senha", esqueciSenhaPorIp)),
+                        UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(new FiltroAutenticacaoJwt(emissorTokenPort, usuarioRepositoryPort),
                         UsernamePasswordAuthenticationFilter.class)
                 .exceptionHandling(e -> e
                         .authenticationEntryPoint((req, res, ex) ->

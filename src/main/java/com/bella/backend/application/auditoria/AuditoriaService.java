@@ -10,6 +10,7 @@ import com.bella.backend.domain.relatorio.model.Pagina;
 import com.bella.backend.domain.relatorio.model.PeriodoRelatorio;
 import com.bella.backend.domain.shared.EntidadeNaoEncontradaException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
@@ -37,6 +38,12 @@ public class AuditoriaService implements RegistrarAuditoriaUseCase, ConsultarAud
         return auditoriaRepositoryPort.salvar(RegistroAuditoria.novo(
                 comando.modulo(), comando.entidadeId(), comando.operacao(), usuario,
                 comando.valoresAnteriores(), comando.novosValores(), comando.motivo()));
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public RegistroAuditoria registrarIndependente(ComandoAuditoria comando) {
+        return registrar(comando);
     }
 
     @Override

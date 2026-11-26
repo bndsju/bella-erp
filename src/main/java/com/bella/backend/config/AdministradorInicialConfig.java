@@ -34,7 +34,7 @@ public class AdministradorInicialConfig {
             }
             boolean gerada = senhaInformada == null || senhaInformada.isBlank();
             String senha = gerada ? SenhaProvisoria.gerar() : senhaInformada;
-            Usuario.validarSenhaNova(senha);
+            Usuario.validarSenhaNova(senha, login);
             gerenciar.cadastrar(new GerenciarUsuariosUseCase.CadastrarComando(nome, login, senha, PerfilUsuario.ADMINISTRADOR));
             if (gerada) {
                 LOG.warn("Primeiro acesso criado. Login: {}  Senha: {}  (troque a senha depois de entrar)", login, senha);

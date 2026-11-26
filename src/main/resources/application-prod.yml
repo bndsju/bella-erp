@@ -13,7 +13,7 @@ spring:
 
 server:
   # Atras do proxy (Caddy): usa X-Forwarded-* para enderecos e esquema corretos
-  forward-headers-strategy: framework
+  forward-headers-strategy: native
   error:
     include-message: never
     include-stacktrace: never

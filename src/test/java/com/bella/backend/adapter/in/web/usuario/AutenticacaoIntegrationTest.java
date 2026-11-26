@@ -23,12 +23,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @TestPropertySource(properties = {
         "bella.seguranca.habilitada=true",
         "bella.seguranca.admin-login=admin",
-        "bella.seguranca.admin-senha=senha-do-admin-1",
-        "bella.seguranca.jwt-segredo=segredo-de-teste-com-mais-de-32-caracteres"
+        "bella.seguranca.admin-senha=senha-do-chefe-1",
+        "bella.seguranca.jwt-segredo=segredo-de-teste-com-mais-de-32-caracteres",
+        "bella.seguranca.limite.login-por-ip=100000",
+        "bella.seguranca.limite.esqueci-senha-por-ip=100000"
 })
 class AutenticacaoIntegrationTest extends IntegrationTestBase {
 
-    private static final String SENHA_ADMIN = "senha-do-admin-1";
+    private static final String SENHA_ADMIN = "senha-do-chefe-1";
 
     @Autowired
     private MockMvc mockMvc;
@@ -307,9 +309,62 @@ class AutenticacaoIntegrationTest extends IntegrationTestBase {
                         .contentType(MediaType.APPLICATION_JSON).content(corpoCliente))
                 .andExpect(status().isCreated());
 
-        mockMvc.perform(get("/api/auditoria").param("usuario", "operador").header("Authorization", bearer(admin)))
+        mockMvc.perform(get("/api/auditoria").param("usuario", "operador").param("modulo", "CLIENTE").header("Authorization", bearer(admin)))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.totalItens").value(1));
         mockMvc.perform(get("/api/auditoria").param("usuario", "forjado").header("Authorization", bearer(admin)))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.totalItens").value(0));
+    }
+
+    private JsonNode eventos(String tokenAdmin, String modulo, String operacao) throws Exception {
+        String corpo = mockMvc.perform(get("/api/auditoria").param("modulo", modulo).param("operacao", operacao)
+                        .param("tamanho", "50").header("Authorization", bearer(tokenAdmin)))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        return objectMapper.readTree(corpo).get("itens");
+    }
+
+    @Test
+    void loginsFalhasEBloqueioFicamNaAuditoriaSemSenha() throws Exception {
+        String admin = token("admin", SENHA_ADMIN);
+        criarUsuario(admin, "auditado", "VENDEDOR");
+
+        login("auditado", "senha-errada-1").andExpect(status().isUnauthorized());
+        login("fantasma", "qualquer-coisa-1").andExpect(status().isUnauthorized());
+        for (int i = 0; i < 4; i++) {
+            login("auditado", "senha-errada-1");
+        }
+        login("auditado", "senha-12345").andExpect(status().isTooManyRequests());
+
+        JsonNode falhas = eventos(admin, "SEGURANCA", "LOGIN_FALHA");
+        org.assertj.core.api.Assertions.assertThat(falhas.toString())
+                .contains("Senha incorreta", "Login inexistente", "fantasma")
+                .doesNotContain("senha-errada-1").doesNotContain("qualquer-coisa-1");
+        org.assertj.core.api.Assertions.assertThat(eventos(admin, "SEGURANCA", "LOGIN_BLOQUEADO")).hasSize(1);
+        org.assertj.core.api.Assertions.assertThat(eventos(admin, "SEGURANCA", "LOGIN_SUCESSO").toString())
+                .contains("admin");
+    }
+
+    @Test
+    void mudancasDeUsuarioESenhaFicamNaAuditoria() throws Exception {
+        String admin = token("admin", SENHA_ADMIN);
+        String id = criarUsuario(admin, "movimentado", "VENDEDOR").get("id").asText();
+        mockMvc.perform(post("/api/usuarios/" + id + "/senha-provisoria").header("Authorization", bearer(admin)))
+                .andExpect(status().isOk());
+
+        org.assertj.core.api.Assertions.assertThat(eventos(admin, "USUARIO", "CRIACAO").toString())
+                .contains("movimentado").doesNotContain("senha-12345");
+        org.assertj.core.api.Assertions.assertThat(eventos(admin, "USUARIO", "SENHA_PROVISORIA").toString())
+                .contains(id);
+    }
+
+    @Test
+    void senhaFracaERecusada() throws Exception {
+        String admin = token("admin", SENHA_ADMIN);
+        for (String fraca : new String[]{"curta1", "somente-letras-aqui", "12345678901234", "senha12345", "xyz-fraca-9"}) {
+            mockMvc.perform(post("/api/usuarios").header("Authorization", bearer(admin))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(Map.of(
+                                    "nome", "Fraca", "login", "fraca", "senha", fraca, "perfil", "VENDEDOR"))))
+                    .andExpect(status().isUnprocessableEntity());
+        }
     }
 }

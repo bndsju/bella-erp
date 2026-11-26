@@ -10,5 +10,8 @@ public enum ModuloAuditoria {
     COMPRA,
     ESTOQUE,
     CONTA_RECEBER,
-    CONTA_PAGAR
+    CONTA_PAGAR,
+    USUARIO,
+    PERMISSAO,
+    SEGURANCA
 }

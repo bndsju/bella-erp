@@ -8,7 +8,11 @@ public interface AutenticarUseCase {
 
     Sessao autenticar(Comando comando);
 
-    record Comando(String login, String senha) {
+    /** {@code enderecoIp} só alimenta o registro de segurança; pode ser nulo. */
+    record Comando(String login, String senha, String enderecoIp) {
+        public Comando(String login, String senha) {
+            this(login, senha, null);
+        }
     }
 
     record Sessao(String token, Instant expiraEm, Usuario usuario) {
